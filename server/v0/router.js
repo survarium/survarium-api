@@ -7,6 +7,6 @@ var index = require('./controllers');
 router.get('/', index.index);
 
 router.options('/:cmd', require('../middleware/cors'));
-router.get('/:cmd', index.cmd);
+router.get('/:cmd', require('../middleware/cors'), index.cmd);
 
 module.exports = router;
