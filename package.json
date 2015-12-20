@@ -1,11 +1,11 @@
 {
-  "name": "survarium-node",
+  "name": "survarium-api-server",
   "version": "0.0.0",
-  "description": "survarium api",
+  "description": "survarium api server",
   "main": "server/index.js",
   "scripts": {
     "test": "npm test",
-    "start": "./server/index.js",
+    "start": "LISTEN=3010 ./server/index.js",
     "deps": "npm i && (cd server && npm run deps)",
     "doc": "jsdoc -c .jsdoc.json",
     "doc-pages": "npm run doc && git add docs && git commit -am 'JSDoc up' && git push origin gh-pages"

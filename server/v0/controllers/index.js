@@ -1,14 +1,14 @@
 'use strict';
 
-const api = require('../models/api');
-const handlers = api.handlers;
+const api = new (require('survarium-api-client').v0)({ keyPriv: 'test', keyPub: 'test' });
+const handlers = api.__handlers;
 const handlersNames = Object.keys(handlers);
 
 const index = function (req, res) {
 	const baseUrl = req.protocol + '://' + req.hostname + req.baseUrl;
 
 	let handlersList = handlersNames.reduce(function (result, method) {
-		result[method] = baseUrl + '/cmd/' + method + '/?param1=&param2=';
+		result[method] = baseUrl + '/' + method;
 		return result;
 	}, {});
 
@@ -18,20 +18,15 @@ const index = function (req, res) {
 const cmd = function (req, res, next) {
 	let cmd = req.params.cmd;
 
-	if (!handlers[cmd]) {
+	if (!api[cmd]) {
 		return res.status(401).send('no method ' + cmd + ' available');
 	}
 
 	let query = req.query;
-	let args = Object.keys(query).map(function (key) {
-		return query[key];
-	});
 
-	handlers
-		[cmd].apply(null, args)
-		.then(api.ask)
-		.then(function (result) {
-			let data = result.body;
+	api
+		[cmd](query)
+		.then(function (data) {
 			res.json(data);
 			return data;
 		})
