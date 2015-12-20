@@ -1,5 +1,5 @@
 {
-  "name": "@survarium-node/server",
+  "name": "@survarium-api/server",
   "dependencies": {
     "express": "^4.13.3",
     "mkdirp": "^0.5.1",

@@ -1,10 +1,6 @@
-# Survarium-api-client
+# Survarium-api
 
-Statistics client based on API of [Survarium game](http://survarium.com).  
-This is a port of initial [PHP-client](https://github.com/PhpSurvarium/SurvariumAPI).
-
-## Docs
-[API handlers](http://vaseker.github.io/survarium-api/docs/global.html)
+API server over [survarium api client](https://github.com/vaseker/survarium-api-client)
 
 ## Requirements
 * `nodejs >= 4`
@@ -16,3 +12,16 @@ This is a port of initial [PHP-client](https://github.com/PhpSurvarium/Survarium
 
 ## Start
 `npm start`
+
+## Usage
+
+### V0
+[Available handles](http://vaseker.github.io/survarium-api-client/docs/Api.html)
+
+Examples:  
+
+* `curl api.survarium.pro/v0/getClans?offset=0`
+* `curl api.survarium.pro/v0/getPublicIdByNickname?nickname=vaseker`
+* `curl api.survarium.pro/v0/getMatchStatistic?id=3578606`
+* `curl api.survarium.pro/v0/getUserData?pid=15238791817735151910`
+* `curl api.survarium.pro/v0/getNicknamesByPublicIds?pids=1606615321417388317,15238791817735151910`
