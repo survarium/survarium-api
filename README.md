@@ -1,12 +1,12 @@
 # Survarium-api
 
-API server over [survarium api client](https://github.com/vaseker/survarium-api-client)
+API server over [survarium api client](https://github.com/survarium/survarium-api-client)
 
 ## Requirements
 * `nodejs >= 4`
 
 ## Setup
-* `git clone https://github.com/vaseker/survarium-api.git`
+* `git clone https://github.com/survarium/survarium-api.git`
 * `cd survarium-api`
 * `npm run deps`
 
@@ -16,7 +16,7 @@ API server over [survarium api client](https://github.com/vaseker/survarium-api-
 ## Usage
 
 ### V0
-[Available handles](http://vaseker.github.io/survarium-api-client/docs/Api.html)
+[Available handles](http://survarium.github.io/survarium-api-client/docs/Api.html)
 
 Examples:  
 
@@ -24,4 +24,4 @@ Examples:
 * `curl api.survarium.pro/v0/getPublicIdByNickname?nickname=vaseker`
 * `curl api.survarium.pro/v0/getMatchStatistic?id=3578606`
 * `curl api.survarium.pro/v0/getUserData?pid=15238791817735151910`
-* `curl api.survarium.pro/v0/getNicknamesByPublicIds?pids=1606615321417388317,15238791817735151910`
+* `curl api.survarium.pro/v0/getNicknamesByPublicIds?pids=1606615321417388317&pids=15238791817735151910`
