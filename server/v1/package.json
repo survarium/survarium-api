@@ -1,0 +1,10 @@
+{
+  "name": "@survarium-api/server-v1",
+  "dependencies": {
+    "bluebird": "^3.1.1",
+    "ioredis": "^1.13.1",
+    "mongoose": "^4.3.3",
+    "mongoose-timestamp": "^0.4.0",
+    "survarium-api-client": "git+https://github.com/vaseker/survarium-api-client.git"
+  }
+}
