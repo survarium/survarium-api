@@ -11,7 +11,8 @@ module.exports = {
 		languages: [
 			'english',
 		    'russian'
-		]
+		],
+		langDefault: 'english'
 	},
 
 	workers: process.env.NODE_WORKERS || require('os').cpus().length,
