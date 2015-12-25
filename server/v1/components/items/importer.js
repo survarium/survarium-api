@@ -20,11 +20,11 @@ function saveDict(lang, data) {
 		}
 		var dict = data.dictionary;
 		var promises = Object.keys(dict).map(function (key) {
-			var map = dict[key];
+			var item = dict[key];
 			var id = Number(key);
 			var data = { };
 			data[lang] = {
-				name: map
+				name: item
 			};
 			return Items.findOne({ id: id }).exec()
 				.then(function (map) {

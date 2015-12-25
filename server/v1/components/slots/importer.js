@@ -5,13 +5,13 @@ const apiNative = require('../../lib/api-native');
 const cache = require('../../lib/cache');
 const db = require('../../lib/db');
 const config = require('../../../configs');
-const Maps = db.model('Maps');
+const Slots = db.model('Slots');
 
 const languages = config.api.languages;
 
-const CACHEKEY = 'maps:loaddict:';
+const CACHEKEY = 'slots:loaddict:';
 const EXPIRE = 60 * 60 * 24 * 5;
-const logKey = 'mapDict:';
+const logKey = 'slotDict:';
 
 function saveDict(lang, data) {
 	return new Promise(function (resolve, reject) {
@@ -21,17 +21,15 @@ function saveDict(lang, data) {
 		var dict = data.dictionary;
 		var promises = Object.keys(dict).map(function (key) {
 			var item = dict[key];
-			var id = Number(item.map_id);
+			var id = Number(key);
 			var data = { };
 			data[lang] = {
-				name: item.name,
-				mode: item.mode,
-				weather: item.weather
+				name: item
 			};
-			return Maps.findOne({ id: id }).exec()
+			return Slots.findOne({ id: id }).exec()
 				.then(function (map) {
 					if (!map) {
-						return Maps.create({
+						return Slots.create({
 							id: id,
 							lang: data
 						});
@@ -55,7 +53,7 @@ function loadDict(lang) {
 			}
 			return cache.set(cachekey, true, 'EX', EXPIRE)
 				.then(function () {
-					return apiNative.getMapsDict({ language: lang })
+					return apiNative.getSlotsDict({ language: lang })
 						.then(saveDict.bind(null, lang))
 						.then(function () {
 							console.info(logKey, 'loaded', lang);
@@ -82,4 +80,3 @@ setInterval(loadAllForms, EXPIRE * 1000);
 });*/
 
 setTimeout(loadAllForms, (Math.random() * 1000) >>> 0);
-
