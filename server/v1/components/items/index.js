@@ -16,7 +16,7 @@ function getData(options) {
 		lang = config.api.langDefault;
 	}
 	return model
-		.find(options.search || {}, `-_id id lang.${lang}`)
+		.find(options.search || {}, `-_id id lang.${lang}.name`)
 		.lean()
 		.then(function (elems) {
 			if (!elems || !elems.length) {
@@ -31,7 +31,7 @@ function getData(options) {
 }
 
 /**
- * Получить информацию о картах, включая погодное явление и режим игры
+ * Получить информацию о предметах
  * @param {Object} req
  * @param {Object} req.query
  * @param {String} [req.query.language=english]  язык, на котором получить информацию
@@ -43,7 +43,7 @@ router.get('/', function (req, res, next) {
 });
 
 /**
- * Получить информацию о карте
+ * Получить информацию о предмете
  * @param {Object} req
  * @param {Object} req.query
  * @param {String} [req.query.language=english]  язык, на котором получить информацию
@@ -62,4 +62,3 @@ router.get('/:id', function (req, res, next) {
 });
 
 module.exports = router;
-
