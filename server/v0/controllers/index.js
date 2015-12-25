@@ -4,6 +4,10 @@ const config = require('../../configs');
 const api = new (require('survarium-api-client').v0)({ keyPriv: config.api.keys.private, keyPub: config.api.keys.public });
 const handlers = api.__handlers;
 const handlersNames = Object.keys(handlers);
+const handlersNamesLowered = handlersNames.reduce(function (methods, method) {
+	methods[method.toLowerCase()] = method;
+	return methods;
+}, {});
 
 const index = function (req, res) {
 	const baseUrl = req.protocol + '://' + req.hostname + req.baseUrl;
@@ -18,15 +22,16 @@ const index = function (req, res) {
 
 const cmd = function (req, res, next) {
 	let cmd = req.params.cmd;
+	let method = api[cmd] ? cmd :
+		api[handlersNamesLowered[cmd]] ? handlersNamesLowered[cmd] : null;
 
-	if (!api[cmd]) {
-		return res.status(401).send('no method ' + cmd + ' available');
+	if (!method) {
+		return res.status(401).send(`no method ${cmd} available`);
 	}
 
 	let query = req.query;
 
-	api
-		[cmd](query)
+	api[method].call(api, query)
 		.then(function (data) {
 			res.json(data);
 			return data;
