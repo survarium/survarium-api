@@ -1,8 +1,15 @@
 const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
+const importer = require('./importer');
 
 const Schema = mongoose.Schema;
+
+const scoreMicro = {
+	type: Number,
+	default: 0,
+	index: true
+};
 
 const PlayersSchema = new Schema({
 	id: {
@@ -43,18 +50,18 @@ const PlayersSchema = new Schema({
 		}
 	},
 	total: {
-		matches: Number,
-		victories: Number,
-		kills: Number,
-		dies: Number,
+		matches: scoreMicro,
+		victories: scoreMicro,
+		kills: scoreMicro,
+		dies: scoreMicro,
 
-		headshots: Number,
-		grenadeKills: Number,
-		meleeKills: Number,
-		artefactKills: Number,
-		pointCaptures: Number,
-		boxesBringed: Number,
-		artefactUses: Number
+		headshots: scoreMicro,
+		grenadeKills: scoreMicro,
+		meleeKills: scoreMicro,
+		artefactKills: scoreMicro,
+		pointCaptures: scoreMicro,
+		boxesBringed: scoreMicro,
+		artefactUses: scoreMicro
 	},
 	stats: [
 		{
@@ -77,5 +84,34 @@ const PlayersSchema = new Schema({
 });
 
 PlayersSchema.plugin(timestamps);
+
+PlayersSchema.statics.load = function () {
+	return importer.load.apply(this, arguments);
+};
+
+PlayersSchema.methods.addStat = function (stat) {
+	var self = this;
+	return this
+		.update({
+			$push: {
+				stats: stat._id
+			},
+			total: {
+				$inc: {
+					headshots: stat.headshots,
+					grenadeKills: stat.grenadeKills,
+					meleeKills: stat.meleeKills,
+					artefactKills: stat.artefactKills,
+					pointCaptures: stat.pointCaptures,
+					boxesBringed: stat.boxesBringed,
+					artefactUses: stat.artefactUses
+				}
+			}
+		})
+		.exec()
+		.then(function () {
+			return self;
+		});
+};
 
 module.exports = db.model('Players', PlayersSchema);

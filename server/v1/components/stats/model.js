@@ -4,6 +4,11 @@ const db         = require('../../lib/db');
 
 const Schema = mongoose.Schema;
 
+const scoreMicro = {
+	type: Number,
+	default: 0
+};
+
 const StatsSchema = new Schema({
 	date: {
 		type : Date,
@@ -14,25 +19,31 @@ const StatsSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref : 'Matches'
 	},
+	map: {
+		type: Schema.Types.ObjectId,
+		ref : 'Maps'
+	},
 	player: {
 		type: Schema.Types.ObjectId,
 		ref : 'Players'
 	},
 
-	level: Number,
+	team: Number,
 
-	score  : Number,
-	kills  : Number,
-	dies   : Number,
+	level: scoreMicro,
+
+	score  : scoreMicro,
+	kills  : scoreMicro,
+	dies   : scoreMicro,
 	victory: Boolean,
 
-	headshots    : Number,
-	grenadeKills : Number,
-	meleeKills   : Number,
-	artefactKills: Number,
-	pointCaptures: Number,
-	boxesBringed : Number,
-	artefactUses : Number,
+	headshots    : scoreMicro,
+	grenadeKills : scoreMicro,
+	meleeKills   : scoreMicro,
+	artefactKills: scoreMicro,
+	pointCaptures: scoreMicro,
+	boxesBringed : scoreMicro,
+	artefactUses : scoreMicro,
 
 	ammunition: [{
 		slot: {
@@ -46,7 +57,7 @@ const StatsSchema = new Schema({
 		amount: Number
 	}],
 	deletedAt : Date
-});
+}, { collection: 'statistics' });
 
 StatsSchema.plugin(timestamps);
 

@@ -3,6 +3,8 @@
 const router = require('express').Router();
 const model  = require('./model');
 
+process.nextTick(require.bind(null, './importer'));
+
 function getData(options) {
 	options = options || {};
 

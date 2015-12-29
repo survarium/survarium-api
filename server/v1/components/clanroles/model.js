@@ -9,8 +9,10 @@ const ClanRolesSchema = new Schema({
 		type: String,
 		required: true,
 		trim: true,
-		index: true
+		index: { unique: true }
 	},
+
+	weight: Number,
 
 	deletedAt : Date
 });

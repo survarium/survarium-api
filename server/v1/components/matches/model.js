@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
+require('./model-unloaded');
 
 const Schema = mongoose.Schema;
 
@@ -25,6 +26,12 @@ const MatchesSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref : 'Maps'
 	},
+	stats: [
+		{
+			type: Schema.Types.ObjectId,
+			ref : 'Stats'
+		}
+	],
 	deletedAt: Date
 });
 
