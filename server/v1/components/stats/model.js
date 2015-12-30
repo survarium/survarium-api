@@ -27,6 +27,10 @@ const StatsSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref : 'Players'
 	},
+	clan: {
+		type: Schema.Types.ObjectId,
+		ref : 'Clans'
+	},
 
 	team: Number,
 

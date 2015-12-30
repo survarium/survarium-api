@@ -11,6 +11,7 @@ const MatchesUnloaded = db.model('MatchesUnloaded');
 const Maps = db.model('Maps');
 const Stats = db.model('Stats');
 const Players = db.model('Players');
+const Clans = db.model('Clans');
 
 const CACHEKEY = 'matches:load';
 const CACHEIMPORTKEY = CACHEKEY + ':last';
@@ -32,26 +33,31 @@ function saveStats(statsData, match) {
 					.then(function (player) {
 						debug(`player ${playerStats.pid} ${player.nickname} loaded`);
 						debug(`creating stats document for player ${player.nickname} and match ${match.id}`);
+						var document = {
+							date : match.date,
+							match: match._id,
+							map  : match.map,
+							player: player._id,
+							team  : teamNum,
+							level : match.level,
+							kills : playerStats.kill,
+							dies  : playerStats.die,
+							victory: !!playerStats.victory,
+							score  : playerStats.score,
+							headshots: playerStats.headshot_kill,
+							grenadeKills: playerStats.grenade_kill,
+							meleeKills  : playerStats.melee_kill,
+							artefactKills: playerStats.artefact_kill,
+							pointCaptures: playerStats.capture_a_point,
+							boxesBringed : playerStats.bring_a_box,
+							artefactUses : playerStats.use_artefact
+						};
+						if (player.clan) {
+							document.clan = player.clan;
+						}
+
 						return Stats
-							.create({
-								date : match.date,
-								match: match._id,
-								map  : match.map,
-								player: player._id,
-								team  : teamNum,
-								level : match.level,
-								kills : playerStats.kill,
-								dies  : playerStats.die,
-								victory: !!playerStats.victory,
-								score  : playerStats.score,
-								headshots: playerStats.headshot_kill,
-								grenadeKills: playerStats.grenade_kill,
-								meleeKills  : playerStats.melee_kill,
-								artefactKills: playerStats.artefact_kill,
-								pointCaptures: playerStats.capture_a_point,
-								boxesBringed : playerStats.bring_a_box,
-								artefactUses : playerStats.use_artefact
-							})
+							.create(document)
 							.tap(function (stat) {
 								debug(`stats document for player ${player.nickname} and match ${match.id} created`);
 								return player.addStat(stat);
@@ -155,6 +161,13 @@ function importMatch(id, ts) {
 		})
 		.catch(function (err) {
 			console.error(logKey, 'cannot import match', id, err);
+			if (err.statusCode === 422) {
+				debug(`match ${id} cannot be loaded from API`);
+				return saveUnloaded(id, ts)
+					.then(function () {
+						return { id: id, status: 'no source', error: err };
+					});
+			}
 			return { id: id, status: 'error', error: err };
 		});
 }
@@ -179,8 +192,14 @@ function load(date) {
 				return null;
 			}
 			return new Promise(function (resolve, reject) {
+				var errors = [];
 				var exit = function () {
 					debug(`imported ${length} new matches`);
+					if (length - errors.length < length * .1) {
+						debug(`too many (${errors.length}) matches import errors in matches`);
+						lastImport = matches[ids[0]];
+						return resolve();
+					}
 					cache.set(CACHEIMPORTKEY, lastImport);
 					if (matchesToImport === length) {
 						debug(`need to import next portion of new matches`);
@@ -191,16 +210,23 @@ function load(date) {
 					return resolve();
 				};
 
+				var i = 0;
 				var next = function () {
 					setTimeout(function () {
-						var id = ids.shift();
+						var id = ids[i++];
 						if (!id) {
 							return exit();
 						}
-						return importMatch(id)
+						var ts = process.hrtime();
+						return importMatch(id, matches[id])
 							.tap(function (result) {
+								ts = process.hrtime(ts);
+								debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
 								console.log(logKey, id, result.status, new Date(matches[id] * 1000));
 								lastImport = matches[id];
+								if (result.status === 'error') {
+									errors.push({ id: id, error: result.error })
+								}
 							})
 							.then(next)
 							.catch(reject);
@@ -212,8 +238,8 @@ function load(date) {
 }
 
 var startOfTimes = {
-	date: new Date('2015-04-30T21:03:00Z'),
-	match: 2253112
+	date: new Date('2015-04-30T21:08:03Z'),
+	match: 2253096
 };
 
 function getLastImport() {
@@ -266,7 +292,9 @@ function loader() {
 		});
 }
 
-setTimeout(loader, (Math.random() * 30000) >>> 0);
+if (process.env.IMPORTER) {
+	setTimeout(loader, (Math.random() * 30000) >>> 0);
+}
 
 function deblock() {
 	return cache.multi().del(CACHEKEY).exec().then(function () {

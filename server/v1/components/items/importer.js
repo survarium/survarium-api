@@ -73,8 +73,10 @@ const loadAllForms = function () {
 	languages.forEach(loadDict);
 };
 
-setInterval(loadAllForms, EXPIRE * 1000);
-setTimeout (loadAllForms, (Math.random() * 10000) >>> 0);
+if (process.env.IMPORTER) {
+	setInterval(loadAllForms, EXPIRE * 1000);
+	setTimeout(loadAllForms, (Math.random() * 10000) >>> 0);
+}
 
 function deblock() {
 	return cache.multi().del(CACHEKEY + languages[0]).del(CACHEKEY + languages[1]).exec().then(function () {

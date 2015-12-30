@@ -1,7 +1,9 @@
+const Promise = require('bluebird');
 const mongoose = require('mongoose');
 const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
 const importer = require('./importer');
+const Clans = db.model('Clans');
 
 const Schema = mongoose.Schema;
 
@@ -91,24 +93,43 @@ PlayersSchema.statics.load = function () {
 
 PlayersSchema.methods.addStat = function (stat) {
 	var self = this;
-	return this
-		.update({
+	var updaters = [this.update({
+		$push: {
+			stats: stat._id
+		},
+		$inc: {
+			'total.headshots': stat.headshots || 0,
+			'total.grenadeKills': stat.grenadeKills || 0,
+			'total.meleeKills': stat.meleeKills || 0,
+			'total.artefactKills': stat.artefactKills || 0,
+			'total.pointCaptures': stat.pointCaptures || 0,
+			'total.boxesBringed': stat.boxesBringed || 0,
+			'total.artefactUses': stat.artefactUses || 0
+		}
+	}).exec()];
+	if (stat.clan) {
+		updaters.push(Clans.update({ _id: stat.clan }, {
 			$push: {
 				stats: stat._id
 			},
-			total: {
-				$inc: {
-					headshots: stat.headshots,
-					grenadeKills: stat.grenadeKills,
-					meleeKills: stat.meleeKills,
-					artefactKills: stat.artefactKills,
-					pointCaptures: stat.pointCaptures,
-					boxesBringed: stat.boxesBringed,
-					artefactUses: stat.artefactUses
-				}
+			$inc: {
+				'total.matches': 1,
+				'total.victories': stat.victory ? 1 : 0,
+				'total.kills': stat.kills || 0,
+				'total.dies': stat.dies || 0,
+
+				'total.headshots': stat.headshots || 0,
+				'total.grenadeKills': stat.grenadeKills || 0,
+				'total.meleeKills': stat.meleeKills || 0,
+				'total.artefactKills': stat.artefactKills || 0,
+				'total.pointCaptures': stat.pointCaptures || 0,
+				'total.boxesBringed': stat.boxesBringed || 0,
+				'total.artefactUses': stat.artefactUses || 0
 			}
-		})
-		.exec()
+		}));
+	}
+	return Promise
+		.all(updaters)
 		.then(function () {
 			return self;
 		});

@@ -5,6 +5,12 @@ const importer   = require('./importer');
 
 const Schema = mongoose.Schema;
 
+const scoreMicro = {
+	type: Number,
+	default: 0,
+	index: true
+};
+
 const ClansSchema = new Schema({
 	id: {
 		type: Number,
@@ -41,6 +47,27 @@ const ClansSchema = new Schema({
 		ref : 'Players'
 	},*/
 
+	total: {
+		matches: scoreMicro,
+		victories: scoreMicro,
+		kills: scoreMicro,
+		dies: scoreMicro,
+
+		headshots: scoreMicro,
+		grenadeKills: scoreMicro,
+		meleeKills: scoreMicro,
+		artefactKills: scoreMicro,
+		pointCaptures: scoreMicro,
+		boxesBringed: scoreMicro,
+		artefactUses: scoreMicro
+	},
+	stats: [
+		{
+			type: Schema.Types.ObjectId,
+			ref : 'Stats'
+		}
+	],
+
 	level: Number,
 	elo: Number,
 
@@ -56,5 +83,7 @@ ClansSchema.statics.load = function () {
 ClansSchema.methods.assignRole = function () {
 	return importer.assignRole.apply(this, arguments);
 };
+
+ClansSchema.statics.fetch = importer.fetch;
 
 module.exports = db.model('Clans', ClansSchema);

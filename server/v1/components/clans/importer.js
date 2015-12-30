@@ -22,7 +22,7 @@ function fetch(params) {
 			if (!clanInfo) {
 				return Promise.props({
 						clan: apiNative.getClanInfo({ id: params.id }, { delay: apiNative.delay }),
-						members: apiNative.getClanMembers({ id: params.id }, { delay: apiNative.delay * 2 })
+						members: apiNative.getClanMembers({ id: params.id }, { delay: apiNative.delay * 1.5 })
 					})
 					.tap(function (clanInfo) {
 						debug(`clan ${params.id} loaded from API`);
@@ -31,44 +31,6 @@ function fetch(params) {
 			}
 			debug(`clan ${params.id} loaded from cache`);
 			return JSON.parse(clanInfo);
-		});
-}
-
-function assignCommander(params, clan) {
-	return db.model('Players')
-		.findOne({ id: params.source.clan.clan_info.commander_pid })
-		.lean()
-		.then(function (player) {
-			if (!player) {
-				return clan;
-			}
-			if (!clan.commander) {
-				return clan.update({
-					commander: player._id,
-					players: {
-						$addToSet: {
-							player: player._id,
-							role: 'commander'
-						}
-					}
-				});
-			}
-			if (clan.commander.toString() !== player._id.toString()) {
-				return clan.update({
-					commander: player._id,
-					players: {
-						$addToSet: {
-							player: player._id,
-							role: 'commander'
-						},
-						$pull: {
-							player: clan.commander,
-							role: 'commander'
-						}
-					}
-				});
-			}
-			return clan;
 		});
 }
 
@@ -122,5 +84,6 @@ function assignRole(player) {
 
 module.exports = {
 	load: load,
+	fetch: fetch,
 	assignRole: assignRole
 };
