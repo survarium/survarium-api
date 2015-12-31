@@ -3,8 +3,8 @@ const api = new (require('survarium-api-client').v0)({ keyPriv: config.api.keys.
 
 const delay = (function () {
 	// MAX 5 RPS
-	var min = 0;
-	var max = 150;
+	var min = +process.env.DELAY_MIN || 0;
+	var max = +process.env.DELAY_MAX || 150;
 	var diff = max - min;
 	return function () {
 		return min + (Math.random() * diff) >>> 0;
