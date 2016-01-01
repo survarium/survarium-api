@@ -14,7 +14,7 @@ const Clans = db.model('Clans');
 
 const CACHEKEY = 'matches:load';
 const CACHEIMPORTKEY = CACHEKEY + ':last';
-const EXPIRE = 60 * 5;
+const EXPIRE = 60 * .5;
 const logKey = 'match:';
 
 function saveStats(statsData, match) {

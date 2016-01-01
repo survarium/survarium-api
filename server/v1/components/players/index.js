@@ -24,7 +24,7 @@ function getData(options) {
 	var sort = {};
 	sort[sortBy] = options.sort === 'asc' ? 1 : -1;
 
-	var stats = Number(options.stats);
+	var stats = options.stats !== undefined ? (Math.abs(Number(options.stats)) || 0) : 25;
 
 	var query = model
 		.find(options.search || {}, `-_id ${!stats ? '-stats' : ''} -__v -clan_meta -createdAt -updatedAt`)
@@ -40,7 +40,7 @@ function getData(options) {
 					select: '-createdAt -updatedAt -__v -ammunition -team -player -_id -clan',
 					options: {
 						sort: { date: options.statsort === 'asc' ? 1 : -1 },
-						limit: Math.min(Math.abs(Number(stats)) || 25, 50),
+						limit: Math.min(stats, 50),
 						skip: Math.abs(Number(options.statskip)) || 0
 					},
 					populate: [
@@ -67,7 +67,20 @@ function getData(options) {
 }
 
 /**
- * Получить информацию об игроках
+ * /v1/players
+ *
+ * Return players information.
+ * Получить информацию об игроках.
+ *
+ * @param {Object} req,
+ * @param {Object} req.query,
+ * @param {String} [req.query.sort=desc]        Sort destination [asc,desc].
+ * @param {Number} [req.query.skip=0]           Amount of skipped elems.
+ * @param {Number} [req.query.limit=25          Limit of elems (max 50).
+ * @param {String} [req.query.sortBy=id]        Sort criteria [id,exp,kill,die,win,match,hs,gk,mk,ak,cap,box,au].
+ * @param {Number} [req.query.stats=25]         Amount of stats (max 50).
+ * @param {String} [req.query.statsort=desc]    Sort destination for stats [asc,desc].
+ * @param {String} [req.query.statskip=0]       Amount of skipped stats elems.
  */
 router.get('/', function (req, res, next) {
 	var query = req.query;
@@ -77,12 +90,18 @@ router.get('/', function (req, res, next) {
 });
 
 /**
- * Получить информацию об игроке
- * @param {Object} req
- * @param {Object} req.query
- * @param {String} [req.query.stats=25]             количество сыгранных матчей
- * @param {String} [req.query.statsort=desc]        сортировать матчи по свежести asc или desc
- * @param {String} [req.query.language=english]     язык, на котором получить информацию
+ * /v1/players/:public_id
+ * /v1/players/:nickname
+ *
+ * Return player information.
+ * Получить информацию об игроке.
+ *
+ * @param {Object} req,
+ * @param {Object} req.query,
+ * @param {*}      [req.query.byName]           Force to search by digit-only nickname.
+ * @param {Number} [req.query.stats=25]         Amount of stats (max 100).
+ * @param {String} [req.query.statsort=desc]    Sort destination for stats [asc,desc].
+ * @param {String} [req.query.statskip=0]       Amount of skipped stats elems.
  */
 router.get('/:search', function (req, res, next) {
 	var query = req.query;
