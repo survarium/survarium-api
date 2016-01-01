@@ -5,15 +5,19 @@ const Promise = require('bluebird');
 const apiNative = require('../../lib/api-native');
 const cache = require('../../lib/cache');
 const db = require('../../lib/db');
-const config = require('../../../configs');
 const ClanRoles = db.model('ClanRoles');
-
-const languages = config.api.languages;
 
 const CACHEKEY = 'clans:load';
 const EXPIRE = 60 * 5;
 const logKey = 'clans:';
 
+/**
+ * Fetch data from API
+ * Cacheable
+ * @param {Object}  params
+ * @param {Number}  params.id  Clan ID
+ * @returns {Object|Promise}
+ */
 function fetch(params) {
 	debug(`loading clan ${params.id} from source`);
 	var key = `${CACHEKEY}:${params.id}`;
@@ -34,6 +38,12 @@ function fetch(params) {
 		});
 }
 
+/**
+ * Map API data to database model schema
+ * @param {Object} source   API data
+ * @param {Object} [update] Document if exists
+ * @returns {Object}
+ */
 function assignDataToModel(source, update) {
 	var data = source.clan.clan_info;
 	var result = {
@@ -52,6 +62,13 @@ function assignDataToModel(source, update) {
 	return result;
 }
 
+/**
+ * Return clan from database
+ * Created or updated from API if needed
+ * @param {Object}  params
+ * @param {Number}  params.id  Clan ID
+ * @returns {Object|Promise}
+ */
 function load(params) {
 	debug(`load ${params.id}`);
 
@@ -78,12 +95,7 @@ function load(params) {
 		});
 }
 
-function assignRole(player) {
-
-}
-
 module.exports = {
 	load: load,
-	fetch: fetch,
-	assignRole: assignRole
+	fetch: fetch
 };

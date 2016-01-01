@@ -5,7 +5,6 @@ const Promise = require('bluebird');
 const apiNative = require('../../lib/api-native');
 const cache = require('../../lib/cache');
 const db = require('../../lib/db');
-const config = require('../../../configs');
 const Matches = db.model('Matches');
 const MatchesUnloaded = db.model('MatchesUnloaded');
 const Maps = db.model('Maps');
@@ -87,6 +86,12 @@ function saveStats(statsData, match) {
 	});
 }
 
+/**
+ * Match document creator
+ * And related models fill trigger
+ * @param {Object} data     Match data from API
+ * @returns {Object|Promise}
+ */
 function saveMatch(data) {
 	var id = data.match_id;
 	var statsData = data.stats;
@@ -122,6 +127,12 @@ function saveMatch(data) {
 	});
 }
 
+/**
+ * Store failed match import
+ * @param {Number} id   Match ID
+ * @param {Number} ts   Match timestamp
+ * @returns {Object|Promise}
+ */
 function saveUnloaded(id, ts) {
 	debug(`adding unloaded match ${id}`);
 	return MatchesUnloaded
@@ -136,6 +147,12 @@ function saveUnloaded(id, ts) {
 		.catch(console.error.bind(console, logKey, 'cannot add unloaded match'));
 }
 
+/**
+ * Match status checker and API data fetcher
+ * @param {Number} id   Match ID
+ * @param {Number} ts   Match timestamp
+ * @returns {Object|Promise}
+ */
 function importMatch(id, ts) {
 	debug(`importing match ${id}`);
 	return Matches
@@ -179,9 +196,17 @@ cache
 		return lastImport = ts;
 	});
 
+/**
+ * Load a pack of matches available from date
+ * @param {Number} date
+ * @returns {Promise}
+ */
 function load(date) {
 	console.log(`load at ${new Date()} from ts=${date} (${new Date(date * 1000)})`);
 	var matchesToImport = 30;
+	/**
+	 * Fetches list of matches available from date
+	 */
 	return apiNative.getNewMatches({ timestamp: date, limit: matchesToImport }, { delay: apiNative.delay })
 		.then(function (matches) {
 			matches = matches.matches;
@@ -195,12 +220,19 @@ function load(date) {
 				var errors = [];
 				var exit = function () {
 					debug(`imported ${length} new matches`);
+					/**
+					 * Rollback last import date if amount of errors
+					 * More than 10%
+					 */
 					if (length - errors.length < length * .1) {
 						debug(`too many (${errors.length}) matches import errors in matches`);
 						lastImport = matches[ids[0]];
 						return resolve();
 					}
 					cache.set(CACHEIMPORTKEY, lastImport);
+					/**
+					 * If match list is full, load its remaining
+					 */
 					if (matchesToImport === length) {
 						debug(`need to import next portion of new matches`);
 						return load(lastImport)
@@ -211,6 +243,10 @@ function load(date) {
 				};
 
 				var i = 0;
+				/**
+				 * Match import runner
+				 * Each API operation must be delayed to fit max 5 req/sec.
+				 */
 				var next = function () {
 					setTimeout(function () {
 						var id = ids[i++];
@@ -242,6 +278,10 @@ var startOfTimes = {
 	match: 2253096
 };
 
+/**
+ * Resolve timestamp of latest available match
+ * @returns {Number}
+ */
 function getLastImport() {
 	return lastImport ? Promise.resolve(lastImport) : Matches.findOne({}, 'date')
 	.sort({ id: -1 })
@@ -252,6 +292,9 @@ function getLastImport() {
 	})
 }
 
+/**
+ * Import planner
+ */
 function loader() {
 	debug(`[${process.pid}] (${new Date()}) trying to import new matches slice`);
 	const cachekey = CACHEKEY;
@@ -285,9 +328,6 @@ function loader() {
 			setTimeout(function () {
 				debug(`[${process.pid}] starting planned import`);
 				return loader();
-				/*return cache
-					.del(cachekey)
-					.then(loader.bind(loader));*/
 			}, 1000 * (EXPIRE + 10));
 		});
 }
@@ -296,6 +336,10 @@ if (process.env.IMPORTER) {
 	setTimeout(loader, (Math.random() * 30000) >>> 0);
 }
 
+/**
+ * Remove loader stoppers
+ * @returns {Promise}
+ */
 function deblock() {
 	return cache.multi().del(CACHEKEY).exec().then(function () {
 		console.info(logKey, 'cache cleaned');

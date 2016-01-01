@@ -1,15 +1,11 @@
 'use strict';
 
 const debug = require('debug')('importer:players');
-const Promise = require('bluebird');
 const apiNative = require('../../lib/api-native');
 const cache = require('../../lib/cache');
 const db = require('../../lib/db');
-const config = require('../../../configs');
 const Matches = db.model('Matches');
 const Clans = db.model('Clans');
-
-const languages = config.api.languages;
 
 const CACHEKEY = 'players:load';
 const EXPIRE = 60 * 5;

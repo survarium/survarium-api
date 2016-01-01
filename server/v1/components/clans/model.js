@@ -80,10 +80,6 @@ ClansSchema.statics.load = function () {
 	return importer.load.apply(this, arguments);
 };
 
-ClansSchema.methods.assignRole = function () {
-	return importer.assignRole.apply(this, arguments);
-};
-
 ClansSchema.statics.fetch = importer.fetch;
 
 module.exports = db.model('Clans', ClansSchema);
