@@ -20,10 +20,7 @@ router.get('/', function (req, res) {
 });
 
 router.use('/v0', require('./v0/router'));
-
-if (process.env.V1) {
-	router.use('/v1', require('./v1/router'));
-}
+router.use('/v1', require('./v1/router'));
 
 router.use(require('./middleware/errors'));
 

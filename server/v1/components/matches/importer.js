@@ -42,7 +42,7 @@ function saveStats(statsData, match) {
 							level : match.level,
 							kills : playerStats.kill,
 							dies  : playerStats.die,
-							victory: !!playerStats.victory,
+							victory: !!+playerStats.victory,
 							score  : playerStats.score,
 							headshots: playerStats.headshot_kill,
 							grenadeKills: playerStats.grenade_kill,
