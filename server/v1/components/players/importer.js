@@ -33,15 +33,15 @@ function assignDataToModel(source, update) {
 	var data = source.userdata;
 	var result = {
 		progress: {
-			elo: data.progress.elo,
-			level: data.progress.level,
-			experience: data.progress.experience
+			elo: +data.progress.elo || 0,
+			level: +data.progress.level || 0,
+			experience: +data.progress.experience || 0
 		},
 		total: {
-			matches: data.matches_stats.matches,
-			victories: data.matches_stats.victories,
-			kills: data.matches_stats.kills,
-			dies: data.matches_stats.dies
+			matches: +data.matches_stats.matches || 0,
+			victories: +data.matches_stats.victories || 0,
+			kills: +data.matches_stats.kills || 0,
+			dies: +data.matches_stats.dies || 0
 		}
 	};
 

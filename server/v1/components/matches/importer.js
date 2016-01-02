@@ -50,17 +50,17 @@ function saveStats(statsData, match) {
 							player: player._id,
 							team  : teamNum,
 							level : match.level,
-							kills : playerStats.kill,
-							dies  : playerStats.die,
+							kills : +playerStats.kill || 0,
+							dies  : +playerStats.die || 0,
 							victory: !!+playerStats.victory,
-							score  : playerStats.score,
-							headshots: playerStats.headshot_kill,
-							grenadeKills: playerStats.grenade_kill,
-							meleeKills  : playerStats.melee_kill,
-							artefactKills: playerStats.artefact_kill,
-							pointCaptures: playerStats.capture_a_point,
-							boxesBringed : playerStats.bring_a_box,
-							artefactUses : playerStats.use_artefact
+							score  : +playerStats.score || 0,
+							headshots: +playerStats.headshot_kill || 0,
+							grenadeKills: +playerStats.grenade_kill || 0,
+							meleeKills  : +playerStats.melee_kill || 0,
+							artefactKills: +playerStats.artefact_kill || 0,
+							pointCaptures: +playerStats.capture_a_point || 0,
+							boxesBringed : +playerStats.bring_a_box || 0,
+							artefactUses : +playerStats.use_artefact || 0
 						};
 						if (player.clan) {
 							document.clan = player.clan;
