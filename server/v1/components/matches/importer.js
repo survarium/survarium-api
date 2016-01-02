@@ -17,6 +17,17 @@ const CACHEIMPORTKEY = CACHEKEY + cache.options.suffix + ':last';
 const EXPIRE = 60 * .5;
 const logKey = 'match:';
 
+var gracefulShutdown;
+
+function tryToShutdown() {
+	if (gracefulShutdown) {
+		console.log(`executing ${process.pid} shutdown...`);
+		return process.nextTick(function () {
+			process.exit(0);
+		});
+	}
+}
+
 function saveStats(statsData, match) {
 	debug(`saving stats for match ${match.id}`);
 	var promises = [0, 1].reduce(function (stats, teamNum) {
@@ -190,6 +201,7 @@ function importMatch(id, ts) {
 }
 
 var lastImport;
+var importInProgress;
 
 /**
  * Load a pack of matches available from date
@@ -198,12 +210,15 @@ var lastImport;
  */
 function load(date) {
 	console.log(`load at ${new Date()} from ts=${date} (${new Date(date * 1000)})`);
-	var matchesToImport = 30;
+	var matchesToImport = +process.env.IMPORTER || 30;
 	/**
 	 * Fetches list of matches available from date
 	 */
 	return apiNative.getNewMatches({ timestamp: date, limit: matchesToImport }, { delay: apiNative.delay })
 		.then(function (matches) {
+			if (!matches.matches) {
+				throw new Error(`no new matches available from ${date} (${new Date(date * 1000)})`)
+			}
 			matches = matches.matches;
 			var ids = Object.keys(matches);
 			var length = ids.length;
@@ -213,6 +228,7 @@ function load(date) {
 			}
 			return new Promise(function (resolve, reject) {
 				var errors = [];
+				var i = 0;
 				var exit = function () {
 					debug(`imported ${length} new matches`);
 					/**
@@ -222,23 +238,29 @@ function load(date) {
 					if (length - errors.length < length * .1) {
 						debug(`too many (${errors.length}) matches import errors in matches`);
 						lastImport = matches[ids[0]];
-						cache.set(CACHEIMPORTKEY, lastImport);
+						cache.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', ids[0]);
+						tryToShutdown();
 						return resolve();
 					}
-					cache.set(CACHEIMPORTKEY, lastImport);
-					/**
-					 * If match list is full, load its remaining
-					 */
-					if (matchesToImport === length) {
-						debug(`need to import next portion of new matches`);
-						return load(lastImport)
-							.then(resolve)
-							.catch(reject);
-					}
-					return resolve();
+
+					return cache
+						.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', ids[length - 1])
+						.then(function () {
+							tryToShutdown();
+							/**
+							 * If match list is full, load its remaining
+							 */
+							if (matchesToImport === length) {
+								debug(`need to import next portion of new matches`);
+								return load(lastImport)
+									.then(resolve)
+									.catch(reject);
+							}
+							return resolve();
+						})
+						.catch(resolve);
 				};
 
-				var i = 0;
 				/**
 				 * Match import runner
 				 * Each API operation must be delayed to fit max 5 req/sec.
@@ -282,10 +304,29 @@ function getLastImport() {
 	return lastImport ?
 		Promise.resolve(lastImport) :
 		cache
-			.get(CACHEIMPORTKEY)
+			.hgetall(CACHEIMPORTKEY)
+			.catch(function (err) {
+				/**
+				 * STRING -> HASH KEY Migration
+				 */
+				if (err.message === 'WRONGTYPE Operation against a key holding the wrong kind of value') {
+					return cache
+						.get(CACHEIMPORTKEY)
+						.tap(function () {
+							return cache.del(CACHEIMPORTKEY);
+						})
+						.tap(function (result) {
+							return cache.hset(CACHEIMPORTKEY, 'ts', result);
+						})
+						.then(function (result) {
+							return { ts: result };
+						});
+				}
+				throw err;
+			})
 			.then(function (result) {
-				if (result) {
-					return lastImport = result;
+				if (result.ts) {
+					return lastImport = result.ts;
 				}
 				return startOfTimes.date.getTime() / 1000 >>> 0;
 			});
@@ -312,6 +353,7 @@ function loader() {
 				debug(`[${process.pid}] cannot start new import: another import is running on process [${loading}]`);
 				return;
 			}
+			importInProgress = true;
 			return cache.set(cachekey, process.pid, 'EX', EXPIRE)
 				.then(function () {
 					return getLastImport()
@@ -332,14 +374,32 @@ function loader() {
 		.catch(console.error.bind(console, logKey, 'cannot get cache status'))
 		.tap(function () {
 			debug(`[${process.pid}] planning next import`);
+			importInProgress = false;
+			tryToShutdown();
 			setTimeout(function () {
 				debug(`[${process.pid}] starting planned import`);
 				return loader();
-			}, 1000 * (EXPIRE + 10));
+			}, 1000 * (EXPIRE + 5));
 		});
 }
 
+process.on('SIGTERM', function () {
+	console.log(`register importer ${process.pid} shutdown...`);
+	gracefulShutdown = true;
+
+	if (!importInProgress) {
+		tryToShutdown();
+	}
+});
+
 if (process.env.IMPORTER) {
+	require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
+		if (err) {
+			throw err;
+		}
+		console.log(`importer PID: ${process.pid}`);
+	});
+
 	setTimeout(loader, (Math.random() * 30000) >>> 0);
 }
 
