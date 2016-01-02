@@ -13,7 +13,7 @@ const Players = db.model('Players');
 const Clans = db.model('Clans');
 
 const CACHEKEY = 'matches:load';
-const CACHEIMPORTKEY = CACHEKEY + ':last';
+const CACHEIMPORTKEY = CACHEKEY + cache.options.suffix + ':last';
 const EXPIRE = 60 * .5;
 const logKey = 'match:';
 
@@ -190,11 +190,6 @@ function importMatch(id, ts) {
 }
 
 var lastImport;
-cache
-	.get(CACHEIMPORTKEY)
-	.then(function (ts) {
-		return lastImport = ts;
-	});
 
 /**
  * Load a pack of matches available from date
@@ -227,6 +222,7 @@ function load(date) {
 					if (length - errors.length < length * .1) {
 						debug(`too many (${errors.length}) matches import errors in matches`);
 						lastImport = matches[ids[0]];
+						cache.set(CACHEIMPORTKEY, lastImport);
 						return resolve();
 					}
 					cache.set(CACHEIMPORTKEY, lastImport);
@@ -274,7 +270,7 @@ function load(date) {
 }
 
 var startOfTimes = {
-	date: new Date('2015-04-30T21:08:03Z'),
+	date: new Date(process.env.IMPORTER_START || '2015-04-30T21:08:03Z'),
 	match: 2253096
 };
 
@@ -283,13 +279,24 @@ var startOfTimes = {
  * @returns {Number}
  */
 function getLastImport() {
-	return lastImport ? Promise.resolve(lastImport) : Matches.findOne({}, 'date')
-	.sort({ id: -1 })
-	.lean()
-	.then(function (result) {
-		var date = result ? result.date : startOfTimes.date;
-		return date.getTime() / 1000 >>> 0;
-	})
+	return lastImport ?
+		Promise.resolve(lastImport) :
+		cache
+			.get(CACHEIMPORTKEY)
+			.then(function (result) {
+				if (result) {
+					return lastImport = result;
+				}
+				return startOfTimes.date.getTime() / 1000 >>> 0;
+			});
+		/*Matches
+			.findOne({}, 'date')
+			.sort({ id: -1 })
+			.lean()
+			.then(function (result) {
+				var date = result ? result.date : startOfTimes.date;
+				return date.getTime() / 1000 >>> 0;
+			})*/
 }
 
 /**

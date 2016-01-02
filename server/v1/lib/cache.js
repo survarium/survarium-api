@@ -1,6 +1,14 @@
-var Redis = require('ioredis');
-var redis = new Redis({
-	keyPrefix: 'sv-api:v1:'
+const Redis = require('ioredis');
+
+const config = require('../../configs');
+
+const redis = new Redis({
+	keyPrefix: 'sv-api:v1:',
+	port: config.v1.cache.port,
+	host: config.v1.cache.host,
+	password: config.v1.cache.auth,
+	family: config.v1.cache.ipv,
+	suffix: config.v1.cache.sfx
 });
 
 redis
