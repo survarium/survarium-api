@@ -1,7 +1,9 @@
 'use strict';
 
-const router = require('express').Router();
-const model  = require('./model');
+const Promise = require('bluebird');
+const router  = require('express').Router();
+const model   = require('./model');
+const cache   = require('../../lib/cache');
 
 process.nextTick(require.bind(null, './importer'));
 
@@ -28,6 +30,33 @@ router.get('/', function (req, res, next) {
 	var query = req.query;
 	getData({ lang: query.language, skip: query.skip, limit: query.limit })
 		.then(res.json.bind(res))
+		.catch(next);
+});
+
+/**
+ * Получить информацию о статусе импортов матчей
+ */
+router.get('/meta', function (req, res, next) {
+	var pfx = 'sv-api:v1:';
+	return cache
+		.keys(`${pfx}matches:load:*last`)
+		.then(function (result) {
+			if (!result || !result.length) {
+				return next(new Error('no information available'));
+			}
+			return Promise
+				.props(result.reduce(function (promises, key) {
+					key = key.replace(pfx, '');
+					promises[key] = cache
+						.hgetall(key)
+						.then(function (meta) {
+							meta.date = new Date(meta.ts * 1000);
+							return meta;
+						});
+					return promises;
+				}, {}))
+				.then(res.json.bind(res));
+		})
 		.catch(next);
 });
 
