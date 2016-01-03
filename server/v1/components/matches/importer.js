@@ -266,7 +266,7 @@ function load(date) {
 				 * Each API operation must be delayed to fit max 5 req/sec.
 				 */
 				var next = function () {
-					setTimeout(function () {
+					//setTimeout(function () {
 						var id = ids[i++];
 						if (!id) {
 							return exit();
@@ -284,7 +284,7 @@ function load(date) {
 							})
 							.then(next)
 							.catch(reject);
-					}, apiNative.delay);
+					//}, apiNative.delay);
 				};
 				return next();
 			});
