@@ -3,6 +3,7 @@
 var path    = require('path');
 var express = require('express');
 var router  = express.Router();
+var api     = express.Router();
 var cors    = require('./middleware/cors');
 
 
@@ -10,17 +11,17 @@ router.use(require('morgan')(':remote-addr :remote-user [:date[clf]] ":method :u
 
 router.use(cors);
 
-router.get('/', function (req, res) {
+api.get('/', function (req, res) {
 	res.json({
-		api: req.protocol +
-		'://' +
-		req.hostname +
-		'/v0'
+		api: `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}v0`
 	});
 });
 
-router.use('/v0', require('./v0/router'));
-router.use('/v1', require('./v1/router'));
+api.use('/v0', require('./v0/router'));
+api.use('/v1', require('./v1/router'));
+
+router.use('/', api);
+router.use('/api', api);
 
 router.use(require('./middleware/errors'));
 
