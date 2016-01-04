@@ -33,6 +33,20 @@ module.exports = {
 			host:  process.env.CACHE_HOST || '127.0.0.1',
 			ipv : +process.env.CACHE_IPV  || 4,
 			sfx :  process.env.CACHE_SFX  || ''
+		},
+		importer: !!process.env.IMPORTER,
+		telegram: {
+			server: !!process.env.TELEGRAM_SERVER,
+			hostname: process.env.TELEGRAM_HOSTNAME || require('os').hostname(),
+			token: process.env.TELEGRAM_TOKEN,
+			botan: process.env.TELEGRAM_BOTAN,
+			hook: {
+				key: process.env.TELEGRAM_HOOK_KEY,
+				cert: process.env.TELEGRAM_HOOK_CERT,
+				port: process.env.TELEGRAM_HOOK_PORT,
+				host: process.env.TELEGRAM_HOOK_HOST,
+				del: !!process.env.TELEGRAM_HOOK_DEL
+			}
 		}
 	}
 };

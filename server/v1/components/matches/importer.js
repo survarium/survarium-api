@@ -5,6 +5,8 @@ const Promise = require('bluebird');
 const apiNative = require('../../lib/api-native');
 const cache = require('../../lib/cache');
 const db = require('../../lib/db');
+const config = require('../../../config');
+const notifications = require('../../services/telegram/triggers');
 const Matches = db.model('Matches');
 const MatchesUnloaded = db.model('MatchesUnloaded');
 const Maps = db.model('Maps');
@@ -217,6 +219,10 @@ function load(date) {
 	return apiNative.getNewMatches({ timestamp: date, limit: matchesToImport }, { delay: apiNative.delay })
 		.then(function (matches) {
 			if (!matches.matches) {
+				notifications.importStatus({
+					type: 'noUpdates',
+					ts: lastImport
+				});
 				throw new Error(`no new matches available from ${date} (${new Date(date * 1000)})`)
 			}
 			matches = matches.matches;
@@ -238,13 +244,22 @@ function load(date) {
 					if (length - errors.length < length * .1) {
 						debug(`too many (${errors.length}) matches import errors in matches`);
 						lastImport = matches[ids[0]];
-						cache.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', ids[0]);
+						cache.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', ids[0], 'host', config.v1.telegram.hostname);
+						let lastError = errors[errors.length - 1];
+						notifications.importStatus({
+							type: 'tooMuchErrors',
+							errors: errors.length,
+							total: length,
+							ts: lastImport,
+							lastError: lastError.error,
+							lastErrorMatch: lastError.id
+						});
 						tryToShutdown();
 						return resolve();
 					}
 
 					return cache
-						.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', ids[length - 1])
+						.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', ids[length - 1], 'host', config.v1.telegram.hostname)
 						.then(function () {
 							tryToShutdown();
 							/**
@@ -366,6 +381,11 @@ function loader() {
 							console.info(logKey, 'loaded');
 						})
 						.catch(function (err) {
+							notifications.importStatus({
+								type: 'fatal',
+								ts: lastImport,
+								error: err
+							});
 							console.error(logKey, 'cannot make import', err);
 						});
 				})
@@ -392,16 +412,14 @@ process.on('SIGTERM', function () {
 	}
 });
 
-if (process.env.IMPORTER) {
-	require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
-		if (err) {
-			throw err;
-		}
-		console.log(`importer PID: ${process.pid}`);
-	});
+require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
+	if (err) {
+		throw err;
+	}
+	console.log(`importer PID: ${process.pid}`);
+});
 
-	setTimeout(loader, (Math.random() * 30000) >>> 0);
-}
+setTimeout(loader, (Math.random() * 30000) >>> 0);
 
 /**
  * Remove loader stoppers

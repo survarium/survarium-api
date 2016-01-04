@@ -1,11 +1,13 @@
 'use strict';
 
-const Promise = require('bluebird');
 const router  = require('express').Router();
 const model   = require('./model');
-const cache   = require('../../lib/cache');
+const ctl     = require('./controller');
+const config  = require('../../../configs');
 
-process.nextTick(require.bind(null, './importer'));
+if (config.v1.importer) {
+	process.nextTick(require.bind(null, './importer'));
+}
 
 function getData(options) {
 	options = options || {};
@@ -37,26 +39,9 @@ router.get('/', function (req, res, next) {
  * Получить информацию о статусе импортов матчей
  */
 router.get('/meta', function (req, res, next) {
-	var pfx = 'sv-api:v1:';
-	return cache
-		.keys(`${pfx}matches:load:*last`)
-		.then(function (result) {
-			if (!result || !result.length) {
-				return next(new Error('no information available'));
-			}
-			return Promise
-				.props(result.reduce(function (promises, key) {
-					key = key.replace(pfx, '');
-					promises[key] = cache
-						.hgetall(key)
-						.then(function (meta) {
-							meta.date = new Date(meta.ts * 1000);
-							return meta;
-						});
-					return promises;
-				}, {}))
-				.then(res.json.bind(res));
-		})
+	return ctl
+		.stats()
+		.then(res.json.bind(res))
 		.catch(next);
 });
 

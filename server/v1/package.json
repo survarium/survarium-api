@@ -2,10 +2,12 @@
   "name": "@survarium-api/server-v1",
   "dependencies": {
     "bluebird": "^3.1.1",
+    "botanio": "0.0.6",
     "debug": "^2.2.0",
     "ioredis": "^1.13.1",
     "mongoose": "^4.3.3",
     "mongoose-timestamp": "^0.4.0",
+    "node-telegram-bot-api": "^0.18.0",
     "survarium-api-client": "git+https://github.com/vaseker/survarium-api-client.git"
   }
 }
