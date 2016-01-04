@@ -15,7 +15,7 @@ bot.onText(/^\/import_stats$/, message => {
 		.then(stats => {
 			var message = Object.keys(stats).map(key => {
 				let info = stats[key];
-				return `${info.host ? '[' + info.host + ']\n' : ''}${key.replace(/.*load:([^:]*):last.*/, '$1')} | ${info.id} | ${utils.time(info.date, true)}`;
+				return `${info.host ? (new Array(10)).join('–') + '\n[' + info.host + ']\n' : ''}${key.replace(/.*load:([^:]*):last.*/, '$1')} | ${info.id} | ${utils.time(info.date, true)}`;
 			}).join('\n');
 			bot.sendMessage(chatId, message);
 		})
