@@ -366,7 +366,7 @@ function getLastImport() {
  */
 function loader() {
 	debug(`[${process.pid}] (${new Date()}) trying to import new matches slice`);
-	const cachekey = CACHEKEY;
+	const cachekey = CACHEKEY + cache.options.suffix;
 	return cache
 		.get(cachekey)
 		.then(function (loading) {
