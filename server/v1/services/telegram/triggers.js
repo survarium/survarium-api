@@ -20,7 +20,7 @@ var importStatus = (function () {
 			message: (status, time) => `[${hostname}] Import TOO MUCH ERRORS (${status.errors}/${status.total}) on time=${time} and match=${status.lastErrorMatch}.\n${status.lastError.message}${status.lastError.path ? ': ' + status.lastError.path : ''}`
 		},
 		noUpdates: {
-			cache: 60 * 60 * 24,
+			cache: 60 * 60 * 12,
 			message: (status, time) => `[${hostname}] Import NO UPDATES from ${time}`
 		},
 		unknown: {

@@ -223,7 +223,9 @@ function load(date) {
 					type: 'noUpdates',
 					ts: lastImport
 				});
-				throw new Error(`no new matches available from ${date} (${new Date(date * 1000)})`)
+				let error = new Error(`no new matches available from ${date} (${new Date(date * 1000)})`);
+				error.handled = true;
+				throw error;
 			}
 			matches = matches.matches;
 			var ids = Object.keys(matches);
@@ -381,7 +383,7 @@ function loader() {
 							console.info(logKey, 'loaded');
 						})
 						.catch(function (err) {
-							notifications.importStatus({
+							!err || !err.handled && notifications.importStatus({
 								type: 'fatal',
 								ts: lastImport,
 								error: err
