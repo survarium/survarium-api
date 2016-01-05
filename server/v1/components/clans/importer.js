@@ -83,8 +83,18 @@ function load(params) {
 				return fetch(params)
 					.then(function (fetched) {
 						return isNew ?
-							self.create(assignDataToModel(fetched)) :
-							self.update({ id: id }, { $set: assignDataToModel(fetched, clan) }).exec()
+							self
+								.create(assignDataToModel(fetched))
+								.catch(function (err) {
+									if (err.code === 11000) {
+										debug(`clan ${id} should be created, but its already exists`);
+										return self.findOne({ id: id });
+									}
+									throw err;
+								}):
+							self
+								.update({ id: id }, { $set: assignDataToModel(fetched, clan) })
+								.exec()
 								.then(function () {
 									return clan;
 								});

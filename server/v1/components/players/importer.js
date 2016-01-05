@@ -192,10 +192,18 @@ function load(params) {
 					.then(function (fetched) {
 						debug(`player ${id} will be ${isNew ? 'created' : 'updated'}`);
 						return (isNew ?
-								self.create(assignDataToModel(fetched))
+								self
+									.create(assignDataToModel(fetched))
 									.tap(function () {
 										debug(`player ${id} created`);
-									}) :
+									})
+									.catch(function (err) {
+										if (err.code === 11000) {
+											debug(`player ${id} should be created, but its already exists`);
+											return self.findOne({ id: id });
+										}
+										throw err;
+									}):
 								self.update({ id: id },  { $set: assignDataToModel(fetched, player) }).exec()
 									.then(function () {
 										debug(`player ${id} updated`);
