@@ -9,7 +9,6 @@ db.once('connected', function () {
 		var quitter;
 		function exit() {
 			console.log(`planning exit`);
-			clearTimeout(quitter);
 			quitter = setTimeout(function () {
 				db.close();
 			}, 1000);
@@ -22,6 +21,7 @@ db.once('connected', function () {
 			if (!--count) {
 				return exit();
 			}
+			clearTimeout(quitter);
 			console.log(`remains ${count} operations`);
 		}
 	})();
