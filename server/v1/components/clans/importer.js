@@ -84,7 +84,7 @@ function load(params) {
 					.then(function (fetched) {
 						return isNew ?
 							self.create(assignDataToModel(fetched)) :
-							self.update(assignDataToModel(fetched, clan)).exec()
+							self.update({ id: id }, assignDataToModel(fetched, clan)).exec()
 								.then(function () {
 									return clan;
 								});

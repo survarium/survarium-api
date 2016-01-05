@@ -196,7 +196,7 @@ function load(params) {
 									.tap(function () {
 										debug(`player ${id} created`);
 									}) :
-								self.update(assignDataToModel(fetched, player)).exec()
+								self.update({ id: id },  assignDataToModel(fetched, player)).exec()
 									.then(function () {
 										debug(`player ${id} updated`);
 										return player;
