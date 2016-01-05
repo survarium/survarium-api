@@ -83,6 +83,15 @@ const PlayersSchema = new Schema({
 		},
 		amount: Number
 	}],
+	skills: [
+		{
+			id: {
+				type: Number,
+				index: true
+			},
+			points: Number
+		}
+	],
 	deletedAt: Date
 });
 

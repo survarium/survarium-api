@@ -7,6 +7,7 @@ const db = require('../../lib/db');
 const utils = require('../../lib/utils');
 const Matches = db.model('Matches');
 const Clans = db.model('Clans');
+const Promise = require('bluebird');
 
 const CACHEKEY = 'players:load';
 const EXPIRE = 60 * 5;
@@ -18,11 +19,14 @@ function fetch(params) {
 	return cache.get(key)
 		.then(function (player) {
 			if (!player) {
-				return apiNative
-					.getUserData({ pid: params.id }, { delay: apiNative.delay })
-					.tap(function (userdata) {
+				return Promise
+					.props({
+						data: apiNative.getUserData({ pid: params.id }, { delay: apiNative.delay }),
+					    skills: apiNative.getUserSkills({ pid: params.id }, { delay: apiNative.delay * 2 })
+					})
+					.tap(function (user) {
 						debug(`player ${params.id} loaded from API`);
-						return cache.set(key, JSON.stringify(userdata), 'EX', EXPIRE);
+						return cache.set(key, JSON.stringify(user), 'EX', EXPIRE);
 					});
 			}
 			debug(`player ${params.id} loaded from cache`);
@@ -31,7 +35,9 @@ function fetch(params) {
 }
 
 function assignDataToModel(source, update) {
-	var data = source.userdata;
+	var data = source.data.userdata;
+	var skills = source.skills.skills;
+
 	var kills = +data.matches_stats.kills || 0;
 	var dies = +data.matches_stats.dies || 0;
 	var result = {
@@ -46,11 +52,17 @@ function assignDataToModel(source, update) {
 			kills: kills,
 			dies: dies,
 			kd: +utils.kd(kills, dies)
-		}
+		},
+		skills: Object.keys(skills).map(function (id) {
+			return {
+				id: Number(id),
+				points: Number(skills[id])
+			};
+		})
 	};
 
 	if (!update) {
-		result.id = source.pid;
+		result.id = source.data.pid;
 		result.nickname = data.nickname;
 	} else {
 		if (data.nickname !== update.nickname) {
@@ -71,7 +83,7 @@ function assignDataToModel(source, update) {
  */
 function assignClan(params, player) {
 	var isNew = params.isNew;
-	var clanId = params.source.userdata.clan_id;
+	var clanId = params.source.data.userdata.clan_id;
 	debug(`assigning clan ${clanId} to player ${player.nickname}`);
 	if (!clanId && isNew) {
 		debug(`clan ${clanId} is not assigned to new player ${player.nickname}`);
