@@ -144,7 +144,7 @@ router.get('/:search', function (req, res, next) {
 			{
 				path: 'players.player',
 				model: model,
-				select: '-createdAt -updatedAt -__v -_id -stats -ammunition -clan -clan_meta'
+				select: '-createdAt -updatedAt -__v -_id -stats -ammunition -clan -clan_meta -skills'
 			}
 		]
 	}];
