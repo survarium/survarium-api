@@ -27,14 +27,14 @@ function saveDict(lang, data) {
 				name: item
 			};
 			return Items.findOne({ id: id }).exec()
-				.then(function (map) {
-					if (!map) {
+				.then(function (item) {
+					if (!item) {
 						return Items.create({
 							id: id,
 							lang: data
 						});
 					}
-					return map.set(`lang.${lang}`, data[lang]).save();
+					return item.set(`lang.${lang}`, data[lang]).save();
 				})
 				.catch(console.error.bind(console, logKey));
 		});

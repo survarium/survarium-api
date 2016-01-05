@@ -165,7 +165,7 @@ router.get('/:search', function (req, res, next) {
 				},
 				{
 					path: 'match',
-					select: '-createdAt -updatedAt -__v -_id -stats -map'
+					select: '-createdAt -updatedAt -__v -_id -stats -map -date'
 				}
 			]
 		});

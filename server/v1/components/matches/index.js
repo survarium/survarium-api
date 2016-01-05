@@ -15,11 +15,19 @@ function getData(options) {
 	var skip = Number(options.skip);
 	var limit = Number(options.limit);
 
-	return model
-		.find(options.search || {}, `-_id`)
-		.skip(isNaN(skip) ? 0 : Math.abs(skip))
-		.limit(isNaN(limit) ? 25 : (Math.abs(limit) || 25 ))
-		.lean();
+	var cursor = model[options.one ? 'findOne' : 'find'](options.search || {}, `-_id -updatedAt -createdAt -__v`);
+
+	if (options.sort) {
+		cursor = cursor.sort(options.sort);
+	}
+
+	cursor = cursor.skip(isNaN(skip) ? 0 : Math.abs(skip));
+
+	if (!options.one) {
+		cursor = cursor.limit(isNaN(limit) ? 25 : (Math.abs(limit) || 25 ));
+	}
+
+	return cursor.lean();
 }
 
 /**
@@ -46,6 +54,15 @@ router.get('/meta', function (req, res, next) {
 });
 
 /**
+ * Получить последний матч
+ */
+router.get('/latest', function (req, res, next) {
+	getData({ sort: { id: -1 }, one: true })
+		.then(res.json.bind(res))
+		.catch(next);
+});
+
+/**
  * Получить информацию о матче
  * @param {Object} req
  * @param {Object} req.query
@@ -57,10 +74,8 @@ router.get('/:id', function (req, res, next) {
 		return next(new Error('wrong type of id'));
 	}
 
-	getData({ search: { id: id }, lang: req.query.language })
-		.then(function (data) {
-			return res.json(data ? data[0] : data);
-		})
+	getData({ search: { id: id }, lang: req.query.language, one: true })
+		.then(res.json.bind(res))
 		.catch(next);
 });
 

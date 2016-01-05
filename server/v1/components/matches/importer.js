@@ -80,6 +80,7 @@ function saveStats(statsData, match) {
 						return Stats
 							.create(document)
 							.tap(function (stat) {
+								saveStatId(stat._id);
 								debug(`stats document for player ${player.nickname} and match ${match.id} created`);
 								return player.addStat(stat);
 							});
