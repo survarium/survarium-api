@@ -33,6 +33,11 @@ function tryToShutdown() {
 
 function saveStats(statsData, match) {
 	debug(`saving stats for match ${match.id}`);
+	var statIds = [];
+	function saveStatId(stat) {
+		return statIds.push(stat._id);
+	}
+
 	var promises = [0, 1].reduce(function (stats, teamNum) {
 		var team = statsData[teamNum + 1];
 		if (!team) {
@@ -40,7 +45,7 @@ function saveStats(statsData, match) {
 		}
 		return stats.concat(Object.keys(team).map(function (key) {
 			var playerStats = team[key];
-			return function () {
+			//return function () {
 				return Players
 					.load({ id: playerStats.pid })
 					.then(function (player) {
@@ -79,14 +84,28 @@ function saveStats(statsData, match) {
 								return player.addStat(stat);
 							});
 					});
-			};
+			//};
 		}));
 	}, []);
+
+	/**
+	 * PARALLEL WAY
+	 */
+	return Promise
+		.all(promises)
+		.catch(function (err) {
+			console.error(`${logKey} error happen while creating stat`, err);
+		})
+		.then(function () {
+			return match.update({
+				stats: statIds
+			}).exec().then(function () {
+				debug(`stats refs for match ${match.id} saved`);
+				return match;
+			});
+		});
+
 	return new Promise(function (resolve, reject) {
-		var statIds = [];
-		function saveStatId(stat) {
-			return statIds.push(stat._id);
-		}
 		(function next() {
 			var fn = promises.shift();
 			if (!fn) {
@@ -281,6 +300,24 @@ function load(date) {
 						})
 						.catch(resolve);
 				};
+
+				/**
+				 * PARALLEL WAY
+				 */
+				return Promise.all(ids.map(function (id) {
+					var ts = process.hrtime();
+					return importMatch(id, matches[id])
+						.tap(function (result) {
+							ts = process.hrtime(ts);
+							debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
+							console.log(logKey, id, result.status, new Date(matches[id] * 1000));
+							lastImport = matches[id];
+							if (result.status === 'error') {
+								errors.push({ id: id, error: result.error })
+							}
+						})
+						.catch(reject);
+				})).then(exit).catch(reject);
 
 				/**
 				 * Match import runner
