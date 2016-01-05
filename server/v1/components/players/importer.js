@@ -4,6 +4,7 @@ const debug = require('debug')('importer:players');
 const apiNative = require('../../lib/api-native');
 const cache = require('../../lib/cache');
 const db = require('../../lib/db');
+const utils = require('../../lib/utils');
 const Matches = db.model('Matches');
 const Clans = db.model('Clans');
 
@@ -31,6 +32,8 @@ function fetch(params) {
 
 function assignDataToModel(source, update) {
 	var data = source.userdata;
+	var kills = +data.matches_stats.kills || 0;
+	var dies = +data.matches_stats.dies || 0;
 	var result = {
 		progress: {
 			elo: +data.progress.elo || 0,
@@ -40,8 +43,9 @@ function assignDataToModel(source, update) {
 		total: {
 			matches: +data.matches_stats.matches || 0,
 			victories: +data.matches_stats.victories || 0,
-			kills: +data.matches_stats.kills || 0,
-			dies: +data.matches_stats.dies || 0
+			kills: kills,
+			dies: dies,
+			kd: +utils.kd(kills, dies)
 		}
 	};
 

@@ -56,6 +56,7 @@ const PlayersSchema = new Schema({
 		victories: scoreMicro,
 		kills: scoreMicro,
 		dies: scoreMicro,
+		kd: scoreMicro,
 
 		headshots: scoreMicro,
 		grenadeKills: scoreMicro,

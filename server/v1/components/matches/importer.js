@@ -5,6 +5,7 @@ const Promise = require('bluebird');
 const apiNative = require('../../lib/api-native');
 const cache = require('../../lib/cache');
 const db = require('../../lib/db');
+const utils = require('../../lib/utils');
 const config = require('../../../configs');
 const notifications = require('../../services/telegram/triggers');
 const Matches = db.model('Matches');
@@ -45,6 +46,8 @@ function saveStats(statsData, match) {
 					.then(function (player) {
 						debug(`player ${playerStats.pid} ${player.nickname} loaded`);
 						debug(`creating stats document for player ${player.nickname} and match ${match.id}`);
+						var kills = +playerStats.kill || 0;
+						var dies = +playerStats.die || 0;
 						var document = {
 							date : match.date,
 							match: match._id,
@@ -52,8 +55,9 @@ function saveStats(statsData, match) {
 							player: player._id,
 							team  : teamNum,
 							level : match.level,
-							kills : +playerStats.kill || 0,
-							dies  : +playerStats.die || 0,
+							kills : kills,
+							dies  : dies,
+							kd : +utils.kd(kills, dies),
 							victory: !!+playerStats.victory,
 							score  : +playerStats.score || 0,
 							headshots: +playerStats.headshot_kill || 0,

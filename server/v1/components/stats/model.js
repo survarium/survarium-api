@@ -6,7 +6,8 @@ const Schema = mongoose.Schema;
 
 const scoreMicro = {
 	type: Number,
-	default: 0
+	default: 0,
+	index: true
 };
 
 const StatsSchema = new Schema({
@@ -39,7 +40,11 @@ const StatsSchema = new Schema({
 	score  : scoreMicro,
 	kills  : scoreMicro,
 	dies   : scoreMicro,
-	victory: Boolean,
+	kd     : scoreMicro,
+	victory: {
+		type: Boolean,
+		index: true
+	},
 
 	headshots    : scoreMicro,
 	grenadeKills : scoreMicro,

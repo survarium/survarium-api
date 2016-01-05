@@ -20,5 +20,13 @@ var timeParse = function (date, isUTC) {
 		leadZeros(date[`get${UTC}Seconds`]());
 };
 
+var kdRatio = function (kill, die) {
+	return die ?
+		kill ? (kill / die).toFixed(2) :
+			0:
+		kill;
+};
+
 exports.zeros = leadZeros;
 exports.time  = timeParse;
+exports.kd    = kdRatio;
