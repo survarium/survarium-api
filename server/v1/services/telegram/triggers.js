@@ -13,11 +13,11 @@ var importStatus = (function () {
 	var types = {
 		fatal: {
 			cache: 60 * 30,
-			message: (status, time) => `[${hostname}] Import FATAL on time=${time}.\n${status.error.message}${status.error.path ? ': ' + status.error.path : ''}`
+			message: (status, time) => `[${hostname}] Import FATAL ${time ? 'on time=' + time + ' and ' : ''}id=${status.match}.\n${status.error.message}${status.error.path ? ': ' + status.error.path : ''}`
 		},
 		tooMuchErrors: {
 			cache: 60 * 5,
-			message: (status, time) => `[${hostname}] Import TOO MUCH ERRORS (${status.errors}/${status.total}) on time=${time} and match=${status.lastErrorMatch}.\n${status.lastError.message}${status.lastError.path ? ': ' + status.lastError.path : ''}`
+			message: (status, time) => `[${hostname}] Import TOO MUCH ERRORS (${status.errors}/${status.total}) ${time ? 'on time=' + time + ' and ' : ''}match=${status.lastErrorMatch}.\n${status.lastError.message}${status.lastError.path ? ': ' + status.lastError.path : ''}`
 		},
 		noUpdates: {
 			cache: 60 * 60 * 12,
@@ -33,7 +33,7 @@ var importStatus = (function () {
 
 	return (status) => {
 		var type = types[status.type] || types.unknown;
-		var time = utils.time(new Date(status.ts * 1000));
+		var time = status.ts ? utils.time(new Date(status.ts * 1000)) : false;
 		var message = type.message(status, time);
 		var CacheKey = `${CACHEKEY}:${event}`;
 		return model

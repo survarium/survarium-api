@@ -175,7 +175,7 @@ function saveUnloaded(id, ts) {
 	return MatchesUnloaded
 		.findOrCreate({
 			id: id,
-			date: ts * 1000
+			date: (ts || 0) * 1000
 		})
 		.then(function () {
 			debug(`unloaded match ${id} added`);
@@ -197,7 +197,7 @@ function importMatch(id, ts) {
 		.then(function (match) {
 			if (match) {
 				debug(`match ${id} exists`);
-				return { id: id, status: 'exists' };
+				return { id: id, status: 'exists', match: match };
 			}
 			debug(`loading match ${id} from API`);
 			return apiNative.getMatchStatistic({ id: id }, { delay: apiNative.delay })
@@ -207,9 +207,9 @@ function importMatch(id, ts) {
 						return saveUnloaded(id, ts);
 					}
 					return saveMatch(match)
-						.then(function () {
+						.then(function (doc) {
 							debug(`match ${id} imported`);
-							return { id: id, status: 'added' };
+							return { id: id, status: 'added', match: doc };
 						});
 				});
 		})
@@ -227,16 +227,140 @@ function importMatch(id, ts) {
 }
 
 var lastImport;
+var lastImportMatch;
 var importInProgress;
+
+function loadByID(last) {
+	var matchId = +last.id;
+	console.log(`load at ${new Date()} from match=${matchId}`);
+	var matchesToImport = +process.env.IMPORTER || 50;
+	var matches = [];
+
+	debug(`need to import ${matchesToImport} new matches`);
+
+	return apiNative.getMaxMatchId({}, { delay: apiNative.delay })
+		.then(function (max) {
+			var latestAvailable = +max.max_match_id.api;
+			var latestPossible = matchId + matchesToImport;
+			var length = latestPossible > latestAvailable ?
+				latestAvailable - matchId
+				: matchesToImport;
+
+			for (var i = 1; i <= length; i++) {
+				matches.push(matchId + i);
+			}
+
+			return new Promise(function (resolve, reject) {
+				var errors = [];
+				var exit = function () {
+					debug(`imported ${length} new matches`);
+					/**
+					 * Rollback last import date if amount of errors
+					 * More than 10%
+					 */
+					if (length - errors.length < length * .1) {
+						debug(`too many (${errors.length}) matches import errors in matches.`);
+						let id = matches[0];
+						lastImportMatch = id;
+						debug(`setting lastImport on id=${lastImportMatch}`);
+						cache.hmset(CACHEIMPORTKEY, 'id', id, 'host', config.v1.telegram.hostname)
+							.then(function () {
+								let lastError = errors[errors.length - 1];
+								notifications.importStatus({
+									type: 'tooMuchErrors',
+									errors: errors.length,
+									total: length,
+									id: id,
+									ts: lastImport,
+									lastError: lastError.error,
+									lastErrorMatch: lastError.id
+								});
+								tryToShutdown();
+								return resolve();
+							});
+					}
+
+					let id = matches[length - 1];
+					lastImportMatch = id;
+					debug(`setting lastImport id=${id}`);
+					return cache
+						.hmset(CACHEIMPORTKEY, 'id', id, 'host', config.v1.telegram.hostname)
+						.then(function () {
+							tryToShutdown();
+							/**
+							 * If match list is full, load its remaining
+							 */
+							if (matchesToImport === length) {
+								debug(`need to import next portion of new matches`);
+								return loadByID({ id: id })
+									.then(resolve)
+									.catch(reject);
+							}
+							return resolve();
+						})
+						.catch(resolve);
+				};
+
+				/**
+				 * PARALLEL WAY
+				 */
+				/*return Promise.all(matches.map(function (id) {
+					var ts = process.hrtime();
+					return importMatch(id)
+						.tap(function (result) {
+							ts = process.hrtime(ts);
+							debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
+							console.log(`${logKey} ${id} ${result.status}`);
+							if (result.status === 'error') {
+								errors.push({ id: id, error: result.error })
+							}
+						})
+						.catch(reject);
+				})).then(exit).catch(reject);*/
+
+				/**
+				 * Match import runner
+				 * Each API operation must be delayed to fit max 5 req/sec.
+				 *
+				 * TODO: change lastImport to real match date
+				 */
+				var i = 0;
+				var next = function () {
+					setTimeout(function () {
+						var id = matches[i++];
+						if (!id) {
+							return exit();
+						}
+						var ts = process.hrtime();
+						return importMatch(id)
+							.tap(function (result) {
+								ts = process.hrtime(ts);
+								debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
+								console.log(logKey, id, result.status);
+								lastImport = matches[id];
+								if (result.status === 'error') {
+									errors.push({ id: id, error: result.error })
+								}
+							})
+							.then(next)
+							.catch(reject);
+					}, apiNative.delay);
+				};
+				return next();
+			});
+		});
+}
 
 /**
  * Load a pack of matches available from date
- * @param {Number} date
+ * @param {Object} last
+ * @param {Number} last.ts
  * @returns {Promise}
  */
-function load(date) {
+function loadByTS(last) {
+	var date = last.ts;
 	console.log(`load at ${new Date()} from ts=${date} (${new Date(date * 1000)})`);
-	var matchesToImport = +process.env.IMPORTER || 30;
+	var matchesToImport = +process.env.IMPORTER || 50;
 	/**
 	 * Fetches list of matches available from date
 	 */
@@ -298,7 +422,7 @@ function load(date) {
 							 */
 							if (matchesToImport === length) {
 								debug(`need to import next portion of new matches`);
-								return load(lastImport)
+								return loadByTS({ ts: lastImport, match: id })
 									.then(resolve)
 									.catch(reject);
 							}
@@ -328,6 +452,8 @@ function load(date) {
 				/**
 				 * Match import runner
 				 * Each API operation must be delayed to fit max 5 req/sec.
+				 *
+				 * TODO: change lastImport to real match date
 				 */
 				var next = function () {
 					//setTimeout(function () {
@@ -357,7 +483,7 @@ function load(date) {
 
 var startOfTimes = {
 	date: new Date(process.env.IMPORTER_START || '2015-04-30T21:08:03Z'),
-	match: 2253096
+	match: +process.env.IMPORTER_MATCH || 2253096
 };
 
 /**
@@ -365,43 +491,21 @@ var startOfTimes = {
  * @returns {Number}
  */
 function getLastImport() {
-	return lastImport ?
-		Promise.resolve(lastImport) :
+	return (lastImport || lastImportMatch)?
+		Promise.resolve({
+			ts: lastImport,
+			id: lastImportMatch
+		}) :
 		cache
 			.hgetall(CACHEIMPORTKEY)
-			.catch(function (err) {
-				/**
-				 * STRING -> HASH KEY Migration
-				 */
-				if (err.message === 'WRONGTYPE Operation against a key holding the wrong kind of value') {
-					return cache
-						.get(CACHEIMPORTKEY)
-						.tap(function () {
-							return cache.del(CACHEIMPORTKEY);
-						})
-						.tap(function (result) {
-							return cache.hset(CACHEIMPORTKEY, 'ts', result);
-						})
-						.then(function (result) {
-							return { ts: result };
-						});
-				}
-				throw err;
-			})
 			.then(function (result) {
-				if (result.ts) {
-					return lastImport = result.ts;
+				if (result.ts && result.id) {
+					lastImport = result.ts;
+					lastImportMatch = result.id;
+					return result;
 				}
-				return startOfTimes.date.getTime() / 1000 >>> 0;
+				return { ts: startOfTimes.date.getTime() / 1000 >>> 0, id: startOfTimes.match };
 			});
-		/*Matches
-			.findOne({}, 'date')
-			.sort({ id: -1 })
-			.lean()
-			.then(function (result) {
-				var date = result ? result.date : startOfTimes.date;
-				return date.getTime() / 1000 >>> 0;
-			})*/
 }
 
 /**
@@ -421,10 +525,10 @@ function loader() {
 			return cache.set(cachekey, process.pid, 'EX', EXPIRE)
 				.then(function () {
 					return getLastImport()
-						.tap(function (date) {
-							console.log('loader date', date);
+						.tap(function (last) {
+							console.log(`loader date ts=${last.ts} match=${last.id}`);
 						})
-						.then(load)
+						.then(loadByID)
 						.tap(cache.del.bind(cache, cachekey))
 						.tap(function () {
 							console.info(logKey, 'loaded');
@@ -433,6 +537,7 @@ function loader() {
 							!err || !err.handled && notifications.importStatus({
 								type: 'fatal',
 								ts: lastImport,
+								match: lastImportMatch,
 								error: err
 							});
 							console.error(logKey, 'cannot make import', err);
