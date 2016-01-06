@@ -326,7 +326,7 @@ function loadByID(last) {
 				 */
 				var i = 0;
 				var next = function () {
-					setTimeout(function () {
+					//setTimeout(function () {
 						var id = matches[i++];
 						if (!id) {
 							return exit();
@@ -344,7 +344,7 @@ function loadByID(last) {
 							})
 							.then(next)
 							.catch(reject);
-					}, apiNative.delay);
+					//}, apiNative.delay);
 				};
 				return next();
 			});
