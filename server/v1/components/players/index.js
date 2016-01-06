@@ -37,7 +37,7 @@ function getData(options) {
 			.populate([
 				{
 					path: 'stats',
-					select: '-createdAt -updatedAt -__v -ammunition -team -player -_id -clan',
+					select: '-createdAt -updatedAt -__v -team -player -_id -clan',
 					options: {
 						sort: { date: options.statsort === 'asc' ? 1 : -1 },
 						limit: Math.min(stats, 50),
@@ -123,7 +123,7 @@ router.get('/:search', function (req, res, next) {
 			{
 				path: 'stats',
 				model: 'Stats',
-				select: '-createdAt -updatedAt -__v -ammunition -team -player -_id -clan',
+				select: '-createdAt -updatedAt -__v -team -player -_id -clan',
 				options: {
 					sort: { _id: -1 },
 					limit: 10
