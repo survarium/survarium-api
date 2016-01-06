@@ -94,7 +94,10 @@ function saveStats(statsData, match) {
 	 */
 	if (process.env.IMPORTER_II_PLAYERS) {
 		return Promise
-			.all(promises)
+			.all(promises
+				.map(function (promise) {
+					return promise();
+				}))
 			.catch(function (err) {
 				console.error(`${logKey} error happen while creating stat`, err);
 			})
