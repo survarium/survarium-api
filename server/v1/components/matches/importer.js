@@ -45,7 +45,7 @@ function saveStats(statsData, match) {
 		}
 		return stats.concat(Object.keys(team).map(function (key) {
 			var playerStats = team[key];
-			//return function () {
+			return function () {
 				return Players
 					.load({ id: playerStats.pid })
 					.then(function (player) {
@@ -85,14 +85,14 @@ function saveStats(statsData, match) {
 								return player.addStat(stat);
 							});
 					});
-			//};
+			};
 		}));
 	}, []);
 
 	/**
 	 * PARALLEL WAY
 	 */
-	return Promise
+	/*return Promise
 		.all(promises)
 		.catch(function (err) {
 			console.error(`${logKey} error happen while creating stat`, err);
@@ -104,7 +104,7 @@ function saveStats(statsData, match) {
 				debug(`stats refs for match ${match.id} saved`);
 				return match;
 			});
-		});
+		});*/
 
 	return new Promise(function (resolve, reject) {
 		(function next() {
