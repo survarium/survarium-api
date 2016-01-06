@@ -4,6 +4,7 @@ const router  = require('express').Router();
 const model   = require('./model');
 const ctl     = require('./controller');
 const config  = require('../../../configs');
+const libLang = require('../../lib/lang');
 
 if (config.v1.importer) {
 	process.nextTick(require.bind(null, './importer'));
@@ -16,7 +17,7 @@ function getData(options) {
 	var limit = Number(options.limit);
 
 	var cursor = model[options.one ? 'findOne' : 'find'](options.search || {},
-		`-_id -updatedAt -createdAt -__v${!options.populate ? ' -map -stats' : ''}`);
+		`-_id -updatedAt -createdAt -__v${!options.populate ? ' -stats' : ''}`);
 
 	cursor = cursor.sort(options.sort || { id: -1 });
 
@@ -26,21 +27,20 @@ function getData(options) {
 		cursor = cursor.limit(isNaN(limit) ? 25 : (Math.abs(limit) || 25 ));
 	}
 
+	cursor = cursor.populate({
+		path: 'map',
+		select: (options.lang ? libLang.select(options.lang): '') + ' -createdAt -updatedAt -__v -_id'
+	});
+
 	if (options.populate) {
-		cursor.populate([
-			{
-				path: 'map',
-				select: '-createdAt -updatedAt -__v -_id'
-			},
-			{
-				path: 'stats',
-				select: '-createdAt -updatedAt -__v -_id -clan -date -map -match -level',
-				populate: {
-					path: 'player',
-					select: '-createdAt -updatedAt -__v -_id -ammunition -skills -stats -clan'
-				}
+		cursor.populate({
+			path: 'stats',
+			select: '-createdAt -updatedAt -__v -_id -clan -date -map -match -level',
+			populate: {
+				path: 'player',
+				select: '-createdAt -updatedAt -__v -_id -ammunition -skills -stats -clan'
 			}
-		]);
+		});
 	}
 
 	return cursor.lean();
@@ -50,6 +50,7 @@ function getData(options) {
  * Получить информацию о матчах
  * @param {Object}  req
  * @param {Object}  req.query
+ * @param {String}  [req.query.lang]
  * @param {Number}  [req.query.level] уровень матчей
  * @param {Boolean} [req.query.slim]  не загружать вложенные документы
  */
@@ -59,7 +60,7 @@ router.get('/', function (req, res, next) {
 	if (/^\d{1,2}$/.test(query.level)) {
 		search.level = +query.level;
 	}
-	getData({ search: search, skip: query.skip, limit: query.limit, populate: !query.slim })
+	getData({ search: search, lang: query.lang, skip: query.skip, limit: query.limit, populate: !!!query.slim })
 		.then(res.json.bind(res))
 		.catch(next);
 });
@@ -78,6 +79,7 @@ router.get('/meta', function (req, res, next) {
  * Получить последний матч
  * @param {Object}  req
  * @param {Object}  req.query
+ * @param {String}  [req.query.lang]
  * @param {Number}  [req.query.level] уровень матча
  * @param {Boolean} [req.query.slim]  не загружать вложенные документы
  */
@@ -87,7 +89,7 @@ router.get('/latest', function (req, res, next) {
 	if (/^\d{1,2}$/.test(query.level)) {
 		search.level = +query.level;
 	}
-	getData({ search: search, sort: { id: -1 }, one: true, populate: !query.slim })
+	getData({ search: search, lang: query.lang, sort: { id: -1 }, one: true, populate: !!!query.slim })
 		.then(res.json.bind(res))
 		.catch(next);
 });
@@ -96,6 +98,7 @@ router.get('/latest', function (req, res, next) {
  * Получить информацию о матче
  * @param {Object}  req
  * @param {Object}  req.query
+ * @param {String}  [req.query.lang]
  * @param {Boolean} [req.query.slim]  не загружать вложенные документы
  */
 router.get('/:id', function (req, res, next) {
@@ -105,7 +108,7 @@ router.get('/:id', function (req, res, next) {
 		return next(new Error('wrong type of id'));
 	}
 
-	getData({ search: { id: id }, one: true, populate: !query.slim })
+	getData({ search: { id: id }, lang: query.lang, one: true, populate: !!!query.slim })
 		.then(res.json.bind(res))
 		.catch(next);
 });

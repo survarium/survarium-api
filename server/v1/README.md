@@ -31,7 +31,9 @@ Must be running in single process.
 * `DEBLOCK` – remove import locks (for unwanted cluster mode)
 * `IMPORTER` – amount of matches to import in each data slice
 * `IMPORTER_START` - start date of import. e.g: `2015-11-03T18:07:00Z`
-* `IMPORT_MATCH` – start of match import
+* `IMPORTER_MATCH` – start of match import
+* `IMPORTER_II_MATCHES` – import matches in parallel mode
+* `IMPORTER_II_PLAYERS` – import players in parallel mode
 * `CACHE_SFX` – suffix for slice caching
 
 ### TELEGRAM

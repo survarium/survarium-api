@@ -92,20 +92,25 @@ function saveStats(statsData, match) {
 	/**
 	 * PARALLEL WAY
 	 */
-	/*return Promise
-		.all(promises)
-		.catch(function (err) {
-			console.error(`${logKey} error happen while creating stat`, err);
-		})
-		.then(function () {
-			return match.update({
-				stats: statIds
-			}).exec().then(function () {
-				debug(`stats refs for match ${match.id} saved`);
-				return match;
+	if (process.env.IMPORTER_II_PLAYERS) {
+		return Promise
+			.all(promises)
+			.catch(function (err) {
+				console.error(`${logKey} error happen while creating stat`, err);
+			})
+			.then(function () {
+				return match.update({
+					stats: statIds
+				}).exec().then(function () {
+					debug(`stats refs for match ${match.id} saved`);
+					return match;
+				});
 			});
-		});*/
+	}
 
+	/**
+	 * STACK WAY
+	 */
 	return new Promise(function (resolve, reject) {
 		(function next() {
 			var fn = promises.shift();
@@ -301,24 +306,28 @@ function loadByID(last) {
 						.catch(resolve);
 				};
 
-				/**
-				 * PARALLEL WAY
-				 */
-				/*return Promise.all(matches.map(function (id) {
-					var ts = process.hrtime();
-					return importMatch(id)
-						.tap(function (result) {
-							ts = process.hrtime(ts);
-							debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
-							console.log(`${logKey} ${id} ${result.status}`);
-							if (result.status === 'error') {
-								errors.push({ id: id, error: result.error })
-							}
-						})
-						.catch(reject);
-				})).then(exit).catch(reject);*/
+				if (process.env.IMPORTER_II_MATCHES) {
+					/**
+					 * PARALLEL WAY
+					 */
+					return Promise.all(matches.map(function (id) {
+						var ts = process.hrtime();
+						return importMatch(id)
+							.tap(function (result) {
+								ts = process.hrtime(ts);
+								debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
+								console.log(`${logKey} ${id} ${result.status}`);
+								if (result.status === 'error') {
+									errors.push({ id: id, error: result.error })
+								}
+							})
+							.catch(reject);
+					})).then(exit).catch(reject);
+				}
 
 				/**
+				 * STACK WAY
+				 *
 				 * Match import runner
 				 * Each API operation must be delayed to fit max 5 req/sec.
 				 *
@@ -326,25 +335,23 @@ function loadByID(last) {
 				 */
 				var i = 0;
 				var next = function () {
-					//setTimeout(function () {
-						var id = matches[i++];
-						if (!id) {
-							return exit();
-						}
-						var ts = process.hrtime();
-						return importMatch(id)
-							.tap(function (result) {
-								ts = process.hrtime(ts);
-								debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
-								console.log(logKey, id, result.status);
-								lastImport = matches[id];
-								if (result.status === 'error') {
-									errors.push({ id: id, error: result.error })
-								}
-							})
-							.then(next)
-							.catch(reject);
-					//}, apiNative.delay);
+					var id = matches[i++];
+					if (!id) {
+						return exit();
+					}
+					var ts = process.hrtime();
+					return importMatch(id)
+						.tap(function (result) {
+							ts = process.hrtime(ts);
+							debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
+							console.log(logKey, id, result.status);
+							lastImport = matches[id];
+							if (result.status === 'error') {
+								errors.push({ id: id, error: result.error })
+							}
+						})
+						.then(next)
+						.catch(reject);
 				};
 				return next();
 			});
@@ -431,25 +438,29 @@ function loadByTS(last) {
 						.catch(resolve);
 				};
 
-				/**
-				 * PARALLEL WAY
-				 */
-				return Promise.all(ids.map(function (id) {
-					var ts = process.hrtime();
-					return importMatch(id, matches[id])
-						.tap(function (result) {
-							ts = process.hrtime(ts);
-							debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
-							console.log(logKey, id, result.status, new Date(matches[id] * 1000));
-							lastImport = matches[id];
-							if (result.status === 'error') {
-								errors.push({ id: id, error: result.error })
-							}
-						})
-						.catch(reject);
-				})).then(exit).catch(reject);
+				if (process.env.IMPORTER_II_MATCHES) {
+					/**
+					 * PARALLEL WAY
+					 */
+					return Promise.all(ids.map(function (id) {
+						var ts = process.hrtime();
+						return importMatch(id, matches[id])
+							.tap(function (result) {
+								ts = process.hrtime(ts);
+								debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
+								console.log(logKey, id, result.status, new Date(matches[id] * 1000));
+								lastImport = matches[id];
+								if (result.status === 'error') {
+									errors.push({ id: id, error: result.error })
+								}
+							})
+							.catch(reject);
+					})).then(exit).catch(reject);
+				}
 
 				/**
+				 * STACK WAY
+				 *
 				 * Match import runner
 				 * Each API operation must be delayed to fit max 5 req/sec.
 				 *
