@@ -54,17 +54,6 @@ const StatsSchema = new Schema({
 	boxesBringed : scoreMicro,
 	artefactUses : scoreMicro,
 
-	ammunition: [{
-		slot: {
-			type: Schema.Types.ObjectId,
-			ref : 'Slots'
-		},
-		item: {
-			type: Schema.Types.ObjectId,
-			ref : 'Items'
-		},
-		amount: Number
-	}],
 	deletedAt : Date
 }, { collection: 'statistics' });
 

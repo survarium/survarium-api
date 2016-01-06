@@ -72,5 +72,5 @@ db.once('connected', function () {
 				status(true);
 				colInfo.kd(collection, data, receiver);
 			});
-	})
+	});
 });
