@@ -79,8 +79,8 @@ function saveStats(statsData, match) {
 
 						return Stats
 							.create(document)
+							.tap(saveStatId)
 							.tap(function (stat) {
-								saveStatId(stat._id);
 								debug(`stats document for player ${player.nickname} and match ${match.id} created`);
 								return player.addStat(stat);
 							});
@@ -118,7 +118,7 @@ function saveStats(statsData, match) {
 					return resolve(match);
 				});
 			}
-			fn().tap(saveStatId).tap(next).catch(reject);
+			fn().tap(next).catch(reject);
 		})();
 	});
 }
