@@ -268,9 +268,11 @@ function load(date) {
 					 * More than 10%
 					 */
 					if (length - errors.length < length * .1) {
-						debug(`too many (${errors.length}) matches import errors in matches`);
-						lastImport = matches[ids[0]];
-						cache.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', ids[0], 'host', config.v1.telegram.hostname);
+						debug(`too many (${errors.length}) matches import errors in matches.`);
+						let id = ids[0];
+						lastImport = matches[id];
+						debug(`setting lastImport on ts=${lastImport} from id=${id}`);
+						cache.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', id, 'host', config.v1.telegram.hostname);
 						let lastError = errors[errors.length - 1];
 						notifications.importStatus({
 							type: 'tooMuchErrors',
@@ -284,8 +286,11 @@ function load(date) {
 						return resolve();
 					}
 
+					let id = ids[length - 1];
+					lastImport = matches[id];
+					debug(`setting lastImport on ts=${lastImport} from id=${id}`);
 					return cache
-						.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', ids[length - 1], 'host', config.v1.telegram.hostname)
+						.hmset(CACHEIMPORTKEY, 'ts', lastImport, 'id', id, 'host', config.v1.telegram.hostname)
 						.then(function () {
 							tryToShutdown();
 							/**
