@@ -11,6 +11,7 @@
 * `NODE_WORKERS` – amount of workers to spawn
 * `SV_API_PUBKEY` – native api public key
 * `SV_API_PRIVKEY` – native api private key
+* `SV_API_RETRIES` – amount of retries in case of network error
 * `DEBUG` – scope for debug logging. e.g `importer:*`
 * `DELAY_MIN` – min delay for native api request
 * `DELAY_MAX` – max delay for native api request

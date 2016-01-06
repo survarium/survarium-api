@@ -12,7 +12,8 @@ module.exports = {
 			'english',
 		    'russian'
 		],
-		langDefault: 'english'
+		langDefault: 'english',
+		retries: 2 || process.env.SV_API_RETRIES
 	},
 
 	workers: +process.env.NODE_WORKERS || require('os').cpus().length,

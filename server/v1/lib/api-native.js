@@ -1,6 +1,6 @@
 const config = require('../../configs');
 const api = new (require('survarium-api-client').v0)({ keyPriv: config.api.keys.private, keyPub: config.api.keys.public }, {
-	retries: 25
+	retries: config.api.retries
 });
 
 const delay = (function () {

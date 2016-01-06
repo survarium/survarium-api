@@ -27,7 +27,7 @@ function getData(options) {
 	var stats = options.stats !== undefined ? (Math.abs(Number(options.stats)) || 0) : 25;
 
 	var query = model
-		.find(options.search || {}, `-_id ${!stats ? '-stats' : ''} -__v -clan_meta -createdAt -updatedAt`)
+		.find(options.search || {}, `-_id ${!stats ? '-stats' : ''} -__v -clan_meta -skills -ammunition -createdAt -updatedAt`)
 		.sort(sort)
 		.skip(Math.abs(Number(options.skip)) || 0)
 		.limit(Math.min(Math.abs(Number(options.limit)) || 25, 50));
@@ -172,7 +172,7 @@ router.get('/:search', function (req, res, next) {
 	}
 
 	model
-		.findOne(search, `-__v -clan_meta ${!stats ? '-stats' : ''} -_id -createdAt -updatedAt`)
+		.findOne(search, `-__v -clan_meta ${!stats ? '-stats' : ''} -_id -createdAt -updatedAt -skills -ammunition`)
 		.populate(population)
 		.lean()
 		.exec()
