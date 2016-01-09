@@ -99,6 +99,7 @@ router.get('/', function (req, res, next) {
  * @param {Object} req,
  * @param {Object} req.query,
  * @param {*}      [req.query.byName]           Force to search by digit-only nickname.
+ * @param {*}      [req.query.fullStats]        Fetch all stats.
  * @param {Number} [req.query.stats=25]         Amount of stats (max 100).
  * @param {String} [req.query.statsort=desc]    Sort destination for stats [asc,desc].
  * @param {String} [req.query.statskip=0]       Amount of skipped stats elems.
@@ -114,7 +115,8 @@ router.get('/:search', function (req, res, next) {
 		search = { nickname: searchParam };
 	}
 
-	var stats = query.stats !== undefined ? (Math.abs(Number(query.stats)) || 0) : 25;
+	var stats = query.fullStats ? true :
+		query.stats !== undefined ? (Math.abs(Number(query.stats)) || 0) : 25;
 
 	var population = [{
 		path: 'clan',
@@ -125,7 +127,7 @@ router.get('/:search', function (req, res, next) {
 				model: 'Stats',
 				select: '-createdAt -updatedAt -__v -team -player -_id -clan',
 				options: {
-					sort: { _id: -1 },
+					sort: { date: -1 },
 					limit: 10
 				},
 				populate: [
@@ -155,8 +157,8 @@ router.get('/:search', function (req, res, next) {
 			select: '-createdAt -updatedAt -__v -ammunition -team -player -_id',
 			options: {
 				sort: { date: query.statsort === 'asc' ? 1 : -1 },
-				limit: Math.min(stats, 100),
-				skip: Math.abs(Number(query.statskip)) || 0
+				limit: query.fullStats ? undefined : Math.min(stats, 100),
+				skip: query.fullStats ? 0 : Math.abs(Number(query.statskip)) || 0
 			},
 			populate: [
 				{

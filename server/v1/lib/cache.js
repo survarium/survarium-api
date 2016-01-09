@@ -11,9 +11,11 @@ const redis = new Redis({
 	suffix: config.v1.cache.sfx
 });
 
+const redisHost = redis.connector.options.host + ':' + redis.connector.options.port;
+
 redis
 	.on('ready', function () {
-		console.info('redis connected');
+		console.info('redis connected', redisHost);
 	})
 	.on('error', function (err) {
 		console.error('redis error', err);
