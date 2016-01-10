@@ -20,7 +20,7 @@ function getData(options) {
 		cap: 'total.pointCaptures',
 		box: 'total.boxesBringed',
 		au: 'total.artefactUses'
-	}[options.sortBy] || 'id';
+	}[options.sortBy] || 'progress.experience';
 	var sort = {};
 	sort[sortBy] = options.sort === 'asc' ? 1 : -1;
 
@@ -33,16 +33,12 @@ function getData(options) {
 		.limit(Math.min(Math.abs(Number(options.limit)) || 25, 50));
 
 	if (stats) {
+		query = query.slice('stats', Math.min(stats, 25));
 		query = query
 			.populate([
 				{
 					path: 'stats',
 					select: '-createdAt -updatedAt -__v -team -player -_id -clan',
-					options: {
-						sort: { date: options.statsort === 'asc' ? 1 : -1 },
-						limit: Math.min(stats, 50),
-						skip: Math.abs(Number(options.statskip)) || 0
-					},
 					populate: [
 						{
 							path: 'map',
@@ -79,8 +75,6 @@ function getData(options) {
  * @param {Number} [req.query.limit=25          Limit of elems (max 50).
  * @param {String} [req.query.sortBy=id]        Sort criteria [id,exp,kill,die,win,match,hs,gk,mk,ak,cap,box,au].
  * @param {Number} [req.query.stats=25]         Amount of stats (max 50).
- * @param {String} [req.query.statsort=desc]    Sort destination for stats [asc,desc].
- * @param {String} [req.query.statskip=0]       Amount of skipped stats elems.
  */
 router.get('/', function (req, res, next) {
 	var query = req.query;
@@ -120,7 +114,7 @@ router.get('/:search', function (req, res, next) {
 
 	var population = [{
 		path: 'clan',
-		select: '-_id -createdAt -updatedAt -__v -players._id',
+		select: '-_id -createdAt -updatedAt -__v -players -stats -total'/*,
 		populate: [
 			{
 				path: 'stats',
@@ -148,7 +142,7 @@ router.get('/:search', function (req, res, next) {
 				model: model,
 				select: '-createdAt -updatedAt -__v -_id -stats -ammunition -clan -clan_meta -skills'
 			}
-		]
+		]*/
 	}];
 
 	if (stats) {
