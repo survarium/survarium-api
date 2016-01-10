@@ -39,7 +39,7 @@ function saveStats(statsData, match) {
 	}
 
 	var promises = [0, 1].reduce(function (stats, teamNum) {
-		var team = statsData[teamNum + 1];
+		var team = statsData[teamNum];
 		if (!team) {
 			return stats;
 		}
