@@ -92,7 +92,14 @@ router.get('/:abbr', function (req, res, next) {
 	});
 
 	getData(params)
-		.then(res.json.bind(res))
+		.then(function (result) {
+			if (!result) {
+				var error = new Error(`no clan ${abbr} found`);
+				error.status = 404;
+				return next(error);
+			}
+			res.json(result);
+		})
 		.catch(next);
 });
 

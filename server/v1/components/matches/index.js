@@ -90,7 +90,14 @@ router.get('/latest', function (req, res, next) {
 		search.level = +query.level;
 	}
 	getData({ search: search, lang: query.lang, sort: { id: -1 }, one: true, populate: !!!query.slim })
-		.then(res.json.bind(res))
+		.then(function (result) {
+			if (!result) {
+				var error = new Error(`no latest match found`);
+				error.status = 404;
+				return next(error);
+			}
+			res.json(result);
+		})
 		.catch(next);
 });
 
@@ -109,7 +116,14 @@ router.get('/:id', function (req, res, next) {
 	}
 
 	getData({ search: { id: id }, lang: query.lang, one: true, populate: !!!query.slim })
-		.then(res.json.bind(res))
+		.then(function (result) {
+			if (!result) {
+				var error = new Error(`no match ${id} found`);
+				error.status = 404;
+				return next(error);
+			}
+			res.json(result);
+		})
 		.catch(next);
 });
 
