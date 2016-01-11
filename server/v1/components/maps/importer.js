@@ -45,30 +45,32 @@ function saveDict(lang, data) {
 	});
 }
 
-function loadDict(lang) {
-	const cachekey = CACHEKEY + lang;
-	return cache
-		.get(cachekey)
-		.then(function (loading) {
-			if (loading) {
-				return;
-			}
-			return cache.set(cachekey, true, 'EX', EXPIRE)
-				.then(function () {
-					return apiNative.getMapsDict({ language: lang })
-						.then(saveDict.bind(null, lang))
-						.then(function () {
-							console.info(logKey, 'loaded', lang);
-						})
-						.catch(function (err) {
-							console.error(logKey, 'cannot load', lang, err);
-							setTimeout(loadDict.bind(loadDict, lang), 1000 * 60 * 5);
-							return cache.del(cachekey);
-						});
-				})
-				.catch(console.error.bind(console, logKey, 'cannot set cache status'));
-		})
-		.catch(console.error.bind(console, logKey, 'cannot get cache status'));
+function loadDict(lang, i) {
+	setTimeout(function () {
+		const cachekey = CACHEKEY + lang;
+		return cache
+			.get(cachekey)
+			.then(function (loading) {
+				if (loading) {
+					return;
+				}
+				return cache.set(cachekey, true, 'EX', EXPIRE)
+					.then(function () {
+						return apiNative.getMapsDict({ language: lang })
+							.then(saveDict.bind(null, lang))
+							.then(function () {
+								console.info(logKey, 'loaded', lang);
+							})
+							.catch(function (err) {
+								console.error(logKey, 'cannot load', lang, err);
+								setTimeout(loadDict.bind(loadDict, lang), 1000 * 60 * 5);
+								return cache.del(cachekey);
+							});
+					})
+					.catch(console.error.bind(console, logKey, 'cannot set cache status'));
+			})
+			.catch(console.error.bind(console, logKey, 'cannot get cache status'));
+	}, i * 500);
 }
 
 const loadAllForms = function () {
