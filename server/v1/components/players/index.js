@@ -33,7 +33,7 @@ function getData(options) {
 		.limit(Math.min(Math.abs(Number(options.limit)) || 25, 50));
 
 	if (stats) {
-		query = query.slice('stats', Math.min(stats, 25));
+		query = query.slice('stats', -Math.min(stats, 25));
 		query = query
 			.populate([
 				{

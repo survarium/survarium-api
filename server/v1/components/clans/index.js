@@ -23,7 +23,7 @@ function getData(options) {
 	}
 
 	if (!options.slim) {
-		options.stats !== -1  && (cursor = cursor.slice('stats', options.one ? stats : Math.min(stats, 5)));
+		options.stats !== -1  && (cursor = cursor.slice('stats', -(options.one ? stats : Math.min(stats, 5))));
 		cursor = cursor.populate([
 			{
 				path: 'players.player',
