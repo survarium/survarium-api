@@ -21,6 +21,7 @@
 * `DB_PORT` - database port
 * `TELEGRAM_HOSTNAME` – server name for pretty bot notifications
 * `TELEGRAM_TOKEN` – bot token
+* `CORS_ORIGIN` – CORS-allow-origin
 
 ### IMPORTER
 Must be running in single process.

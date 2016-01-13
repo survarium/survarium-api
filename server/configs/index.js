@@ -18,6 +18,10 @@ module.exports = {
 
 	workers: +process.env.NODE_WORKERS || require('os').cpus().length,
 
+	cors: {
+		origin: process.env.CORS_ORIGIN || 'https://survarium.pro'
+	},
+
 	v1: {
 		db: {
 			uri: `mongodb://
