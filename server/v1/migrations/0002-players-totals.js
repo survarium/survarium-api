@@ -34,7 +34,7 @@ db.once('connected', function () {
 	let statistics = db.collection('statistics');
 
 	status(true);
-	statistics.aggregate([{
+	var aggregator = statistics.aggregate([{
 		$group: {
 			_id          : "$player",
 			artefactUses : { $sum: "$artefactUses" },
@@ -45,12 +45,9 @@ db.once('connected', function () {
 			grenadeKills : { $sum: "$grenadeKills" },
 			headshots    : { $sum: "$headshots" }
 		}
-	}], function (err, result) {
-		if (err) {
-			status();
-			return console.error(err);
-		}
-		result.forEach(function (total) {
+	}], { cursor: { batchSize: 1 } });
+
+	function row(total) {
 			status(true);
 			players.update({ _id: total._id }, {
 				$set: {
@@ -68,7 +65,11 @@ db.once('connected', function () {
 					return console.error('player', err);
 				}
 			});
+	}
+
+	aggregator
+		.on('data', row)
+		.once('end', function () {
+			status();
 		});
-		status();
-	});
 });
