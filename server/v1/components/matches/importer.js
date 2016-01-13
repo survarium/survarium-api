@@ -131,6 +131,10 @@ function saveStats(statsData, match) {
 	});
 }
 
+var lastImport;
+var lastImportMatch;
+var importInProgress;
+
 /**
  * Match document creator
  * And related models fill trigger
@@ -167,6 +171,7 @@ function saveMatch(data) {
 			})
 			.tap(function (match) {
 				debug(`document for match ${id} created`);
+				lastImport = match.date / 1000 >>> 0;
 				return saveStats(statsData.accounts, match);
 			});
 	});
@@ -234,10 +239,6 @@ function importMatch(id, ts) {
 		});
 }
 
-var lastImport;
-var lastImportMatch;
-var importInProgress;
-
 function loadByID(last) {
 	var matchId = +last.id;
 	console.log(`load at ${new Date()} from match=${matchId}`);
@@ -270,8 +271,8 @@ function loadByID(last) {
 						debug(`too many (${errors.length}) matches import errors in matches.`);
 						let id = matches[0];
 						lastImportMatch = id;
-						debug(`setting lastImport on id=${lastImportMatch}`);
-						cache.hmset(CACHEIMPORTKEY, 'id', id, 'host', config.v1.telegram.hostname)
+						debug(`setting lastImport id=${lastImportMatch}`);
+						cache.hmset(CACHEIMPORTKEY, 'id', id, 'ts', lastImport,'host', config.v1.telegram.hostname)
 							.then(function () {
 								let lastError = errors[errors.length - 1];
 								notifications.importStatus({
@@ -292,7 +293,7 @@ function loadByID(last) {
 					lastImportMatch = id;
 					debug(`setting lastImport id=${id}`);
 					return cache
-						.hmset(CACHEIMPORTKEY, 'id', id, 'host', config.v1.telegram.hostname)
+						.hmset(CACHEIMPORTKEY, 'id', id, 'ts', lastImport, 'host', config.v1.telegram.hostname)
 						.then(function () {
 							tryToShutdown();
 							/**
@@ -348,7 +349,6 @@ function loadByID(last) {
 							ts = process.hrtime(ts);
 							debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
 							console.log(logKey, id, result.status);
-							lastImport = matches[id];
 							if (result.status === 'error') {
 								errors.push({ id: id, error: result.error })
 							}

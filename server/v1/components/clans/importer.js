@@ -93,7 +93,7 @@ function load(params) {
 									throw err;
 								}):
 							self
-								.update({ id: id }, { $set: assignDataToModel(fetched, clan) })
+								.update({ id: id }, { $set: assignDataToModel(fetched, clan), $currentDate: { updatedAt: true } })
 								.exec()
 								.then(function () {
 									return clan;

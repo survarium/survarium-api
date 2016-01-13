@@ -46,12 +46,12 @@ function assignDataToModel(source, update) {
 			level: +data.progress.level || 0,
 			experience: +data.progress.experience || 0
 		},
-		total: {
-			matches: +data.matches_stats.matches || 0,
-			victories: +data.matches_stats.victories || 0,
-			kills: kills,
-			dies: dies,
-			kd: +utils.kd(kills, dies)
+		$set: {
+			'total.matches': +data.matches_stats.matches || 0,
+			'total.victories': +data.matches_stats.victories || 0,
+			'total.kills': kills,
+			'total.dies': dies,
+			'total.kd': +utils.kd(kills, dies)
 		},
 		skills: Object.keys(skills).map(function (id) {
 			return {
@@ -204,7 +204,7 @@ function load(params) {
 										}
 										throw err;
 									}):
-								self.update({ id: id },  { $set: assignDataToModel(fetched, player) }).exec()
+								self.update({ id: id },  { $set: assignDataToModel(fetched, player), $currentDate: { updatedAt: true }} ).exec()
 									.then(function () {
 										debug(`player ${id} updated`);
 										return player;
