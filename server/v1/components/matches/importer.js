@@ -208,7 +208,7 @@ function importMatch(id, ts) {
 				return { id: id, status: 'exists', match: match };
 			}
 			debug(`loading match ${id} from API`);
-			return apiNative.getMatchStatistic({ id: id }, { delay: apiNative.delay })
+			return apiNative.getMatchStatistic({ id: id })
 				.then(function (match) {
 					if (!match) {
 						debug(`match ${id} cannot be loaded from API`);
@@ -246,7 +246,7 @@ function loadByID(last) {
 
 	debug(`need to import ${matchesToImport} new matches`);
 
-	return apiNative.getMaxMatchId({}, { delay: apiNative.delay })
+	return apiNative.getMaxMatchId({})
 		.then(function (max) {
 			var latestAvailable = +max.max_match_id.api;
 			var latestPossible = matchId + matchesToImport;
@@ -374,7 +374,7 @@ function loadByTS(last) {
 	/**
 	 * Fetches list of matches available from date
 	 */
-	return apiNative.getNewMatches({ timestamp: date, limit: matchesToImport }, { delay: apiNative.delay })
+	return apiNative.getNewMatches({ timestamp: date, limit: matchesToImport })
 		.then(function (matches) {
 			if (!matches.matches) {
 				notifications.importStatus({

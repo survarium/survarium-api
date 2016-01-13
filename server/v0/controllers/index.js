@@ -1,7 +1,6 @@
 'use strict';
 
-const config = require('../../configs');
-const api = new (require('survarium-api-client').v0)({ keyPriv: config.api.keys.private, keyPub: config.api.keys.public });
+const api = new (require('survarium-api-client').v0)();
 const handlers = api.__handlers;
 const handlersNames = Object.keys(handlers);
 const handlersNamesLowered = handlersNames.reduce(function (methods, method) {

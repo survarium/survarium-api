@@ -21,8 +21,8 @@ function fetch(params) {
 			if (!player) {
 				return Promise
 					.props({
-						data: apiNative.getUserData({ pid: params.id }, { delay: apiNative.delay }),
-					    skills: apiNative.getUserSkills({ pid: params.id }, { delay: apiNative.delay * 2 })
+						data: apiNative.getUserData({ pid: params.id }),
+					    skills: apiNative.getUserSkills({ pid: params.id })
 					})
 					.tap(function (user) {
 						debug(`player ${params.id} loaded from API`);

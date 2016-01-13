@@ -25,8 +25,8 @@ function fetch(params) {
 		.then(function (clanInfo) {
 			if (!clanInfo) {
 				return Promise.props({
-						clan: apiNative.getClanInfo({ id: params.id }, { delay: apiNative.delay }),
-						members: apiNative.getClanMembers({ id: params.id }, { delay: apiNative.delay * 2 })
+						clan: apiNative.getClanInfo({ id: params.id }),
+						members: apiNative.getClanMembers({ id: params.id })
 					})
 					.tap(function (clanInfo) {
 						debug(`clan ${params.id} loaded from API`);
