@@ -204,7 +204,7 @@ function load(params) {
 										}
 										throw err;
 									}):
-								self.update({ id: id },  { $set: assignDataToModel(fetched, player), $currentDate: { updatedAt: true }} ).exec()
+								self.update({ id: id },  { $set: assignDataToModel(fetched, player) } ).exec()
 									.then(function () {
 										debug(`player ${id} updated`);
 										return player;
