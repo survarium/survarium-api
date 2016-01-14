@@ -1,5 +1,4 @@
 const mongoose   = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db         = require('../../lib/db');
 const importer   = require('./importer');
 
@@ -26,6 +25,7 @@ const ClansSchema = new Schema({
 		type: String,
 		required: true,
 		index: { unique: true },
+		text: true,
 		trim: true
 	},
 	players: [{
@@ -72,9 +72,7 @@ const ClansSchema = new Schema({
 	elo: Number,
 
 	deletedAt : Date
-});
-
-ClansSchema.plugin(timestamps);
+}, { timestamps: true });
 
 ClansSchema.statics.load = function () {
 	return importer.load.apply(this, arguments);

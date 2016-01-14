@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
 const config = require('../../../configs');
 
@@ -23,8 +22,6 @@ const MapName = new Schema({
 	},
 	langs: langs,
 	deletedAt: Date
-});
-
-MapName.plugin(timestamps);
+}, { timestamps: true });
 
 module.exports = db.model('MapName', MapName);

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
 require('./model-unloaded');
 
@@ -33,8 +32,6 @@ const MatchesSchema = new Schema({
 		}
 	],
 	deletedAt: Date
-});
-
-MatchesSchema.plugin(timestamps);
+}, { timestamps: true });
 
 module.exports = db.model('Matches', MatchesSchema);

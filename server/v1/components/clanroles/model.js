@@ -1,5 +1,4 @@
 const mongoose   = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db         = require('../../lib/db');
 
 const Schema = mongoose.Schema;
@@ -15,8 +14,6 @@ const ClanRolesSchema = new Schema({
 	weight: Number,
 
 	deletedAt : Date
-});
-
-ClanRolesSchema.plugin(timestamps);
+}, { timestamps: true });
 
 module.exports = db.model('ClanRoles', ClanRolesSchema);

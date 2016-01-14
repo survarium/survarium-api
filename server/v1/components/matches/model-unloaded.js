@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
 
 const Schema = mongoose.Schema;
@@ -12,9 +11,7 @@ const MatchesUnloadedSchema = new Schema({
 	},
 	date: Date,
 	deletedAt: Date
-});
-
-MatchesUnloadedSchema.plugin(timestamps);
+}, { timestamps: true });
 
 MatchesUnloadedSchema.statics.findOrCreate = function (data) {
 	return this.findOne({

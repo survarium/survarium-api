@@ -1,5 +1,4 @@
 const mongoose   = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db         = require('../../lib/db');
 
 const Schema = mongoose.Schema;
@@ -55,8 +54,6 @@ const StatsSchema = new Schema({
 	artefactUses : scoreMicro,
 
 	deletedAt : Date
-}, { collection: 'statistics' });
-
-StatsSchema.plugin(timestamps);
+}, { collection: 'statistics', timestamps: true });
 
 module.exports = db.model('Stats', StatsSchema);

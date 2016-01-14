@@ -1,6 +1,5 @@
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
 const importer = require('./importer');
 const Clans = db.model('Clans');
@@ -23,6 +22,7 @@ const PlayersSchema = new Schema({
 	nickname: {
 		type: 'String',
 		index: { unique: true },
+		text: true,
 		required: true,
 		trim: true
 	},
@@ -93,9 +93,7 @@ const PlayersSchema = new Schema({
 		}
 	],
 	deletedAt: Date
-});
-
-PlayersSchema.plugin(timestamps);
+}, { timestamps: true });
 
 PlayersSchema.statics.load = function () {
 	return importer.load.apply(this, arguments);

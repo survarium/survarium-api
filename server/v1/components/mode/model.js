@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
 const config = require('../../../configs');
 
@@ -19,8 +18,6 @@ const langs = config.api.languages.reduce(function (prev, next) {
 const GameMode = new Schema({
 	langs: langs,
 	deletedAt: Date
-});
-
-GameMode.plugin(timestamps);
+}, { timestamps: true });
 
 module.exports = db.model('GameMode', GameMode);
