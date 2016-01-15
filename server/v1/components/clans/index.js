@@ -87,7 +87,10 @@ router.get('/:abbr', function (req, res, next) {
 	}
 
 	var params = Object.assign({ stats: 300 }, query, {
-		search: { $text: { $search: `\"${abbr}\"`, $diacriticSensitive: true } },
+		search: { $or: [
+			{ abbr: abbr },
+			{ $text: { $search: `\"${abbr}\"`, $diacriticSensitive: true } }
+		] },
 		one: true
 	});
 
