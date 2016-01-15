@@ -57,6 +57,10 @@ const PlayersSchema = new Schema({
 		kills: scoreMicro,
 		dies: scoreMicro,
 		kd: scoreMicro,
+		winRate: scoreMicro,
+		stats: { type: Number, default: 0 },
+		score: { type: Number, default: 0 },
+		scoreAvg: scoreMicro,
 
 		headshots: scoreMicro,
 		grenadeKills: scoreMicro,
@@ -112,7 +116,12 @@ PlayersSchema.methods.addStat = function (stat) {
 			'total.artefactKills': stat.artefactKills || 0,
 			'total.pointCaptures': stat.pointCaptures || 0,
 			'total.boxesBringed': stat.boxesBringed || 0,
-			'total.artefactUses': stat.artefactUses || 0
+			'total.artefactUses': stat.artefactUses || 0,
+			'total.stats': 1,
+			'total.score': stat.score || 0
+		},
+		$set: {
+			'total.scoreAvg': Number((this.total.score + stat.score || 0) / (this.total.stats + 1) >>> 0)
 		}
 	}).exec()];
 	if (stat.clan) {

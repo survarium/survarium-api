@@ -51,7 +51,8 @@ function assignDataToModel(source, update) {
 			'total.victories': +data.matches_stats.victories || 0,
 			'total.kills': kills,
 			'total.dies': dies,
-			'total.kd': +utils.kd(kills, dies)
+			'total.kd': +utils.kd(kills, dies),
+			'total.winRate': ((+data.matches_stats.victories || 0) / (+data.matches_stats.matches || 0) * 100) || 0
 		},
 		skills: Object.keys(skills).map(function (id) {
 			return {

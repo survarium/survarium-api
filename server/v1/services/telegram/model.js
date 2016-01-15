@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const timestamps = require('mongoose-timestamp');
 const db = require('../../lib/db');
 
 const Schema = mongoose.Schema;
@@ -17,8 +16,7 @@ const TelegramSchema = new Schema({
 		type: String,
 		index: true
 	}]
-});
+}, { timestamps: true });
 
-TelegramSchema.plugin(timestamps);
 
 module.exports = db.model('Telegram', TelegramSchema);
