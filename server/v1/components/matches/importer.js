@@ -269,7 +269,7 @@ function loadByID(last) {
 					 */
 					if (length - errors.length < length * .1) {
 						debug(`too many (${errors.length}) matches import errors in matches.`);
-						let id = matches[0];
+						let id = matches[0] || matchId;
 						lastImportMatch = id;
 						debug(`setting lastImport id=${lastImportMatch}`);
 						cache.hmset(CACHEIMPORTKEY, 'id', id, 'ts', lastImport,'host', config.v1.telegram.hostname)
@@ -289,7 +289,7 @@ function loadByID(last) {
 							});
 					}
 
-					let id = matches[length - 1];
+					let id = matches[length - 1] || matchId;
 					lastImportMatch = id;
 					debug(`setting lastImport id=${id}`);
 					return cache
