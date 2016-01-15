@@ -87,7 +87,7 @@ router.get('/:abbr', function (req, res, next) {
 	}
 
 	var params = Object.assign({ stats: 500 }, query, {
-		search: { $text: { $search: abbr } },
+		search: { $text: { $search: `\"${abbr}\"` } },
 		one: true
 	});
 
