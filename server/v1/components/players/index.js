@@ -106,7 +106,8 @@ router.get('/:search', function (req, res, next) {
 	if (searchParam.match(/^\d+$/) && query.byName === undefined) {
 		search = { id: searchParam };
 	} else {
-		search = { nickname: { $regex: new RegExp(`^${searchParam}$`, 'i') } };
+		search = { nickname: { $regex: new RegExp(`^${searchParam
+			.replace(/\|/g, '\\|')}$`, 'i') } };
 	}
 
 	var stats = query.fullStats ? true :

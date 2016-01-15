@@ -87,7 +87,8 @@ router.get('/:abbr', function (req, res, next) {
 	}
 
 	var params = Object.assign({ stats: 300 }, query, {
-		search: { abbr: { $regex: new RegExp(`^${abbr}$`, 'i') } },
+		search: { abbr: { $regex: new RegExp(`^${abbr
+			.replace(/\|/g, '\\|')}$`, 'i') } },
 		one: true
 	});
 
