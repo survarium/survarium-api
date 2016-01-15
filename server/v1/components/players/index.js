@@ -107,7 +107,7 @@ router.get('/:search', function (req, res, next) {
 		search = { id: searchParam };
 	} else {
 		search = { nickname: { $regex: new RegExp(`^${searchParam
-			.replace(/\|/g, '\\|')}$`, 'i') } };
+			.replace(/(\||\$|\.|\*)/g, '\\$1')}$`, 'i') } };
 	}
 
 	var stats = query.fullStats ? true :
@@ -149,7 +149,7 @@ router.get('/:search', function (req, res, next) {
 	if (stats) {
 		population.push({ // TODO: distinct this
 			path: 'stats',
-			select: '-createdAt -updatedAt -__v -ammunition -team -player -_id',
+			select: '-createdAt -updatedAt -__v -ammunition -team -player -_id -clan',
 			options: {
 				sort: { date: query.statsort === 'asc' ? 1 : -1 },
 				limit: query.fullStats ? undefined : Math.min(stats, 100),
