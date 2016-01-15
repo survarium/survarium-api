@@ -106,10 +106,7 @@ router.get('/:search', function (req, res, next) {
 	if (searchParam.match(/^\d+$/) && query.byName === undefined) {
 		search = { id: searchParam };
 	} else {
-		search = { $or: [
-			{ nickname: searchParam },
-			{ $text: { $search: `\"${searchParam}\"`, $diacriticSensitive: true } }
-		] };
+		search = { nickname: { $regex: new RegExp(`^${searchParam}$`, 'i') } };
 	}
 
 	var stats = query.fullStats ? true :
