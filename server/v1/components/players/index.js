@@ -107,7 +107,7 @@ router.get('/:search', function (req, res, next) {
 		search = { id: searchParam };
 	} else {
 		search = { nickname: { $regex: new RegExp(`^${searchParam
-			.replace(/(\||\$|\.|\*|\+|\-|\?)/g, '\\$1')}$`, 'i') } };
+			.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\})/g, '\\$1')}$`, 'i') } };
 	}
 
 	var stats = query.fullStats ? true :
