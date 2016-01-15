@@ -86,7 +86,7 @@ router.get('/:abbr', function (req, res, next) {
 		return next(new Error('wrong type of clan tag'));
 	}
 
-	var params = Object.assign({ stats: 500 }, query, {
+	var params = Object.assign({ stats: 300 }, query, {
 		search: { $text: { $search: `\"${abbr}\"` } },
 		one: true
 	});
