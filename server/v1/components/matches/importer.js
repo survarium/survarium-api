@@ -263,6 +263,13 @@ function loadByID(last) {
 				var errors = [];
 				var exit = function () {
 					debug(`imported ${length} new matches`);
+					if (!length || length < 0) {
+						/**
+						 * HEAD state, no fresh matches available yet
+						 */
+						tryToShutdown();
+						return resolve();
+					}
 					/**
 					 * Rollback last import date if amount of errors
 					 * More than 10%
