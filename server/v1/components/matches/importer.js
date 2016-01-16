@@ -274,7 +274,7 @@ function loadByID(last) {
 						debug(`setting lastImport id=${lastImportMatch}`);
 						cache.hmset(CACHEIMPORTKEY, 'id', id, 'ts', lastImport,'host', config.v1.telegram.hostname)
 							.then(function () {
-								let lastError = errors[errors.length - 1];
+								let lastError = errors[errors.length - 1] || {};
 								notifications.importStatus({
 									type: 'tooMuchErrors',
 									errors: errors.length,
