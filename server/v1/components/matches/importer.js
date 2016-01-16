@@ -249,7 +249,7 @@ function loadByID(last) {
 
 	return apiNative.getMaxMatchId({})
 		.then(function (max) {
-			var latestAvailable = +max.max_match_id.api - 10;
+			var latestAvailable = +max.max_match_id.api - 25;
 			var latestPossible = matchId + matchesToImport;
 			var length = latestPossible > latestAvailable ?
 				latestAvailable - matchId
