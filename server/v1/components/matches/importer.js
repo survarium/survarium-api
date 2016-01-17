@@ -17,7 +17,7 @@ const Clans = db.model('Clans');
 
 const CACHEKEY = 'matches:load';
 const CACHEIMPORTKEY = CACHEKEY + cache.options.suffix + ':last';
-const EXPIRE = 60 * 10;
+const EXPIRE = 60 * 3;
 const logKey = 'match:';
 
 var gracefulShutdown;
@@ -549,7 +549,7 @@ function loader() {
 						.tap(function (last) {
 							console.log(`loader date ts=${last.ts} match=${last.id}`);
 						})
-						.then(loadByID)
+						.then(loadByTS)
 						.tap(cache.del.bind(cache, cachekey))
 						.tap(function () {
 							console.info(logKey, 'loaded');
