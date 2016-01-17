@@ -77,6 +77,7 @@ function getData(options) {
  * @param {Number} [req.query.limit=25          Limit of elems (max 50).
  * @param {String} [req.query.sortBy=id]        Sort criteria [id,exp,kill,die,win,match,hs,gk,mk,ak,cap,box,au].
  * @param {Number} [req.query.stats=25]         Amount of stats (max 50).
+ * @param {String} [req.query.nickname]         Nickname to find.
  */
 router.get('/', function (req, res, next) {
 	var query = req.query;
@@ -89,6 +90,7 @@ router.get('/', function (req, res, next) {
 				.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^)/g, '\\$1')}`, 'i') } }
 		]};
 		query.stats = 1;
+		query.limit = query.limit || 5;
 		middlewares.push(function (result) {
 			return result.map(function (player) {
 				player.url = `${front}/?player=${player.nickname}`;
