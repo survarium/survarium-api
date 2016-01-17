@@ -22,6 +22,7 @@
 * `TELEGRAM_HOSTNAME` – server name for pretty bot notifications
 * `TELEGRAM_TOKEN` – bot token
 * `CORS_ORIGIN` – CORS-allow-origin
+* `FRONT` – frontend hostname
 
 ### IMPORTER
 Must be running in single process.

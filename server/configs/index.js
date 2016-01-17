@@ -16,6 +16,8 @@ module.exports = {
 		retries: 2 || process.env.SV_API_RETRIES
 	},
 
+	front: process.env.FRONT || 'https://survarium.pro',
+
 	workers: +process.env.NODE_WORKERS || require('os').cpus().length,
 
 	cors: {

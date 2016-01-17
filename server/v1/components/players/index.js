@@ -2,6 +2,8 @@
 
 const router = require('express').Router();
 const model  = require('./model');
+const config = require('../../../configs');
+const front  = config.front;
 
 function getData(options) {
 	options = options || {};
@@ -52,7 +54,7 @@ function getData(options) {
 				},
 				{
 					path: 'clan',
-					select: '-createdAt -updatedAt -__v -_id -stats -players -total'
+					select: '-createdAt -updatedAt -__v -_id -stats -players -total -id'
 				}
 			])
 	}
@@ -78,8 +80,36 @@ function getData(options) {
  */
 router.get('/', function (req, res, next) {
 	var query = req.query;
-	getData(query)
-		.then(res.json.bind(res))
+	var middlewares = [];
+
+	if ([undefined, null, ''].indexOf(query.nickname) !== 0 && query.nickname.length > 1) {
+		query.search = { $or: [
+			{ $text: { $search: `\"${query.nickname}\"`, $diacriticSensitive: true } },
+			{ nickname: { $regex: new RegExp(`${query.nickname
+				.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^)/g, '\\$1')}`, 'i') } }
+		]};
+		query.stats = 1;
+		middlewares.push(function (result) {
+			return result.map(function (player) {
+				player.url = `${front}/?player=${player.nickname}`;
+				if (player.stats && player.stats.length && player.stats[0].match) {
+					player.stats[0].url = `${front}/?match=${player.stats[0].match.id}`;
+				}
+				if (player.clan) {
+					player.clan.url = `${front}/?clan=${player.clan.abbr}`;
+				}
+				return player;
+			});
+		});
+	}
+
+	var promise = getData(query);
+	if (middlewares.length) {
+		middlewares.forEach(function (middleware) {
+			promise = promise.then(middleware);
+		})
+	}
+	promise = promise.then(res.json.bind(res))
 		.catch(next);
 });
 
@@ -98,10 +128,10 @@ router.get('/', function (req, res, next) {
  * @param {String} [req.query.statsort=desc]    Sort destination for stats [asc,desc].
  * @param {String} [req.query.statskip=0]       Amount of skipped stats elems.
  */
-router.get('/:search', function (req, res, next) {
+router.get('/:player', function (req, res, next) {
 	var query = req.query;
 
-	var searchParam = req.params.search;
+	var searchParam = req.params.player;
 	var search = {};
 	if (searchParam.match(/^\d+$/) && query.byName === undefined) {
 		search = { id: searchParam };
