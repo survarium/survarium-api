@@ -41,19 +41,17 @@ function assignDataToModel(source, update) {
 	var kills = +data.matches_stats.kills || 0;
 	var dies = +data.matches_stats.dies || 0;
 	var result = {
-		progress: {
-			elo: +data.progress.elo || 0,
-			level: +data.progress.level || 0,
-			experience: +data.progress.experience || 0
-		},
-		$set: {
-			'total.matches': +data.matches_stats.matches || 0,
-			'total.victories': +data.matches_stats.victories || 0,
-			'total.kills': kills,
-			'total.dies': dies,
-			'total.kd': +utils.kd(kills, dies),
-			'total.winRate': ((+data.matches_stats.victories || 0) / (+data.matches_stats.matches || 0) * 100) || 0
-		},
+		'progress.elo': +data.progress.elo || 0,
+		'progress.level': +data.progress.level || 0,
+		'progress.experience': +data.progress.experience || 0,
+
+		'total.matches': +data.matches_stats.matches || 0,
+		'total.victories': +data.matches_stats.victories || 0,
+		'total.kills': kills,
+		'total.dies': dies,
+		'total.kd': +utils.kd(kills, dies),
+		'total.winRate': ((+data.matches_stats.victories || 0) / (+data.matches_stats.matches || 0) * 100) || 0,
+
 		skills: Object.keys(skills).map(function (id) {
 			return {
 				id: Number(id),

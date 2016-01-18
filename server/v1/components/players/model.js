@@ -85,7 +85,9 @@ const PlayersSchema = new Schema({
 			type: Schema.Types.ObjectId,
 			ref : 'Items'
 		},
-		amount: Number
+		profile: Number,
+		amount: Number,
+		mods: [Number]
 	}],
 	skills: [
 		{
