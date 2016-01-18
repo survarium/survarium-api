@@ -31,11 +31,38 @@ function tryToShutdown() {
 	}
 }
 
+function clanWar(stats) {
+	var clanwar = {
+		clans : [null, null],
+		winner: true
+	};
+	stats.forEach(stat => {
+		if (!clanwar.winner) {
+			return;
+		}
+		let clan = stat.player.clan_meta;
+		if (!clan) {
+			return clanwar.winner = false;
+		}
+		if (clanwar.clans[stat.team] !== null && clanwar.clans[stat.team] !== clan.id) {
+			return clanwar.winner = false;
+		}
+		if (stat.victory) {
+			clanwar.winner = clan.abbr;
+		}
+		return clanwar.clans[stat.team] = clan.id;
+	});
+	if (clanwar.winner === true) {
+		clanwar.winner = i18n.draw;
+	}
+	return clanwar;
+}
+
 function saveStats(statsData, match) {
 	debug(`saving stats for match ${match.id}`);
-	var statIds = [];
-	function saveStatId(stat) {
-		return statIds.push(stat._id);
+	var createdStats = {};
+	function saveStat(stat) {
+		return createdStats[stat._id] = stat;
 	}
 
 	var promises = [0, 1].reduce(function (stats, teamNum) {
@@ -79,7 +106,7 @@ function saveStats(statsData, match) {
 
 						return Stats
 							.create(document)
-							.tap(saveStatId)
+							.tap(saveStat)
 							.tap(function (stat) {
 								debug(`stats document for player ${player.nickname} and match ${match.id} created`);
 								return player.addStat(stat);
@@ -103,7 +130,7 @@ function saveStats(statsData, match) {
 			})
 			.then(function () {
 				return match.update({
-					stats: statIds
+					stats: Object.keys(createdStats)
 				}).exec().then(function () {
 					debug(`stats refs for match ${match.id} saved`);
 					return match;
@@ -120,7 +147,7 @@ function saveStats(statsData, match) {
 			if (!fn) {
 				debug(`saving stats refs for match ${match.id}`);
 				return match.update({
-					stats: statIds
+					stats: Object.keys(createdStats)
 				}).exec().then(function () {
 					debug(`stats refs for match ${match.id} saved`);
 					return resolve(match);
@@ -376,12 +403,13 @@ function loadByID(last) {
  */
 function loadByTS(last) {
 	var date = last.ts;
-	console.log(`load at ${new Date()} from ts=${date} (${new Date(date * 1000)})`);
 	var matchesToImport = +process.env.IMPORTER || 50;
+	var offset = last.offset || 0;
+	debug(`loading ${matchesToImport} matches at ${new Date()} from ts=${date} with offset ${offset} (${new Date(date * 1000)})`);
 	/**
 	 * Fetches list of matches available from date
 	 */
-	return apiNative.getNewMatches({ timestamp: date, limit: matchesToImport })
+	return apiNative.getNewMatches({ timestamp: date, limit: matchesToImport, offset: offset })
 		.then(function (matches) {
 			if (!matches.matches) {
 				notifications.importStatus({
@@ -439,7 +467,16 @@ function loadByTS(last) {
 							 */
 							if (matchesToImport === length) {
 								debug(`need to import next portion of new matches`);
-								return loadByTS({ ts: lastImport, match: id })
+								/**
+								 * A lot of matches was imported at the single moment
+								 */
+								if (lastImport === matches[ids[0]]) {
+									debug(`increasing offset for lastImport`);
+									offset += matchesToImport;
+								} else {
+									offset = 0;
+								}
+								return loadByTS({ ts: lastImport, match: id, offset: offset })
 									.then(resolve)
 									.catch(reject);
 							}
