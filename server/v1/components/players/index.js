@@ -1,20 +1,23 @@
 'use strict';
 
-const router = require('express').Router();
-const model  = require('./model');
-const config = require('../../../configs');
-const front  = config.front;
+const Promise = require('bluebird');
+const router  = require('express').Router();
+const model   = require('./model');
+const config  = require('../../../configs');
+const front   = config.front;
 
 function getData(options) {
 	options = options || {};
 
 	var sortBy = {
 		id: 'id',
+		kd: 'total.kd',
 		exp: 'progress.experience',
 		kill: 'total.kills',
 		die: 'total.dies',
 		win: 'total.victories',
 		match: 'total.matches',
+		scoreAvg: 'total.scoreAvg',
 		hs: 'total.headshots',
 		gk: 'total.grenadeKills',
 		mk: 'total.meleeKills',
@@ -28,38 +31,44 @@ function getData(options) {
 
 	var stats = options.stats !== undefined ? (Math.abs(Number(options.stats)) || 0) : 25;
 
+	var find  = options.search || {};
 	var query = model
-		.find(options.search || {}, `-_id ${!stats ? '-stats' : ''} -__v -clan_meta -skills -ammunition -createdAt -updatedAt`)
-		.sort(sort)
+		.find(find, `-_id ${!stats ? '-stats' : ''} -__v -clan_meta -skills -ammunition -createdAt -updatedAt`);
+
+	query = query.sort(sort)
 		.skip(Math.abs(Number(options.skip)) || 0)
-		.limit(Math.min(Math.abs(Number(options.limit)) || 25, 50));
+		.limit(Math.min(Math.abs(Number(options.limit)) || 25, 150));
+
+	query = query.populate({
+		path: 'clan',
+		select: '-createdAt -updatedAt -__v -_id -stats -players -total -id'
+	});
 
 	if (stats) {
 		query = query.slice('stats', -Math.min(stats, 25));
 		query = query
-			.populate([
-				{
-					path: 'stats',
-					select: '-createdAt -updatedAt -__v -team -player -_id -clan',
-					populate: [
-						{
-							path: 'map',
-							select: '-createdAt -updatedAt -__v -_id'
-						},
-						{
-							path: 'match',
-							select: '-createdAt -updatedAt -__v -_id -stats -map -date'
-						}
-					]
-				},
-				{
-					path: 'clan',
-					select: '-createdAt -updatedAt -__v -_id -stats -players -total -id'
-				}
-			])
+			.populate({
+				path: 'stats',
+				select: '-createdAt -updatedAt -__v -team -player -_id -clan',
+				populate: [
+					{
+						path: 'map',
+						select: '-createdAt -updatedAt -__v -_id'
+					},
+					{
+						path: 'match',
+						select: '-createdAt -updatedAt -__v -_id -stats -map -date'
+					}
+				]
+			});
 	}
 
-	return query
+	return options.meta ?
+		Promise.props({
+			data: query.lean().exec(),
+			filtered: options.search ? model.count(find) : Promise.resolve(),
+			total: model.count()
+		}) : query
 		.lean()
 		.exec();
 }
@@ -81,6 +90,7 @@ function getData(options) {
  */
 router.get('/', function (req, res, next) {
 	var query = req.query;
+
 	var middlewares = [];
 
 	if ([undefined, null, ''].indexOf(query.nickname) !== 0 && query.nickname.length > 1) {
@@ -89,9 +99,9 @@ router.get('/', function (req, res, next) {
 			{ nickname: { $regex: new RegExp(`${query.nickname
 				.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^)/g, '\\$1')}`, 'i') } }
 		]};
-		query.stats = 1;
+		query.stats = ~[undefined, null, ''].indexOf(query.stats) ? 1 : Number(query.stats);
 		query.limit = query.limit || 5;
-		middlewares.push(function (result) {
+		!query.noUrls && middlewares.push(function (result) {
 			return result.map(function (player) {
 				player.url = `${front}/?player=${player.nickname}`;
 				if (player.stats && player.stats.length && player.stats[0].match) {
