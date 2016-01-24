@@ -32,6 +32,12 @@ function getData(options) {
 	var stats = options.stats !== undefined ? (Math.abs(Number(options.stats)) || 0) : 25;
 
 	var find  = options.search || {};
+	var defaultSearch = {
+		'total.stats': { $gt: 10 }
+	};
+
+	Object.assign(find, defaultSearch);
+
 	var query = model
 		.find(find, `-_id ${!stats ? '-stats' : ''} -__v -clan_meta -skills -ammunition -createdAt -updatedAt`);
 
@@ -67,7 +73,7 @@ function getData(options) {
 		Promise.props({
 			data: query.lean().exec(),
 			filtered: options.search ? model.count(find) : Promise.resolve(),
-			total: model.count()
+			total: model.count(defaultSearch)
 		}) : query
 		.lean()
 		.exec();
