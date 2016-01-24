@@ -31,6 +31,20 @@ const MatchesSchema = new Schema({
 			ref : 'Stats'
 		}
 	],
+	clanwar: {
+		is: {
+			type: Boolean,
+			index: true,
+			default: false
+		},
+		clans: [{
+			clan: {
+				type: Schema.Types.ObjectId,
+				ref : 'Clans'
+			},
+			win : Boolean
+		}]
+	},
 	deletedAt: Date
 }, { timestamps: true });
 

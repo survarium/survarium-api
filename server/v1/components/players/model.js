@@ -2,7 +2,7 @@ const Promise = require('bluebird');
 const mongoose = require('mongoose');
 const db = require('../../lib/db');
 const importer = require('./importer');
-const Clans = db.model('Clans');
+const ClansImporter = require('../clans/importer');
 
 const Schema = mongoose.Schema;
 
@@ -127,10 +127,10 @@ PlayersSchema.methods.addStat = function (stat) {
 		}
 	}).exec()];
 	if (stat.clan) {
-		updaters.push(Clans.update({ _id: stat.clan }, {
+		updaters.push(ClansImporter.model.update({ _id: stat.clan }, {
 			$push: {
 				stats: stat._id
-			},
+			}/*,
 			$inc: {
 				'total.matches': 1,
 				'total.victories': stat.victory ? 1 : 0,
@@ -144,7 +144,7 @@ PlayersSchema.methods.addStat = function (stat) {
 				'total.pointCaptures': stat.pointCaptures || 0,
 				'total.boxesBringed': stat.boxesBringed || 0,
 				'total.artefactUses': stat.artefactUses || 0
-			}
+			}*/
 		}));
 	}
 	return Promise

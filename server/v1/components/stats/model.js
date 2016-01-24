@@ -31,6 +31,7 @@ const StatsSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref : 'Clans'
 	},
+	clanwar: Boolean,
 
 	team: Number,
 

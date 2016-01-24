@@ -3,12 +3,9 @@
 const router  = require('express').Router();
 const model   = require('./model');
 const ctl     = require('./controller');
-const config  = require('../../../configs');
 const libLang = require('../../lib/lang');
 
-if (config.v1.importer) {
-	process.nextTick(require.bind(null, './importer'));
-}
+require('./importer');
 
 function getData(options) {
 	options = options || {};

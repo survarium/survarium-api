@@ -8,12 +8,12 @@ const db = require('../../lib/db');
 const utils = require('../../lib/utils');
 const config = require('../../../configs');
 const notifications = require('../../services/telegram/triggers');
-const Matches = db.model('Matches');
+const Matches = require('./model');
 const MatchesUnloaded = db.model('MatchesUnloaded');
-const Maps = db.model('Maps');
-const Stats = db.model('Stats');
-const Players = db.model('Players');
-const Clans = db.model('Clans');
+const Maps = require('../maps/model');
+const Stats = require('../stats/model');
+const Players = require('../players/model');
+const ClansImporter = require('../clans/importer');
 
 const CACHEKEY = 'matches:load';
 const CACHEIMPORTKEY = CACHEKEY + cache.options.suffix + ':last';
@@ -31,38 +31,14 @@ function tryToShutdown() {
 	}
 }
 
-function clanWar(stats) {
-	var clanwar = {
-		clans : [null, null],
-		winner: true
-	};
-	stats.forEach(stat => {
-		if (!clanwar.winner) {
-			return;
-		}
-		let clan = stat.player.clan_meta;
-		if (!clan) {
-			return clanwar.winner = false;
-		}
-		if (clanwar.clans[stat.team] !== null && clanwar.clans[stat.team] !== clan.id) {
-			return clanwar.winner = false;
-		}
-		if (stat.victory) {
-			clanwar.winner = clan.abbr;
-		}
-		return clanwar.clans[stat.team] = clan.id;
-	});
-	if (clanwar.winner === true) {
-		clanwar.winner = i18n.draw;
-	}
-	return clanwar;
-}
-
-function saveStats(statsData, match) {
+function saveStats(matchData, match) {
 	debug(`saving stats for match ${match.id}`);
+	var statsData = matchData.accounts;
 	var createdStats = {};
-	function saveStat(stat) {
-		return createdStats[stat._id] = stat;
+	function saveStat(stat, player) {
+		stat.player = player;
+		createdStats[stat._id] = stat;
+		return createdStats;
 	}
 
 	var promises = [0, 1].reduce(function (stats, teamNum) {
@@ -100,13 +76,16 @@ function saveStats(statsData, match) {
 							boxesBringed : +playerStats.bring_a_box || 0,
 							artefactUses : +playerStats.use_artefact || 0
 						};
+
 						if (player.clan) {
 							document.clan = player.clan;
 						}
 
 						return Stats
 							.create(document)
-							.tap(saveStat)
+							.tap(function (stat) {
+								return saveStat(stat, player);
+							})
 							.tap(function (stat) {
 								debug(`stats document for player ${player.nickname} and match ${match.id} created`);
 								return player.addStat(stat);
@@ -129,12 +108,19 @@ function saveStats(statsData, match) {
 				console.error(`${logKey} error happen while creating stat`, err);
 			})
 			.then(function () {
-				return match.update({
-					stats: Object.keys(createdStats)
-				}).exec().then(function () {
-					debug(`stats refs for match ${match.id} saved`);
-					return match;
-				});
+				return ClansImporter.clanwar({ match: match, stats: createdStats, matchData: matchData });
+			})
+			.then(function (clanwar) {
+				return match
+					.update({
+						stats: Object.keys(createdStats),
+						clanwar: clanwar
+					})
+					.exec()
+					.then(function () {
+						debug(`stats refs for match ${match.id} saved`);
+						return match;
+					});
 			});
 	}
 
@@ -146,11 +132,18 @@ function saveStats(statsData, match) {
 			var fn = promises.shift();
 			if (!fn) {
 				debug(`saving stats refs for match ${match.id}`);
-				return match.update({
-					stats: Object.keys(createdStats)
-				}).exec().then(function () {
-					debug(`stats refs for match ${match.id} saved`);
-					return resolve(match);
+				return ClansImporter.clanwar({ match: match, stats: createdStats, matchData: matchData })
+				.then(function (clanwar) {
+					return match
+						.update({
+							stats: Object.keys(createdStats),
+							clanwar: clanwar
+						})
+						.exec()
+						.then(function () {
+							debug(`stats refs for match ${match.id} saved`);
+							return resolve(match);
+						});
 				});
 			}
 			fn().tap(next).catch(reject);
@@ -183,6 +176,7 @@ function saveMatch(data) {
 		}
 
 		debug(`creating document for match ${id}`);
+
 		return Matches
 			.create({
 				id: data.match_id,
@@ -199,7 +193,7 @@ function saveMatch(data) {
 			.tap(function (match) {
 				debug(`document for match ${id} created`);
 				lastImport = match.date / 1000 >>> 0;
-				return saveStats(statsData.accounts, match);
+				return saveStats(statsData, match);
 			});
 	});
 }
@@ -253,7 +247,7 @@ function importMatch(id, ts) {
 						});
 				});
 		})
-		.catch(function (err) {
+		/*.catch(function (err) {
 			console.error(logKey, 'cannot import match', id, err);
 			if (err.statusCode === 422) {
 				debug(`match ${id} cannot be loaded from API`);
@@ -263,7 +257,7 @@ function importMatch(id, ts) {
 					});
 			}
 			return { id: id, status: 'error', error: err };
-		});
+		});*/
 }
 
 function loadByID(last) {
@@ -624,14 +618,16 @@ process.on('SIGTERM', function () {
 	}
 });
 
-require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
-	if (err) {
-		throw err;
-	}
-	console.log(`importer PID: ${process.pid}`);
-});
+if (config.v1.importer) {
+	require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
+		if (err) {
+			throw err;
+		}
+		console.log(`importer PID: ${process.pid}`);
+	});
 
-setTimeout(loader, (Math.random() * 30000) >>> 0);
+	setTimeout(loader, (Math.random() * 30000) >>> 0);
+}
 
 /**
  * Remove loader stoppers
@@ -648,5 +644,7 @@ if (process.env.DEBLOCK) {
 }
 
 module.exports = {
-	deblock: deblock
+	deblock: deblock,
+	loader: loader,
+	importMatch: importMatch
 };

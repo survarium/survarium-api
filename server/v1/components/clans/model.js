@@ -1,6 +1,5 @@
 const mongoose   = require('mongoose');
 const db         = require('../../lib/db');
-const importer   = require('./importer');
 
 const Schema = mongoose.Schema;
 
@@ -59,7 +58,8 @@ const ClansSchema = new Schema({
 		artefactKills: scoreMicro,
 		pointCaptures: scoreMicro,
 		boxesBringed: scoreMicro,
-		artefactUses: scoreMicro
+		artefactUses: scoreMicro,
+		score: scoreMicro
 	},
 	stats: [
 		{
@@ -68,16 +68,19 @@ const ClansSchema = new Schema({
 		}
 	],
 
+	matches: [
+		{
+			type: Schema.Types.ObjectId,
+			ref : 'Matches'
+		}
+	],
+
 	level: Number,
 	elo: Number,
 
+	foundation: Date,
+
 	deletedAt : Date
 }, { timestamps: true });
-
-ClansSchema.statics.load = function () {
-	return importer.load.apply(this, arguments);
-};
-
-ClansSchema.statics.fetch = importer.fetch;
 
 module.exports = db.model('Clans', ClansSchema);

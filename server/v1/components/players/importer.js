@@ -6,7 +6,7 @@ const cache = require('../../lib/cache');
 const db = require('../../lib/db');
 const utils = require('../../lib/utils');
 const Matches = db.model('Matches');
-const Clans = db.model('Clans');
+const ClansImporter = require('../clans/importer');
 const Promise = require('bluebird');
 
 const CACHEKEY = 'players:load';
@@ -90,7 +90,7 @@ function assignClan(params, player) {
 	}
 	if (clanId) {
 		debug(`clan ${clanId} will be assigned to player ${player.nickname}`);
-		return Clans
+		return ClansImporter
 			.load({
 				id: clanId
 			})
@@ -106,7 +106,7 @@ function assignClan(params, player) {
 			.tap(function (clan) {
 				debug(`clan ${clanId} assigned to player ${player.nickname}`);
 				debug(`player ${player.nickname} will be added to clan ${clanId}`);
-				return Clans
+				return ClansImporter
 					.fetch({ id: clanId })
 					.then(function (clanInfo) {
 						var members = clanInfo.members.members;
@@ -163,7 +163,7 @@ function assignClan(params, player) {
 			})
 			.tap(function () {
 				debug(`player will be removed from clan members`);
-				return Clans.update({ _id: player.clan }, {
+				return ClansImporter.model.update({ _id: player.clan }, {
 					$pull: {
 						players: {
 							player: player._id
