@@ -3,6 +3,10 @@ const db = require('../../lib/db');
 require('./model-unloaded');
 
 const Schema = mongoose.Schema;
+const scoreMicro = {
+	type: Number,
+	default: 0
+};
 
 const MatchesSchema = new Schema({
 	id: {
@@ -42,7 +46,19 @@ const MatchesSchema = new Schema({
 				type: Schema.Types.ObjectId,
 				ref : 'Clans'
 			},
-			win : Boolean
+			win : Boolean,
+			total: {
+				score  : scoreMicro,
+				kills  : scoreMicro,
+				dies   : scoreMicro,
+				headshots    : scoreMicro,
+				grenadeKills : scoreMicro,
+				meleeKills   : scoreMicro,
+				artefactKills: scoreMicro,
+				pointCaptures: scoreMicro,
+				boxesBringed : scoreMicro,
+				artefactUses : scoreMicro
+			}
 		}]
 	},
 	deletedAt: Date

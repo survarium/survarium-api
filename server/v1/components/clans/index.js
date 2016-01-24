@@ -12,7 +12,7 @@ function getData(options) {
 	var stats = options.stats !== undefined ? (Math.abs(Number(options.stats)) || 0) : 5;
 
 	var cursor = model[options.one ? 'findOne' : 'find'](options.search || {},
-		`-_id -updatedAt -createdAt -__v${(!stats || options.slim) ? ' -stats -players' : ' -players._id'}`);
+		`-_id -updatedAt -createdAt -stats -__v${(!stats || options.slim) ? ' -matches -players' : ' -players._id'}`);
 
 	cursor = cursor.sort(options.sort || { level: -1 });
 
@@ -23,7 +23,7 @@ function getData(options) {
 	}
 
 	if (!options.slim) {
-		options.stats !== -1  && (cursor = cursor.slice('stats', -(options.one ? stats : Math.min(stats, 5))));
+		options.stats !== -1  && (cursor = cursor.slice('matches', -(options.one ? stats : Math.min(stats, 5))));
 		cursor = cursor.populate([
 			{
 				path: 'players.player',
@@ -31,24 +31,19 @@ function getData(options) {
 				select: '-createdAt -updatedAt -__v -_id -ammunition -skills -stats -clan -clan_meta'
 			},
 			{
-				path: 'stats',
-				model: 'Stats',
-				select: '-createdAt -updatedAt -__v -_id -clan',
+				path: 'matches',
+				model: 'Matches',
+				select: '-createdAt -updatedAt -__v -_id -stats -clanwar.clans._id -duration -server -replay -clanwar.is',
 				populate: [
-					{
-						path: 'player',
-						model: 'Players',
-						select: '-createdAt -updatedAt -__v -_id -ammunition -skills -stats -clan -clan_meta'
-					},
 					{
 						path: 'map',
 						model: 'Maps',
-						select: (options.lang ? libLang.select(options.lang) : '') + ' -createdAt -updatedAt -__v -_id'
+						select: libLang.select(options.lang) + ' -createdAt -updatedAt -__v -_id'
 					},
 					{
-						path: 'match',
-						model: 'Matches',
-						select: '-createdAt -updatedAt -__v -_id -stats -map -date'
+						path: 'clanwar.clans.clan',
+						model: 'Clans',
+						select: '-createdAt -updatedAt -__v -_id -matches -stats -total -players -foundation'
 					}
 				]
 			}

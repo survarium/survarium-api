@@ -207,7 +207,11 @@ function clanwar(params) {
 							.then(function () {
 								return {
 									clan: clan._id,
-									win: victory
+									win: victory,
+									total: Object.keys(inc).reduce(function (total, key) {
+										total[key.replace('total.', '')] = inc[key];
+										return total;
+									}, {})
 								};
 							});
 					})
