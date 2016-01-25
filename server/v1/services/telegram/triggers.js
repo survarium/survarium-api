@@ -26,6 +26,10 @@ var importStatus = (function () {
 		unknown: {
 			cache: 0,
 			message: (status, time) => `[${hostname}] Import UNKNOWN ERROR`
+		},
+		clanwar: {
+			cache: 0,
+			message: (status, time) => `[${hostname}] Clanwar ${status.match} imported`
 		}
 	};
 
@@ -54,7 +58,7 @@ var importStatus = (function () {
 							}
 							return bot.sendMessage(chatId, message)
 								.tap(function () {
-									return cache.setex(cacheKey, type.cache, true);
+									return type.cache && cache.setex(cacheKey, type.cache, true);
 								});
 						})
 						.catch(bot.handleError.bind(bot, chatId));

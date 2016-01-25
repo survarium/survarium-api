@@ -111,6 +111,12 @@ function saveStats(matchData, match) {
 				return ClansImporter.clanwar({ match: match, stats: createdStats, matchData: matchData });
 			})
 			.then(function (clanwar) {
+				if (clanwar) {
+					notifications.importStatus({
+						type: 'clanwar',
+						match: match.id
+					});
+				}
 				return match
 					.update({
 						stats: Object.keys(createdStats),
@@ -134,6 +140,12 @@ function saveStats(matchData, match) {
 				debug(`saving stats refs for match ${match.id}`);
 				return ClansImporter.clanwar({ match: match, stats: createdStats, matchData: matchData })
 				.then(function (clanwar) {
+					if (clanwar) {
+						notifications.importStatus({
+							type: 'clanwar',
+							match: match.id
+						});
+					}
 					return match
 						.update({
 							stats: Object.keys(createdStats),
@@ -247,7 +259,7 @@ function importMatch(id, ts) {
 						});
 				});
 		})
-		/*.catch(function (err) {
+		.catch(function (err) {
 			console.error(logKey, 'cannot import match', id, err);
 			if (err.statusCode === 422) {
 				debug(`match ${id} cannot be loaded from API`);
@@ -257,7 +269,7 @@ function importMatch(id, ts) {
 					});
 			}
 			return { id: id, status: 'error', error: err };
-		});*/
+		});
 }
 
 function loadByID(last) {
