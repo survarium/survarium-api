@@ -29,7 +29,8 @@ const StatsSchema = new Schema({
 	},
 	clan: {
 		type: Schema.Types.ObjectId,
-		ref : 'Clans'
+		ref : 'Clans',
+		index: true
 	},
 	clanwar: Boolean,
 
