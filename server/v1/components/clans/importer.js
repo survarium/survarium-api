@@ -165,6 +165,9 @@ function matchStat(allStats, team, win, clan) {
  * @returns {Promise.<boolean>}
  */
 function clanwar(params) {
+	if (process.env.IMPORT_NOCW) {
+		return Promise.resolve(undefined);
+	}
 	var matchData = params.matchData;
 	var match = params.match;
 	var stats = params.stats;
