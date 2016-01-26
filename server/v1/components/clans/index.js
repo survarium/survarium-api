@@ -48,7 +48,7 @@ function getData(options) {
 	return cursor
 		.lean()
 		.then(function (result) {
-			return (!options.one || !options.publicStats) ? result : db.model('Stats')
+			return (!result || !options.one || !options.publicStats) ? result : db.model('Stats')
 				.aggregate([{
 					$match: { clan: result._id }
 				}, {

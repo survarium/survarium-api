@@ -18,6 +18,7 @@ function getData(options) {
 		win: 'total.victories',
 		match: 'total.matches',
 		scoreAvg: 'total.scoreAvg',
+		winrate: 'total.winRate',
 		hs: 'total.headshots',
 		gk: 'total.grenadeKills',
 		mk: 'total.meleeKills',
@@ -33,7 +34,7 @@ function getData(options) {
 
 	var find  = options.search || {};
 	var defaultSearch = {
-		'total.stats': { $gt: 10 },
+		'total.stats': { $gt: 20 },
 		'total.matches': { $gt: 100 }
 	};
 
