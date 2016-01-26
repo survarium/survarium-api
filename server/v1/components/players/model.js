@@ -123,7 +123,7 @@ PlayersSchema.methods.addStat = function (stat) {
 			'total.score': stat.score || 0
 		},
 		$set: {
-			'total.scoreAvg': Number((this.total.score + stat.score || 0) / (this.total.stats + 1) >>> 0)
+			'total.scoreAvg': +((this.total.score + stat.score || 0) / (this.total.stats + 1)).toFixed(0)
 		}
 	}).exec()];
 	if (stat.clan) {

@@ -33,7 +33,8 @@ function getData(options) {
 
 	var find  = options.search || {};
 	var defaultSearch = {
-		'total.stats': { $gt: 10 }
+		'total.stats': { $gt: 10 },
+		'total.matches': { $gt: 100 }
 	};
 
 	Object.assign(find, defaultSearch);

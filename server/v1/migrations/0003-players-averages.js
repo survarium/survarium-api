@@ -54,7 +54,7 @@ db.once('connected', function () {
 						$set: {
 							'total.stats'    : total.stats,
 							'total.score' : total.score,
-							'total.scoreAvg'   : (total.score / total.stats >>> 0),
+							'total.scoreAvg'   : +(total.score / total.stats).toFixed(0),
 							'total.winRate': ((+player.total.victories || 0) / (+player.total.matches || 0) * 100) || 0
 						}
 					}, function (err) {
