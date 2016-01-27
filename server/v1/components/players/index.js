@@ -42,7 +42,7 @@ function getData(options) {
 	Object.assign(find, defaultSearch);
 
 	var query = model
-		.find(find, `-_id ${!stats ? '-stats' : ''} -__v -clan_meta -skills -ammunition -createdAt -updatedAt`);
+		.find(find, `-_id ${!stats ? '-stats' : ''} -__v -clan_meta -skills -ammunition -createdAt -updatedAt -total.score -total.stats`);
 
 	query = query.sort(sort)
 		.skip(Math.abs(Number(options.skip)) || 0)
@@ -96,14 +96,17 @@ function getData(options) {
  * @param {String} [req.query.sortBy=id]        Sort criteria [id,exp,kill,die,win,match,hs,gk,mk,ak,cap,box,au].
  * @param {Number} [req.query.stats=25]         Amount of stats (max 50).
  * @param {String} [req.query.nickname]         Nickname to find.
+ * @param {String} [req.query.pid]              PID to find.
  */
 router.get('/', function (req, res, next) {
 	var query = req.query;
 
 	var middlewares = [];
+	var pid = req.query.pid;
+	!(/^\d{5,}$/.test(pid)) && (pid = undefined);
 
-	if ([undefined, null, ''].indexOf(query.nickname) !== 0 && query.nickname.length > 1) {
-		query.search = { $or: [
+	if (pid || ([undefined, null, ''].indexOf(query.nickname) !== 0 && query.nickname.length > 1)) {
+		query.search = pid ? { id: pid } : { $or: [
 			{ $text: { $search: `\"${query.nickname}\"`, $diacriticSensitive: true } },
 			{ nickname: { $regex: new RegExp(`${query.nickname
 				.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^)/g, '\\$1')}`, 'i') } }
