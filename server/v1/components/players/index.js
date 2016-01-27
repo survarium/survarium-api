@@ -4,6 +4,7 @@ const Promise = require('bluebird');
 const router  = require('express').Router();
 const model   = require('./model');
 const config  = require('../../../configs');
+const libLang = require('../../lib/lang');
 const front   = config.front;
 
 function getData(options) {
@@ -33,7 +34,7 @@ function getData(options) {
 	var stats = options.stats !== undefined ? (Math.abs(Number(options.stats)) || 0) : 25;
 
 	var find  = options.search || {};
-	var defaultSearch = {
+	var defaultSearch = options.noexclude ? {} : {
 		'total.stats': { $gt: 20 },
 		'total.matches': { $gt: 100 }
 	};
@@ -61,7 +62,7 @@ function getData(options) {
 				populate: [
 					{
 						path: 'map',
-						select: '-createdAt -updatedAt -__v -_id'
+						select: libLang.select(options.lang) + ' -createdAt -updatedAt -__v -_id'
 					},
 					{
 						path: 'match',

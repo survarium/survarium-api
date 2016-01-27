@@ -120,7 +120,8 @@ function saveStats(matchData, match) {
 				return match
 					.update({
 						stats: Object.keys(createdStats),
-						clanwar: clanwar
+						clanwar: !!clanwar,
+						clans: clanwar
 					})
 					.exec()
 					.then(function () {
@@ -149,7 +150,8 @@ function saveStats(matchData, match) {
 					return match
 						.update({
 							stats: Object.keys(createdStats),
-							clanwar: clanwar
+							clanwar: !!clanwar,
+							clans: clanwar
 						})
 						.exec()
 						.then(function () {

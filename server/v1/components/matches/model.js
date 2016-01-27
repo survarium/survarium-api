@@ -36,31 +36,29 @@ const MatchesSchema = new Schema({
 		}
 	],
 	clanwar: {
-		is: {
-			type: Boolean,
-			index: true,
-			default: false
-		},
-		clans: [{
-			clan: {
-				type: Schema.Types.ObjectId,
-				ref : 'Clans'
-			},
-			win : Boolean,
-			total: {
-				score  : scoreMicro,
-				kills  : scoreMicro,
-				dies   : scoreMicro,
-				headshots    : scoreMicro,
-				grenadeKills : scoreMicro,
-				meleeKills   : scoreMicro,
-				artefactKills: scoreMicro,
-				pointCaptures: scoreMicro,
-				boxesBringed : scoreMicro,
-				artefactUses : scoreMicro
-			}
-		}]
+		type: Boolean,
+		index: true,
+		default: false
 	},
+	clans: [{
+		clan: {
+			type: Schema.Types.ObjectId,
+			ref : 'Clans'
+		},
+		win : Boolean,
+		total: {
+			score  : scoreMicro,
+			kills  : scoreMicro,
+			dies   : scoreMicro,
+			headshots    : scoreMicro,
+			grenadeKills : scoreMicro,
+			meleeKills   : scoreMicro,
+			artefactKills: scoreMicro,
+			pointCaptures: scoreMicro,
+			boxesBringed : scoreMicro,
+			artefactUses : scoreMicro
+		}
+	}],
 	deletedAt: Date
 }, { timestamps: true });
 

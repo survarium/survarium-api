@@ -221,10 +221,7 @@ function clanwar(params) {
 				}))
 				.then(function (clanwar) {
 					debug(`clanwar ${match.id} assigned to its clans`);
-					return {
-						is: true,
-						clans: clanwar
-					};
+					return clanwar;
 				})
 				.catch(function (err) {
 					if (err.message === 'empty team score') {

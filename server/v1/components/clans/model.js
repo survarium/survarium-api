@@ -46,7 +46,7 @@ const ClansSchema = new Schema({
 		ref : 'Players'
 	},*/
 
-	total: {
+	total: { // итоги клановых матчей
 		matches: scoreMicro,
 		victories: scoreMicro,
 		kills: scoreMicro,
@@ -61,14 +61,31 @@ const ClansSchema = new Schema({
 		artefactUses: scoreMicro,
 		score: scoreMicro
 	},
-	stats: [
+
+	totalPublic: { // итоги паблик матчей
+		matches: scoreMicro,
+		victories: scoreMicro,
+		kills: scoreMicro,
+		dies: scoreMicro,
+
+		headshots: scoreMicro,
+		grenadeKills: scoreMicro,
+		meleeKills: scoreMicro,
+		artefactKills: scoreMicro,
+		pointCaptures: scoreMicro,
+		boxesBringed: scoreMicro,
+		artefactUses: scoreMicro,
+		score: scoreMicro
+	},
+
+	stats: [ // статистики паблик матчей
 		{
 			type: Schema.Types.ObjectId,
 			ref : 'Stats'
 		}
 	],
 
-	matches: [
+	matches: [ // статистики клановых матчей
 		{
 			type: Schema.Types.ObjectId,
 			ref : 'Matches'

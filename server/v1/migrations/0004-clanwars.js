@@ -44,7 +44,13 @@ db.once('connected', function () {
 	status(true);
 	Promise.props({
 		clans: Clans.update({}, {
-			$unset: { total: '' }
+			$unset: { matches: '', total: '' }
+		}, { multi: true }),
+		matches: Matches.update({}, {
+			$unset: { clanwar: '' }
+		}, { multi: true }),
+		stats: Stats.update({}, {
+			$unset: { clanwar: '' }
 		}, { multi: true })
 	}).then(function () {
 		status();

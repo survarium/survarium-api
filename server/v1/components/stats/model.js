@@ -1,12 +1,12 @@
-const mongoose   = require('mongoose');
-const db         = require('../../lib/db');
+const mongoose = require('mongoose');
+const db       = require('../../lib/db');
 
 const Schema = mongoose.Schema;
 
 const scoreMicro = {
-	type: Number,
+	type   : Number,
 	default: 0,
-	index: true
+	index  : true
 };
 
 const StatsSchema = new Schema({
@@ -15,24 +15,27 @@ const StatsSchema = new Schema({
 		index: true
 	},
 
-	match : {
+	match  : {
 		type: Schema.Types.ObjectId,
 		ref : 'Matches'
 	},
-	map: {
+	map    : {
 		type: Schema.Types.ObjectId,
 		ref : 'Maps'
 	},
-	player: {
+	player : {
 		type: Schema.Types.ObjectId,
 		ref : 'Players'
 	},
-	clan: {
-		type: Schema.Types.ObjectId,
-		ref : 'Clans',
+	clan   : {
+		type : Schema.Types.ObjectId,
+		ref  : 'Clans',
 		index: true
 	},
-	clanwar: Boolean,
+	clanwar: {
+		type : Boolean,
+		index: true
+	},
 
 	team: Number,
 
@@ -43,7 +46,7 @@ const StatsSchema = new Schema({
 	dies   : scoreMicro,
 	kd     : scoreMicro,
 	victory: {
-		type: Boolean,
+		type : Boolean,
 		index: true
 	},
 
@@ -55,7 +58,10 @@ const StatsSchema = new Schema({
 	boxesBringed : scoreMicro,
 	artefactUses : scoreMicro,
 
-	deletedAt : Date
-}, { collection: 'statistics', timestamps: true });
+	deletedAt: Date
+}, {
+	collection: 'statistics',
+	timestamps: true
+});
 
 module.exports = db.model('Stats', StatsSchema);
