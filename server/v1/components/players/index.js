@@ -103,16 +103,16 @@ router.get('/', function (req, res, next) {
 
 	var middlewares = [];
 	var pid = req.query.pid;
-	!(/^\d{5,}$/.test(pid)) && (pid = undefined);
+	/^(\d{5,}\,?)+$/g.test(pid) ? (pid = pid.split(',')) : (pid = undefined);
 
 	if (pid || ([undefined, null, ''].indexOf(query.nickname) !== 0 && query.nickname.length > 1)) {
-		query.search = pid ? { id: pid } : { $or: [
+		query.search = pid ? { id: { $in: pid } } : { $or: [
 			{ $text: { $search: `\"${query.nickname}\"`, $diacriticSensitive: true } },
 			{ nickname: { $regex: new RegExp(`${query.nickname
 				.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^)/g, '\\$1')}`, 'i') } }
 		]};
 		query.stats = ~[undefined, null, ''].indexOf(query.stats) ? 1 : Number(query.stats);
-		query.limit = query.limit || 5;
+		query.limit = pid ? pid.length : (query.limit || 5);
 		!query.noUrls && middlewares.push(function (result) {
 			return result.map(function (player) {
 				player.url = `${front}/?player=${player.nickname}`;
