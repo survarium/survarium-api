@@ -200,19 +200,22 @@ router.get('/:player', function (req, res, next) {
 		]*/
 	}];
 
+	var cursor = model.findOne(search, `-__v -clan_meta ${!stats ? '-stats' : ''} -_id -createdAt -updatedAt -skills -ammunition`);
 	if (stats) {
+		stats =  Math.min(stats, 200);
+		!query.fullStats && (cursor = cursor.slice('stats', -stats));
 		population.push({ // TODO: distinct this
 			path: 'stats',
 			select: '-createdAt -updatedAt -__v -ammunition -team -player -_id -clan',
 			options: {
 				sort: { date: query.statsort === 'asc' ? 1 : -1 },
-				limit: query.fullStats ? undefined : Math.min(stats, 100),
+				limit: query.fullStats ? undefined : stats,
 				skip: query.fullStats ? 0 : Math.abs(Number(query.statskip)) || 0
 			},
 			populate: [
 				{
 					path: 'map',
-					select: '-createdAt -updatedAt -__v -_id'
+					select: libLang.select(query.lang) + ' -createdAt -updatedAt -__v -_id'
 				},
 				{
 					path: 'match',
@@ -222,8 +225,7 @@ router.get('/:player', function (req, res, next) {
 		});
 	}
 
-	model
-		.findOne(search, `-__v -clan_meta ${!stats ? '-stats' : ''} -_id -createdAt -updatedAt -skills -ammunition`)
+	cursor
 		.populate(population)
 		.lean()
 		.exec()
