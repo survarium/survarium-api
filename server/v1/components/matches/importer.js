@@ -478,7 +478,7 @@ function loadByTS(last) {
 								/**
 								 * A lot of matches was imported at the single moment
 								 */
-								if (lastImport === matches[ids[0]]) {
+								if (length > 1 && lastImport === matches[ids[length - 2]]) {
 									debug(`increasing offset for lastImport`);
 									offset += matchesToImport;
 								} else {
