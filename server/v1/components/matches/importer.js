@@ -594,7 +594,7 @@ function loader() {
 						.tap(function (last) {
 							console.log(`loader date ts=${last.ts} match=${last.id}`);
 						})
-						.then(loadByTS)
+						.then(~['true'].indexOf(process.env.IMPORTER_BY_ID) ? loadByID : loadByTS)
 						.tap(cache.del.bind(cache, cachekey))
 						.tap(function () {
 							console.info(logKey, 'loaded');
