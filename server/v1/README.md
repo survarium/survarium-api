@@ -33,6 +33,7 @@ Must be running in single process.
 * `IMPORTER_BY_ID` – (equal `true`) start of match import by id instead of timestamps
 * `IMPORTER_II_MATCHES` – import matches in parallel mode
 * `IMPORTER_II_PLAYERS` – import players in parallel mode
+* `IMPORTER_NOCW` – dont parse clanwars
 * `CACHE_SFX` – suffix for slice caching
 
 ### TELEGRAM
