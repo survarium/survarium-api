@@ -38,7 +38,7 @@ function getData(options) {
 				model : 'Maps',
 				select: libLang.select(options.lang) + ' -createdAt -updatedAt -__v -_id'
 			}, {
-				path  : 'clanwar.clans.clan',
+				path  : 'clans.clan',
 				model : 'Clans',
 				select: '-createdAt -updatedAt -__v -_id -matches -stats -total -players -foundation'
 			}]
