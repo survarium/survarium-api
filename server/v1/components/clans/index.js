@@ -12,10 +12,18 @@ function getData(options) {
 	var skip  = Number(options.skip);
 	var limit = Number(options.limit);
 	var stats = options.stats !== undefined ? (Math.abs(Number(options.stats)) || 0) : 5;
+	var search = options.search || {};
+	var sort = options.sort || { level: -1 };
+	if (!options.one) {
+		if (options.publicStats === '0') {
+			search.total = { $exists: 1 };
+			sort = { 'total.victories': -1, 'total.matches': -1 };
+		}
+	}
 
-	var cursor = model[options.one ? 'findOne' : 'find'](options.search || {}, `${!options.one ? '-_id ' : ''}-updatedAt -createdAt -stats -__v${(!stats || options.slim) ? ' -matches -players' : ' -players._id'}`);
+	var cursor = model[options.one ? 'findOne' : 'find'](search, `${!options.one ? '-_id ' : ''}-updatedAt -createdAt -stats -__v${(!stats || options.slim) ? ' -matches -players' : ' -players._id'}`);
 
-	cursor = cursor.sort(options.sort || { level: -1 });
+	cursor = cursor.sort(sort);
 
 	cursor = cursor.skip(isNaN(skip) ? 0 : Math.abs(skip));
 
@@ -48,7 +56,7 @@ function getData(options) {
 	return cursor
 		.lean()
 		.then(function (result) {
-			return (!result || !options.one || !options.publicStats) ? result : db.model('Stats')
+			return (!result || !options.one || options.publicStats !== '1') ? result : db.model('Stats')
 				.aggregate([{
 					$match: { clan: result._id }
 				}, {
