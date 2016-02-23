@@ -30,13 +30,20 @@ function getData(options) {
 	});
 
 	if (options.populate) {
-		cursor.populate({
+		cursor = cursor.populate({
 			path: 'stats',
 			select: '-createdAt -updatedAt -__v -_id -clan -date -map -match -level',
 			populate: {
 				path: 'player',
 				select: '-createdAt -updatedAt -__v -_id -ammunition -skills -stats -clan'
 			}
+		});
+	}
+
+	if (options.cw) {
+		cursor = cursor.populate({
+			path: 'clans.clan',
+			select: 'abbr name'
 		});
 	}
 
@@ -57,7 +64,12 @@ router.get('/', function (req, res, next) {
 	if (/^\d{1,2}$/.test(query.level)) {
 		search.level = +query.level;
 	}
-	getData({ search: search, lang: query.lang, skip: query.skip, limit: query.limit, populate: !!!query.slim })
+	if (query.cw === '1') {
+		search.clanwar = true;
+	} else {
+		search.$or = [ { clanwar: { $exists: false } }, { clanwar: 0 } ];
+	}
+	getData({ search: search, lang: query.lang, skip: query.skip, limit: query.limit, populate: !!!query.slim, cw: query.cw })
 		.then(res.json.bind(res))
 		.catch(next);
 });
