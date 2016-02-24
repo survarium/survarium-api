@@ -16,8 +16,8 @@ function getData(options) {
 	var sort = options.sort || { level: -1 };
 	if (!options.one) {
 		if (options.publicStats === '0') {
-			search.total = { $exists: 1 };
-			sort = { 'total.victories': -1, 'total.matches': -1 };
+			search['total.matches'] = { $gt: 0 };
+			sort = { elo: -1, 'total.matches': -1, 'total.victories': -1 };
 		}
 	}
 
@@ -56,7 +56,7 @@ function getData(options) {
 	return cursor
 		.lean()
 		.then(function (result) {
-			return (!result || !options.one || options.publicStats !== '1') ? result : db.model('Stats')
+			return (!result || !options.one || !~['true', '1'].indexOf(options.publicStats)) ? result : db.model('Stats')
 				.aggregate([{
 					$match: { clan: result._id }
 				}, {
