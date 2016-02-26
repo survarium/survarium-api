@@ -198,9 +198,8 @@ test('clans.importer.public', (t) => {
 					.then(function (clan) {
 						let totals = clan.totalPublic;
 						t.equal(clan.stats.length, 2, 'should be stats relation');
-						t.equal(totals.stats, 2, 'should be stats count');
 
-						t.equal(totals.matches, 2, 'should be matches count');
+						t.equal(totals.matches, 2, 'should be matches(stats) count');
 						t.equal(totals.victories, 1, 'should be victories count');
 
 						t.equal(totals.kills, 19, 'should be kills count');

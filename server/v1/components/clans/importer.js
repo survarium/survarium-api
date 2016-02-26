@@ -134,13 +134,12 @@ function publicStat (id, stat) {
 				'totalPublic.boxesBringed': stat.boxesBringed || 0,
 				'totalPublic.artefactUses': stat.artefactUses || 0,
 
-				'totalPublic.score': stat.score || 0,
-				'totalPublic.stats': 1
+				'totalPublic.score': stat.score || 0
 			}
 		}, { new: true, fields: { abbr: 1, totalPublic: 1 } })
 		.then(function (clan) {
 			clan.set('totalPublic.winRate', ((+clan.totalPublic.victories || 0) / (+clan.totalPublic.matches || 0) * 100) || 0);
-			clan.set('totalPublic.scoreAvg', +((clan.totalPublic.score || 0) / (clan.totalPublic.stats)).toFixed(0));
+			clan.set('totalPublic.scoreAvg', +((clan.totalPublic.score || 0) / (clan.totalPublic.matches)).toFixed(0));
 			clan.set('totalPublic.kd', +utils.kd(clan.totalPublic.kills, clan.totalPublic.dies));
 			return clan.save().then(function (clan) {
 				debug(`added publicStat for clan ${clan.abbr}`);
@@ -187,11 +186,6 @@ function matchStat(allStats, team, win, clan) {
 	if ($inc['total.score'] === 0) {
 		return Promise.resolve(undefined);
 	}
-
-
-	clan.set('total.winRate',   ((+clan.total.victories || 0) / (+clan.total.matches || 0) * 100) || 0);
-	clan.set('total.scoreAvg',  +((clan.total.score || 0) /      (clan.total.stats)).toFixed(0));
-	clan.set('total.kd', +utils.kd(clan.total.kills,              clan.total.dies));
 
 	var $set = {
 		'total.scoreAvg': +(((clan.total.score + $inc['total.score']) || 0) / (clan.total.matches + 1)).toFixed(0),

@@ -67,7 +67,7 @@ const ClansSchema = new Schema({
 	},
 
 	totalPublic: { // итоги паблик матчей
-		matches: scoreMicro,
+		matches: scoreMicro, // фактически, это количество статистик, а не матчей
 		victories: scoreMicro,
 		kills: scoreMicro,
 		dies: scoreMicro,
@@ -80,7 +80,6 @@ const ClansSchema = new Schema({
 		boxesBringed: scoreMicro,
 		artefactUses: scoreMicro,
 
-		stats: { type: Number, default: 0 },
 		score: { type: Number, default: 0 },
 		scoreAvg: scoreMicro,
 		winRate: scoreMicro,
