@@ -127,25 +127,7 @@ PlayersSchema.methods.addStat = function (stat) {
 		}
 	}).exec()];
 	if (stat.clan) {
-		updaters.push(ClansImporter.model.update({ _id: stat.clan }, {
-			$push: {
-				stats: stat._id
-			}/*,
-			$inc: {
-				'total.matches': 1,
-				'total.victories': stat.victory ? 1 : 0,
-				'total.kills': stat.kills || 0,
-				'total.dies': stat.dies || 0,
-
-				'total.headshots': stat.headshots || 0,
-				'total.grenadeKills': stat.grenadeKills || 0,
-				'total.meleeKills': stat.meleeKills || 0,
-				'total.artefactKills': stat.artefactKills || 0,
-				'total.pointCaptures': stat.pointCaptures || 0,
-				'total.boxesBringed': stat.boxesBringed || 0,
-				'total.artefactUses': stat.artefactUses || 0
-			}*/
-		}));
+		updaters.push(ClansImporter.publicStat(stat.clan, stat));
 	}
 	return Promise
 		.all(updaters)

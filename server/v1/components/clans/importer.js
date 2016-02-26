@@ -6,6 +6,7 @@ const apiNative = require('../../lib/api-native');
 const cache = require('../../lib/cache');
 const model = require('./model');
 const Stats = require('../stats/model');
+const utils    = require('../../lib/utils');
 
 const CACHEKEY = 'clans:load';
 const EXPIRE = 60 * 5;
@@ -113,10 +114,45 @@ function teamWin(stat) {
 		stat.team ? 0 : 1;
 }
 
+function publicStat (id, stat) {
+	return model
+		.findOneAndUpdate({ _id: id }, {
+			$push: {
+				stats: stat._id
+			},
+			$inc: {
+				'totalPublic.matches': 1,
+				'totalPublic.victories': stat.victory ? 1 : 0,
+				'totalPublic.kills': stat.kills || 0,
+				'totalPublic.dies': stat.dies || 0,
+
+				'totalPublic.headshots': stat.headshots || 0,
+				'totalPublic.grenadeKills': stat.grenadeKills || 0,
+				'totalPublic.meleeKills': stat.meleeKills || 0,
+				'totalPublic.artefactKills': stat.artefactKills || 0,
+				'totalPublic.pointCaptures': stat.pointCaptures || 0,
+				'totalPublic.boxesBringed': stat.boxesBringed || 0,
+				'totalPublic.artefactUses': stat.artefactUses || 0,
+
+				'totalPublic.score': stat.score || 0,
+				'totalPublic.stats': 1
+			}
+		}, { new: true, fields: { abbr: 1, totalPublic: 1 } })
+		.then(function (clan) {
+			clan.set('totalPublic.winRate', ((+clan.totalPublic.victories || 0) / (+clan.totalPublic.matches || 0) * 100) || 0);
+			clan.set('totalPublic.scoreAvg', +((clan.totalPublic.score || 0) / (clan.totalPublic.stats)).toFixed(0));
+			clan.set('totalPublic.kd', +utils.kd(clan.totalPublic.kills, clan.totalPublic.dies));
+			return clan.save().then(function (clan) {
+				debug(`added publicStat for clan ${clan.abbr}`);
+				return clan;
+			});
+		});
+}
+
 function matchStat(allStats, team, win, clan) {
 	var keys = Object.keys(allStats);
 	var statUpdates = [];
-	var inc = keys.reduce(function  (inc, key) {
+	var $inc = keys.reduce(function  (inc, key) {
 		var stat = allStats[key];
 		if (stat.team !== team) {
 			return inc;
@@ -148,12 +184,23 @@ function matchStat(allStats, team, win, clan) {
 		'total.score': 0
 	});
 
-	if (inc['total.score'] === 0) {
+	if ($inc['total.score'] === 0) {
 		return Promise.resolve(undefined);
 	}
 
+
+	clan.set('total.winRate',   ((+clan.total.victories || 0) / (+clan.total.matches || 0) * 100) || 0);
+	clan.set('total.scoreAvg',  +((clan.total.score || 0) /      (clan.total.stats)).toFixed(0));
+	clan.set('total.kd', +utils.kd(clan.total.kills,              clan.total.dies));
+
+	var $set = {
+		'total.scoreAvg': +(((clan.total.score + $inc['total.score']) || 0) / (clan.total.matches + 1)).toFixed(0),
+		'total.winRate': (((+clan.total.victories + $inc['total.victories']) || 0) / ((+clan.total.matches + 1) || 0) * 100) || 0,
+		'total.kd': +utils.kd(clan.total.kills + $inc['total.kills'], clan.total.dies + $inc['total.dies'])
+	};
+
 	return Stats.update({ _id: { $in: statUpdates }}, { $set: { clanwar: true } }, { multi: true }).then(function () {
-		return inc;
+		return { $inc: $inc, $set: $set };
 	});
 }
 
@@ -192,20 +239,21 @@ function clanwar(params) {
 	return model
 		.find({ id: {
 			$in: clans
-		}}, { _id: 1, id: 1, abbr: 1 })
+		}}, { _id: 1, id: 1, abbr: 1, total: 1 })
 		.then(function (clanData) {
 			debug(`assigning clanwar ${match.id} to its clans`);
 			return Promise
 				.all(clanData.map(function (clan) {
 					var victory = win === clanKeys[clan.id];
 					return matchStat(stats, clanKeys[clan.id], victory, clan)
-					.then(function (inc) {
-						if (!inc) {
+					.then(function (updaters) {
+						if (!updaters) {
 							debug(`cannot assign empty stat for clan ${clan.abbr} in clanwar ${match.id}`);
 							throw new Error('empty team score');
 						}
+						var inc = updaters.$inc;
 						return clan
-							.update({ $push: { matches: match._id }, $inc: inc })
+							.update({ $push: { matches: match._id }, $inc: inc, $set: updaters.$set })
 							.exec()
 							.then(function () {
 								return {
@@ -236,5 +284,6 @@ module.exports = {
 	load: load,
 	fetch: fetch,
 	clanwar: clanwar,
+	publicStat: publicStat,
 	model: model
 };

@@ -4,7 +4,7 @@
   "description": "survarium api server",
   "main": "server/index.js",
   "scripts": {
-    "test": "npm test",
+    "test": "DEBUG=importer*,survarium-api-client DB_NAME=sv-test ./node_modules/.bin/tape tests/**/*.js | ./node_modules/.bin/tap-spec",
     "start": "LISTEN=3010 ./server/index.js",
     "deps": "npm i && (cd server && npm run deps)"
   },
@@ -20,5 +20,9 @@
   "bugs": {
     "url": "https://github.com/vaseker/survarium-api/issues"
   },
-  "homepage": "https://github.com/vaseker/survarium-api#readme"
+  "homepage": "https://github.com/vaseker/survarium-api#readme",
+  "devDependencies": {
+    "tap-spec": "^4.1.1",
+    "tape": "^4.4.0"
+  }
 }

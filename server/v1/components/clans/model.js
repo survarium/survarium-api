@@ -1,5 +1,5 @@
-const mongoose   = require('mongoose');
-const db         = require('../../lib/db');
+const mongoose = require('mongoose');
+const db       = require('../../lib/db');
 
 const Schema = mongoose.Schema;
 
@@ -59,7 +59,11 @@ const ClansSchema = new Schema({
 		pointCaptures: scoreMicro,
 		boxesBringed: scoreMicro,
 		artefactUses: scoreMicro,
-		score: scoreMicro
+		score: scoreMicro,
+
+		scoreAvg: scoreMicro,
+		winRate: scoreMicro,
+		kd: scoreMicro
 	},
 
 	totalPublic: { // итоги паблик матчей
@@ -75,7 +79,12 @@ const ClansSchema = new Schema({
 		pointCaptures: scoreMicro,
 		boxesBringed: scoreMicro,
 		artefactUses: scoreMicro,
-		score: scoreMicro
+
+		stats: { type: Number, default: 0 },
+		score: { type: Number, default: 0 },
+		scoreAvg: scoreMicro,
+		winRate: scoreMicro,
+		kd: scoreMicro
 	},
 
 	stats: [ // статистики паблик матчей
