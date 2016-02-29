@@ -1,6 +1,7 @@
 {
   "name": "@survarium-api/server",
   "dependencies": {
+    "bluebird": "^3.3.3",
     "express": "^4.13.3",
     "mkdirp": "^0.5.1",
     "morgan": "^1.6.1",

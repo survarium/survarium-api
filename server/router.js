@@ -19,6 +19,7 @@ api.get('/', function (req, res) {
 
 api.use('/v0', require('./v0/router'));
 api.use('/v1', require('./v1/router'));
+api.use('/v2', require('./v2/router'));
 
 router.use('/', api);
 router.use('/api', api);
