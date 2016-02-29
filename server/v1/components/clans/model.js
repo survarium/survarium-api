@@ -100,7 +100,7 @@ const ClansSchema = new Schema({
 		}
 	],
 
-	level: Number,
+	level: scoreMicro,
 	elo: scoreMicro,
 
 	foundation: Date,

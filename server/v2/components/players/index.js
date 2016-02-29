@@ -5,7 +5,6 @@ const ctl     = require('./ctl');
 
 router.get('/', function (req, res, next) {
 	var query = req.query;
-	query.__type = 'public';
 
 	ctl
 		.list(query)
@@ -15,23 +14,14 @@ router.get('/', function (req, res, next) {
 		.catch(next);
 });
 
-router.get('/cw', function (req, res, next) {
-	var query = req.query;
-	query.__type = 'cw';
-
+router.get('/:nickname', function (req, res, next) {
 	ctl
-		.list(query)
+		.fetch({ nickname: req.params.nickname })
 		.then(function (result) {
 			return res.json(result);
 		})
 		.catch(next);
 });
-
-router.get('/clans/:abbr');
-router.get('/clans/:abbr/members');
-router.get('/clans/:abbr/matches');
-router.get('/clans/:abbr/cw');
-router.get('/clans/:abbr/cw/matches');
 
 module.exports = router;
 

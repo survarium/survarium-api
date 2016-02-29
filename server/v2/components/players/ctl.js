@@ -1,7 +1,7 @@
 'use strict';
 
 const Promise = require('bluebird');
-const model   = require('../../../v1/components/clans/model');
+const model   = require('../../../v1/components/players/model');
 const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
 
@@ -12,14 +12,16 @@ exports.list = function list (options) {
 
 	var query = {};
 	var fields = {
+		clan: 0,
 		stats: 0,
-		matches: 0,
-		players: 0,
+		ammunition: 0,
+		skills: 0,
 		_id: 0,
 		__v: 0,
+		createdAt: 0,
 		updatedAt: 0
 	};
-	var sort = options.sort || { elo: -1 };
+	var sort = {};
 	var limit = 25;
 	var skip = 0;
 
@@ -30,11 +32,8 @@ exports.list = function list (options) {
 		}
 	}
 
-	if (options.__type === 'cw') {
-		query['total.matches'] = totalQuery['total.matches'] = { $gt: 0 };
-		fields.totalPublic = 0;
-	} else {
-		fields.total = 0;
+	if (options.sort) {
+		sort = options.sort;
 	}
 
 	var cursor = model
