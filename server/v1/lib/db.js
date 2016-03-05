@@ -1,6 +1,15 @@
 var mongoose     = require('mongoose');
-mongoose.Promise = require('bluebird');
+var Promise      = require('bluebird');
 var config       = require('../../configs');
+
+Promise.config({
+	// Enables all warnings except forgotten return statements.
+	warnings: {
+		wForgottenReturn: false
+	}
+});
+
+mongoose.Promise = Promise;
 
 var uri = config.v1.db.uri;
 
