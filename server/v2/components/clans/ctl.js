@@ -3,6 +3,7 @@
 const Promise = require('bluebird');
 const model   = require('../../../v1/components/clans/model');
 const Players = require('../../../v1/components/players/model');
+const Stats   = require('../../../v1/components/stats/model');
 const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
 
@@ -84,7 +85,7 @@ exports.fetch = function (clan) {
 	return cursor.lean();
 };
 
-exports.players = function list (clan, options) {
+exports.players = function players (clan, options) {
 	options = options || {};
 
 	var sort = options.sort || { role: -1 };
@@ -196,4 +197,71 @@ exports.players = function list (clan, options) {
 					};
 				});
 		});
+};
+
+
+exports.matches = function matches(clan, options) {
+	options = options || {};
+
+	var totalQuery = {};
+
+	var query = totalQuery = { clan: clan._id };
+
+	var fields = {
+		clanwar: 0,
+		clan: 0,
+		team: 0,
+		_id: 0,
+		__v: 0,
+		createdAt: 0,
+		updatedAt: 0
+	};
+	var sort = options.sort || { date: -1 };
+	var limit = 20;
+	var skip = 0;
+
+	if (options.skip) {
+		var __skip = Number(options.skip);
+		if (!isNaN(__skip) && (__skip > 0)) {
+			skip = __skip;
+		}
+	}
+
+	var cursor = Stats
+		.find(query)
+		.select(fields)
+		.sort(sort);
+
+	if (skip) {
+		cursor.skip(skip);
+	}
+
+	if (limit) {
+		cursor.limit(limit);
+	}
+
+	cursor.populate([
+		{
+			path: 'player',
+			select: { _id: 0, nickname: 1 }
+		},
+		{
+			path: 'match',
+			select: { _id: 0, id: 1 }
+		},
+		{
+			path: 'map',
+			select: libLang.select(options.lang) + ' -createdAt -updatedAt -__v -_id'
+		}
+	]);
+
+	return Promise.props({
+		data: cursor
+			.lean()
+			.exec(),
+		filtered: Stats.count(query),
+		total: Stats.count(totalQuery),
+		skip: skip,
+		limit: limit
+	});
 };
