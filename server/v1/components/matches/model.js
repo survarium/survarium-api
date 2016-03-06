@@ -43,7 +43,8 @@ const MatchesSchema = new Schema({
 	clans: [{
 		clan: {
 			type: Schema.Types.ObjectId,
-			ref : 'Clans'
+			ref : 'Clans',
+			index: true
 		},
 		win : Boolean,
 		total: {

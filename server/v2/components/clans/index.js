@@ -57,7 +57,12 @@ router.get('/:abbr/matches', function (req, res, next) {
 		.catch(next);
 });
 
-router.get('/:abbr/clanwars');
+router.get('/:abbr/clanwars', function (req, res, next) {
+	ctl
+		.clanwars(req.clan, req.query)
+		.then(res.json.bind(res))
+		.catch(next);
+});
 
 module.exports = router;
 
