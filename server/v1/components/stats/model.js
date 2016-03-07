@@ -14,7 +14,6 @@ const StatsSchema = new Schema({
 		type : Date,
 		index: true
 	},
-
 	match  : {
 		type: Schema.Types.ObjectId,
 		ref : 'Matches'

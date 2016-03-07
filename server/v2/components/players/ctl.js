@@ -29,7 +29,7 @@ exports.list = function list (options) {
 	};
 
 	var sort = {};
-	var limit = 10;
+	var limit = 20;
 	var skip = 0;
 
 	if (options.skip) {

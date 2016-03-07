@@ -41,7 +41,7 @@ function saveStats(matchData, match) {
 		return createdStats;
 	}
 
-	var promises = [0, 1].reduce(function (stats, teamNum) {
+	var promises = Object.keys(statsData).reduce(function (stats, teamNum) {
 		var team = statsData[teamNum];
 		if (!team) {
 			return stats;
