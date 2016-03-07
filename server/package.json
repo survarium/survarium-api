@@ -8,6 +8,6 @@
     "survarium-api-client": "git+https://github.com/vaseker/survarium-api-client.git"
   },
   "scripts": {
-    "deps": "npm i && (cd v1 && npm i)"
+    "deps": "npm i && (cd v1 && npm i) && (cd v2 && npm i)"
   }
 }
