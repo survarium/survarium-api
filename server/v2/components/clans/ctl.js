@@ -90,7 +90,7 @@ exports.players = function players (clan, options) {
 	options = options || {};
 
 	var sort = options.sort || { role: -1 };
-	var limit = 15;
+	var limit = 10;
 	var skip = 0;
 
 	if (options.skip) {
@@ -217,7 +217,7 @@ exports.matches = function matches(clan, options) {
 		updatedAt: 0
 	};
 	var sort = options.sort || { date: -1 };
-	var limit = 20;
+	var limit = 10;
 	var skip = 0;
 
 	if (options.skip) {
@@ -286,7 +286,7 @@ exports.clanwars = function clanwars(clan, options) {
 		updatedAt: 0
 	};
 	var sort = options.sort || { date: -1 };
-	var limit = 20;
+	var limit = 10;
 	var skip = 0;
 
 	if (options.skip) {

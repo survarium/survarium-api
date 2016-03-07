@@ -18,7 +18,7 @@ exports.list = function list (options) {
 		updatedAt: 0
 	};
 	var sort = options.sort || { id: -1 };
-	var limit = 20;
+	var limit = 10;
 	var skip = 0;
 	var populate = [{
 		path: 'map',

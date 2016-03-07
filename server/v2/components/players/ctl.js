@@ -29,7 +29,7 @@ exports.list = function list (options) {
 	};
 
 	var sort = {};
-	var limit = 20;
+	var limit = 10;
 	var skip = 0;
 
 	if (options.skip) {
@@ -108,7 +108,7 @@ exports.stats = function (player, options) {
 	};
 
 	var sort = options.sort || { date: -1 };
-	var limit = 20;
+	var limit = 10;
 	var skip = 0;
 
 	if (options.skip) {
