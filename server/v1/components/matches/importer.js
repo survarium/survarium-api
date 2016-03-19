@@ -632,16 +632,14 @@ process.on('SIGTERM', function () {
 	}
 });
 
-if (config.v1.importer) {
-	require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
-		if (err) {
-			throw err;
-		}
-		console.log(`importer PID: ${process.pid}`);
-	});
+require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
+	if (err) {
+		throw err;
+	}
+	console.log(`importer PID: ${process.pid}`);
+});
 
-	setTimeout(loader, (Math.random() * 30000) >>> 0);
-}
+setTimeout(loader, (Math.random() * 30000) >>> 0);
 
 /**
  * Remove loader stoppers

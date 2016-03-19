@@ -2,6 +2,11 @@ module.exports = {
 	env: process.env.NODE_ENV  || 'development',
 	handle: process.env.LISTEN || 3005,
 
+	forum: {
+		email: process.env.FORUM_EMAIL,
+		pass:  process.env.FORUM_PASS
+	},
+
 	api: {
 		host: 'http://api.survarium.com/',
 		keys: {
@@ -55,5 +60,20 @@ module.exports = {
 				del: !!process.env.TELEGRAM_HOOK_DEL
 			}
 		}
+	},
+	v2: {
+		developers: [
+			{ id: '58',      name: 'Yava' },
+			{ id: '65',      name: 'dima' },
+			{ id: '67',      name: 'Stohe' },
+			{ id: '69',      name: 'joewillburn' },
+			{ id: '76',      name: 'FANTOM' },
+			{ id: '148',     name: 'Dargalon' },
+			{ id: '74710',   name: 'Андрияш Козловский' },
+			{ id: '392554',  name: 'Альбертыч' },
+			{ id: '457474',  name: 'Survarium DevTeam' },
+			{ id: '561692',  name: 'Gramb' },
+			//{ id: '1080565', name: 'Esmer' }
+		]
 	}
 };

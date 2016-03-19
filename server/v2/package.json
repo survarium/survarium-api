@@ -2,7 +2,8 @@
   "name": "@survarium-api/server-v2",
   "dependencies": {
     "bluebird": "^3.3.3",
-    "debug": "^2.2.0"
+    "debug": "^2.2.0",
+    "mongoose": "^4.4.8"
   },
   "devDependencies": {
     "bluebird": "^3.3.3",

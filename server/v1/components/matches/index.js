@@ -1,11 +1,14 @@
 'use strict';
 
 const router  = require('express').Router();
+const config  = require('../../../configs');
 const model   = require('./model');
 const ctl     = require('./controller');
 const libLang = require('../../lib/lang');
 
-require('./importer');
+if (config.v1.importer) {
+	require('./importer');
+}
 
 function getData(options) {
 	options = options || {};
