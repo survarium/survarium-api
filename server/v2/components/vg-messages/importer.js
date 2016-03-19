@@ -162,7 +162,7 @@ function parseSearch(html, options) {
 				}
 			}
 
-			return promises;
+			return promises.reverse();
 		});
 }
 
