@@ -48,6 +48,7 @@ module.exports = {
 		},
 		importer: !!process.env.IMPORTER,
 		telegram: {
+			disabled: process.env.TELEGRAM_DISABLED === 'true',
 			server: !!process.env.TELEGRAM_SERVER,
 			hostname: process.env.TELEGRAM_HOSTNAME || require('os').hostname(),
 			token: process.env.TELEGRAM_TOKEN,

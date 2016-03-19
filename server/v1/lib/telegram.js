@@ -21,7 +21,7 @@ if (config.hook.key && config.hook.cert) {
 	options.polling = true;
 }
 
-var bot = new TelegramBot(config.token, options);
+var bot = !config.disabled ? new TelegramBot(config.token, options) : { setWebHook: function () {}, sendMessage: function () {}, options: {} };
 var webHook = bot.options.webHook;
 if (webHook) {
 	let webHookURL = `${config.hook.host}:${webHook.port}/bot/${config.token}`;
