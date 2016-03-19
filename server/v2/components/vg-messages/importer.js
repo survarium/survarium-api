@@ -121,7 +121,7 @@ function parseSearch(html, options) {
 					lang : options.target.lang
 				});
 
-				message.url = `${options.target.topic.url}?f=${message.forum.id}&t=${message.topic.id}&p=${message.post}#p${message.post}`;
+				var url = message.url = `${options.target.topic.url}?f=${message.forum.id}&t=${message.topic.id}&p=${message.post}#p${message.post}`;
 
 				let info   = $post.find('.postprofile');
 				let topics = info.find('dd + dd a');
@@ -141,7 +141,11 @@ function parseSearch(html, options) {
 						headers: headers
 					})
 						.then(function (response) {
-							return parseMessage(response.body, { target: options.target, dev: options.dev, message: message });
+							return parseMessage(response.body, { target: options.target, dev: options.dev, message: message })
+								.then(function (message) {
+									notifications.devmessage({ message: message, dev: options.dev, url: url });
+									return message;
+								});
 						});
 				});
 			});

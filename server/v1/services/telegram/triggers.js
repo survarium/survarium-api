@@ -68,4 +68,27 @@ var importStatus = (function () {
 
 })();
 
+var devmessage = function (params) {
+	let message = params.message;
+	let dev     = params.dev;
+	let url     = params.url;
+
+	let text = message.text;
+
+	text = text
+		.replace(/^\s+/, '')
+		.replace(/<br><br>/gm, '\n\n')
+		.replace(/&quot;/gm, '"')
+		.replace(/<cite>((?:.|\n)*?)<\/cite>/gm, '__italic__$1__/italic__\n')
+		.replace(/<(?:.|\n)*?>/gm, '')
+		.replace(/__italic__/gm, '<i>')
+		.replace(/__\/italic__/gm, '</i>');
+
+	var print = `<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + message.topic.name + '</a>' : ''}\n${text}`;
+	config.v1.telegram.channels.forEach((channel) => {
+		bot.sendMessage(channel, print, { parse_mode: 'HTML' });
+	});
+};
+
+exports.devmessage = devmessage;
 exports.importStatus = importStatus;

@@ -18,7 +18,7 @@ if (config.hook.key && config.hook.cert) {
 		cert: config.hook.cert
 	};
 } else {
-	options.polling = true;
+	options.polling = config.server;
 }
 
 var bot = !config.disabled ? new TelegramBot(config.token, options) : { setWebHook: function () {}, sendMessage: function () {}, options: {} };

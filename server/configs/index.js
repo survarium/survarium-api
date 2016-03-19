@@ -53,6 +53,7 @@ module.exports = {
 			hostname: process.env.TELEGRAM_HOSTNAME || require('os').hostname(),
 			token: process.env.TELEGRAM_TOKEN,
 			botan: process.env.TELEGRAM_BOTAN,
+			channels: (process.env.TELEGRAM_CHANNELS || '').split(','),
 			hook: {
 				key: process.env.TELEGRAM_HOOK_KEY,
 				cert: process.env.TELEGRAM_HOOK_CERT,
