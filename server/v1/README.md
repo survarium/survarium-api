@@ -35,6 +35,8 @@ Must be running in single process.
 * `IMPORTER_II_PLAYERS` – import players in parallel mode
 * `IMPORTER_NOCW` – dont parse clanwars
 * `CACHE_SFX` – suffix for slice caching
+* `FORUM_EMAIL` – survarium forum credentials
+* `FORUM_PASS` – survarium forum credentials
 
 ### TELEGRAM
 Must be running in single process.
@@ -45,3 +47,4 @@ Must be running in single process.
 * `TELEGRAM_HOOK_HOST` – hostname for webHook listening
 * `TELEGRAM_HOOK_PORT` – port for webHook listening
 * `TELEGRAM_HOOK_DEL` – unset webHook URL to allow receive updates in pooling mode
+* `TELEGRAM_CHANNELS` - channels list to post messages
