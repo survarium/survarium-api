@@ -356,12 +356,6 @@ if (config.v1.importer) {
 	setTimeout(loader, (Math.random() * 30000) >>> 0);
 }
 
-/**
- * DEBUG
- */
-
-loader();
-
 module.exports = {
 	loader: loader
 };
