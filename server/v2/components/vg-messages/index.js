@@ -1,11 +1,15 @@
 'use strict';
 
-const router  = require('express').Router();
-/*const ctl     = require('./ctl');
+const config = require('../../../configs');
+const router = require('express').Router();
+const ctl    = require('./ctl');
 
-router.get('/', function (req, res, next) {
+router.get('/devs', function (req, res) {
+	res.json(ctl.devs());
+});
+
+router.get('/messages', function (req, res, next) {
 	var query = req.query;
-	query.__type = 'public';
 
 	ctl
 		.list(query)
@@ -13,9 +17,11 @@ router.get('/', function (req, res, next) {
 			return res.json(result);
 		})
 		.catch(next);
-});*/
+});
 
-require('./importer');
+if (config.v1.importer) {
+	require('./importer');
+}
 
 module.exports = router;
 

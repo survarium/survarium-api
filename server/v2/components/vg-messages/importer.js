@@ -352,9 +352,7 @@ process.on('SIGTERM', function () {
 	}
 });
 
-if (config.v1.importer) {
-	setTimeout(loader, (Math.random() * 30000) >>> 0);
-}
+setTimeout(loader, (Math.random() * 30000) >>> 0);
 
 module.exports = {
 	loader: loader
