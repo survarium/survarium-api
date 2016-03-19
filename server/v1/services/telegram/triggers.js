@@ -96,7 +96,7 @@ var devmessage = (function (storage) {
 
 		text = text
 			.replace(/^\s+/, '')
-			.replace(/<br><br>/gm, '\n\n')
+			.replace(/<br>/gm, '\n')
 			.replace(/&quot;/gm, '"')
 			.replace(/<cite>((?:.|\n)*?)<\/cite>/gm, '__italic__$1__/italic__\n')
 			.replace(/<(?:.|\n)*?>/gm, '')
