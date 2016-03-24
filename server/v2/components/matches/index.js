@@ -1,7 +1,9 @@
 'use strict';
 
-const router  = require('express').Router();
-const ctl     = require('./ctl');
+const router   = require('express').Router();
+const ctl      = require('./ctl');
+const importer = require('../../../v1/components/matches/importer');
+const config   = require('../../../configs');
 
 router.get('/', function (req, res, next) {
 	var query = req.query;
@@ -46,6 +48,28 @@ router.get('/:id', function (req, res, next) {
 router.get('/:id/stats', function (req, res, next) {
 	ctl
 		.stats(req.match, req.query)
+		.then(res.json.bind(res))
+		.catch(next);
+});
+
+router.get('/:importId/import', function (req, res, next) {
+	let id = Number(req.params.importId);
+	let key = req.query.special;
+
+	if (!config.special) {
+		return next({ message: 'No `special` key configured' });
+	}
+
+	if (config.special !== key) {
+		return next({ message: 'Key `special` is invalid' });
+	}
+
+	if (isNaN(id)) {
+		return res.status(403).json({ code: 403, message: 'No valid `id` received' });
+	}
+
+	importer
+		.importMatch(id)
 		.then(res.json.bind(res))
 		.catch(next);
 });

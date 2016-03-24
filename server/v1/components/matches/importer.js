@@ -403,6 +403,8 @@ function loadByID(last) {
 		});
 }
 
+var importHoles = [];
+
 /**
  * Load a pack of matches available from date
  * @param {Object} last
@@ -430,6 +432,25 @@ function loadByTS(last) {
 			}
 			matches = matches.matches;
 			var ids = Object.keys(matches);
+
+			//FIXME: https://github.com/PhpSurvarium/SurvariumAPI/issues/35
+			ids = ids.sort(function (a, b) {
+				return Number(matches[a]) - Number(matches[b]);
+			});
+			//TODO: implement holes detection
+			/*
+			var holes = [
+				{
+					id: Number,
+					tries: Number
+				}
+			];
+
+			if (holes.length > critical && noNewMatches) {
+				tryToFixHoles(holes);
+			}
+			*/
+
 			var length = ids.length;
 			debug(`need to import ${length} new matches`);
 			if (!length) {
@@ -522,25 +543,23 @@ function loadByTS(last) {
 				 * TODO: change lastImport to real match date
 				 */
 				var next = function () {
-					//setTimeout(function () {
-						var id = ids[i++];
-						if (!id) {
-							return exit();
-						}
-						var ts = process.hrtime();
-						return importMatch(id, matches[id])
-							.tap(function (result) {
-								ts = process.hrtime(ts);
-								debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
-								console.log(logKey, id, result.status, new Date(matches[id] * 1000));
-								lastImport = matches[id];
-								if (result.status === 'error') {
-									errors.push({ id: id, error: result.error })
-								}
-							})
-							.then(next)
-							.catch(reject);
-					//}, apiNative.delay);
+					var id = ids[i++];
+					if (!id) {
+						return exit();
+					}
+					var ts = process.hrtime();
+					return importMatch(id, matches[id])
+						.tap(function (result) {
+							ts = process.hrtime(ts);
+							debug(`imported match ${id} with result ${result.status} in ${(ts[0] + ts[1] / 1e9).toFixed(2)}sec.`);
+							console.log(logKey, id, result.status, new Date(matches[id] * 1000));
+							lastImport = matches[id];
+							if (result.status === 'error') {
+								errors.push({ id: id, error: result.error })
+							}
+						})
+						.then(next)
+						.catch(reject);
 				};
 				return next();
 			});
@@ -623,23 +642,25 @@ function loader() {
 		});
 }
 
-process.on('SIGTERM', function () {
-	console.log(`register importer ${process.pid} shutdown...`);
-	gracefulShutdown = true;
+if (config.v1.importer) {
+	process.on('SIGTERM', function () {
+		console.log(`register importer ${process.pid} shutdown...`);
+		gracefulShutdown = true;
 
-	if (!importInProgress) {
-		tryToShutdown();
-	}
-});
+		if (!importInProgress) {
+			tryToShutdown();
+		}
+	});
 
-require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
-	if (err) {
-		throw err;
-	}
-	console.log(`importer PID: ${process.pid}`);
-});
+	require('fs').writeFile(require('path').join(__dirname, '../../../../', 'importer.pid'), `${process.pid}\n`, function (err) {
+		if (err) {
+			throw err;
+		}
+		console.log(`importer PID: ${process.pid}`);
+	});
 
-setTimeout(loader, (Math.random() * 30000) >>> 0);
+	setTimeout(loader, (Math.random() * 30000) >>> 0);
+}
 
 /**
  * Remove loader stoppers

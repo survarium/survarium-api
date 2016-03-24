@@ -29,6 +29,8 @@ module.exports = {
 		origin: process.env.CORS_ORIGIN || 'https://survarium.pro'
 	},
 
+	special: process.env.SPECIAL_KEY,
+
 	v1: {
 		db: {
 			uri: `mongodb://
