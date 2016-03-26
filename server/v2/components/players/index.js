@@ -10,6 +10,13 @@ router.get('/', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/top', function (req, res, next) {
+	ctl
+		.top(req.query)
+		.then(res.json.bind(res))
+		.catch(next);
+});
+
 router.param('nickname', function (req, res, next, value) {
 	ctl
 		.id(value)
