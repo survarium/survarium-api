@@ -25,6 +25,13 @@ router.get('/cw', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/timeline', function (req, res, next) {
+	ctl
+		.timeline(req.query)
+		.then(res.json.bind(res))
+		.catch(next);
+});
+
 router.param('id', function (req, res, next, value) {
 	ctl
 		.id(value)

@@ -141,3 +141,14 @@ exports.stats = function (match, options) {
 		});
 };
 
+exports.timeline = function () {
+	var date = new Date();
+	date.setHours(date.getHours() - 23, 0, 0, 0);
+
+	return model.aggregate([
+		{ $match: { date: { $gte: date } } },
+		{ $group: { _id: { level: '$level', hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
+		{ $group: { _id: '$_id.level', hours: { $push: { hour: '$_id.hour', total: '$total', date: '$date' } }, total: { $sum: '$total' } } },
+		{ $project: { level: '$_id', hours: '$hours', date: '$date', total: '$total', _id: 0 }}
+	]).allowDiskUse(true).exec()
+};
