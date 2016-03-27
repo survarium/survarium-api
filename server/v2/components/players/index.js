@@ -17,6 +17,13 @@ router.get('/top', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/unique', function (req, res, next) {
+	ctl
+		.unique(req.query)
+		.then(res.json.bind(res))
+		.catch(next);
+});
+
 router.param('nickname', function (req, res, next, value) {
 	ctl
 		.id(value)

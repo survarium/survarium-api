@@ -181,3 +181,18 @@ exports.top = function () {
 		])
 		.allowDiskUse(true).exec();
 };
+
+exports.unique = function () {
+	var date = new Date();
+	date.setDate(date.getDate() - 1);
+
+	return stats
+		.aggregate([
+			{ $match: { date: { $gte: date } } },
+			{ $group: { _id: null, players: { $addToSet: '$player' } }},
+			{ $project: { count: { $size: '$players' } } }
+		])
+		.allowDiskUse(true).exec().then(function (result) {
+			return { count: result[0].count };
+		});
+};
