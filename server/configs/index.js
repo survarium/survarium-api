@@ -31,6 +31,11 @@ module.exports = {
 
 	special: process.env.SPECIAL_KEY,
 
+	importer: {
+		matches: !!process.env.IMPORT_MATCHES,
+		messages: !!process.env.IMPORT_MESSAGES
+	},
+
 	v1: {
 		db: {
 			uri: `mongodb://

@@ -11,18 +11,6 @@ const got = require('got');
 const cheerio = require('cheerio');
 const VgMessages = require('./model');
 
-var gracefulShutdown;
-var importInProgress;
-
-function tryToShutdown() {
-	if (gracefulShutdown) {
-		console.log(`executing ${process.pid} shutdown...`);
-		return process.nextTick(function () {
-			process.exit(0);
-		});
-	}
-}
-
 var headers = {
 	'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4',
 	cookie: 'lang=ru'
@@ -308,7 +296,6 @@ function auth() {
 }
 
 function loader () {
-	importInProgress = true;
 	debug('loading dev messages');
 
 	return auth()
@@ -334,24 +321,12 @@ function loader () {
 		})
 		.then(function () {
 			debug('loaded');
-			importInProgress = undefined;
-			tryToShutdown();
 			setTimeout(loader, 1000 * 60 * 10);
 		})
 		.catch(function (error) {
 			console.log(error);
 		});
 }
-
-process.on('SIGTERM', function () {
-	console.log(`register importer ${process.pid} shutdown...`);
-	gracefulShutdown = true;
-
-	if (!importInProgress) {
-		tryToShutdown();
-	}
-});
-
 setTimeout(loader, (Math.random() * 30000) >>> 0);
 
 module.exports = {

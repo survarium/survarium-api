@@ -19,7 +19,7 @@ router.get('/messages', function (req, res, next) {
 		.catch(next);
 });
 
-if (config.v1.importer) {
+if (config.importer.messages) {
 	require('./importer');
 }
 
