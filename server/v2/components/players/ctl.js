@@ -193,6 +193,6 @@ exports.unique = function () {
 			{ $project: { count: { $size: '$players' } } }
 		])
 		.allowDiskUse(true).exec().then(function (result) {
-			return { count: result[0].count };
+			return { count: result[0] ? result[0].count : 0 };
 		});
 };
