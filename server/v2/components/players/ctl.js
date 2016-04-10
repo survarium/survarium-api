@@ -5,6 +5,7 @@ const model   = require('../../../v1/components/players/model');
 const stats   = require('../../../v1/components/stats/model');
 const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
+const Query   = require('./query');
 
 exports.id = function (nickname) {
 	return model.findOne({ nickname: nickname }, { _id: 1, nickname: 1 }).lean();
@@ -15,7 +16,7 @@ exports.list = function list (options) {
 
 	var totalQuery = {};
 
-	var query = {};
+	var query = Query.list(options.filter);
 
 	var fields = {
 		clan: 0,
