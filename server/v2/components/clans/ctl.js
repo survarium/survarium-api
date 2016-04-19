@@ -114,6 +114,8 @@ exports.players = function players (clan, options) {
 			var players = clan.players;
 			total = players.length;
 
+			var filtered = total;
+
 			var roles = {};
 
 			var ids = players.map(function (elem) {
@@ -147,8 +149,10 @@ exports.players = function players (clan, options) {
 				});
 			}
 
+			var query = { _id: { $in: ids } };
+
 			var cursor = Players
-				.find({ _id: { $in: ids } })
+				.find(query)
 				.select({
 					clan: 0,
 					clan_meta: 0,
@@ -156,7 +160,6 @@ exports.players = function players (clan, options) {
 					skills: 0,
 					ammunition: 0,
 					__v: 0,
-					updatedAt: 0,
 					createdAt: 0
 				});
 
@@ -167,36 +170,33 @@ exports.players = function players (clan, options) {
 					.limit(limit)
 			}
 
-			return cursor
-				.lean()
-				.then(function (players) {
-					var filtered = players.length;
+			return Promise.props({
+				data: cursor
+					.lean()
+					.then(function (players) {
+						var result = [];
 
-					var result = [];
-
-					if (roleSort) {
-						players.forEach(function (player) {
-							let id = player._id;
-							player.role = roles[id].role;
-							delete player['_id'];
-							result[roles[id].index] = player;
-						});
-					} else {
-						result = players.map(function (player) {
-							player.role = roles[player._id].role;
-							delete player['_id'];
-							return player;
-						});
-					}
-
-					return {
-						data: result,
-						filtered: filtered,
-						total: total,
-						skip: skip,
-						limit: limit
-					};
-				});
+						if (roleSort) {
+							players.forEach(function (player) {
+								let id = player._id;
+								player.role = roles[id].role;
+								delete player['_id'];
+								result[roles[id].index] = player;
+							});
+						} else {
+							result = players.map(function (player) {
+								player.role = roles[player._id].role;
+								delete player['_id'];
+								return player;
+							});
+						}
+						return result;
+					}),
+				filtered: filtered,
+				total: total,
+				skip: skip,
+				limit: limit
+			});
 		});
 };
 
