@@ -26,7 +26,8 @@ module.exports = {
 	workers: +process.env.NODE_WORKERS || require('os').cpus().length,
 
 	cors: {
-		origin: process.env.CORS_ORIGIN || 'https://survarium.pro'
+		default: 'https://survarium.pro',
+		origin: process.env.CORS_ORIGIN || '^https:\/\/survarium\.pro$'
 	},
 
 	special: process.env.SPECIAL_KEY,
