@@ -1,7 +1,7 @@
 # Survarium-api
 
 [![Stories in Ready](https://badge.waffle.io/survarium/survarium-api.svg?label=ready&title=Ready)](http://waffle.io/survarium/survarium-api)
-[![Stories In%20Progress](https://badge.waffle.io/survarium/survarium-api.svg?label=In%20Progress&title=In%20Progress)](http://waffle.io/survarium/survarium-api)
+[![Stories in Progress](https://badge.waffle.io/survarium/survarium-api.svg?label=In%20Progress&title=In%20Progress)](http://waffle.io/survarium/survarium-api)
 
 API server over [survarium api client](https://github.com/survarium/survarium-api-client)
 
