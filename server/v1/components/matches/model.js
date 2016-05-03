@@ -14,7 +14,10 @@ const MatchesSchema = new Schema({
 		index   : { unique: true },
 		required: true
 	},
-	date: Date,
+	date: {
+		type: Date,
+		index: true
+	},
 	duration: Number,
 	server: Number,
 	replay: String,

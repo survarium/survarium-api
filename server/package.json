@@ -5,6 +5,7 @@
     "express": "^4.13.3",
     "mkdirp": "^0.5.1",
     "morgan": "^1.6.1",
+    "sitemap": "^1.6.0",
     "survarium-api-client": "git+https://github.com/vaseker/survarium-api-client.git"
   },
   "scripts": {

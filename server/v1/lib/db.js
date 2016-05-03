@@ -17,7 +17,7 @@ const connection = mongoose.createConnection(uri, config.v1.db.options || {});
 
 connection
 	.on('connected', function () {
-		console.info('connected to', uri);
+		console.info('connected to mongodb');
 	})
 	.on('error', function (err) {
 		console.error('cannot connect to', uri, err);

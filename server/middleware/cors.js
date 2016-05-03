@@ -9,7 +9,6 @@ module.exports = function (req, res, next) {
 		return req.method === 'options' ? res.end() : next();
 	}
 	var origin = origins.test(req.headers.origin) ? req.headers.origin : originDefault;
-	console.log(origin);
 	res.header("Access-Control-Allow-Origin", origin);
 	res.header("Access-Control-Allow-Credentials", true);
 	res.header("Access-Control-Allow-Methods", 'GET, POST, PUT, DELETE');
