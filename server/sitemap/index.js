@@ -43,7 +43,7 @@ function getClans(result) {
 
 		aggregator
 			.on('data', function (elem) {
-				result.push({ url: url + elem.path, changefreq: changefreq });
+				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
 				resolve(result);
@@ -85,7 +85,7 @@ function getPlayers(result) {
 
 		aggregator
 			.on('data', function (elem) {
-				result.push({ url: url + elem.path, changefreq: changefreq });
+				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
 				resolve(result);
