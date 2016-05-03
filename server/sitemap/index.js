@@ -104,7 +104,7 @@ db.once('connected', () => {
 			getMatches(result)
 		])
 		.then(() => {
-			return result.map(elem => {
+			return result = result.map(elem => {
 				elem.links = ['ru', 'ua', 'en'].map(lang => {
 					return {
 						lang: lang,
