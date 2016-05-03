@@ -160,9 +160,15 @@ exports.stats = function (player, options) {
 	});
 };
 
-exports.top = function () {
+exports.top = function (query) {
 	var date = new Date();
-	date.setHours(date.getHours() - 1);
+	var period = query.period === 'day' ? 'day' : 'hour';
+	if (period === 'day') {
+		date.setMinutes(0, 0, 0, 0);
+		date.setDate(date.getDate() - 1);
+	} else {
+		date.setHours(date.getHours() - 1, 0, 0, 0);
+	}
 
 	return stats
 		.aggregate([
@@ -185,6 +191,7 @@ exports.top = function () {
 
 exports.unique = function () {
 	var date = new Date();
+	date.setMinutes(0, 0, 0);
 	date.setDate(date.getDate() - 1);
 
 	return stats
