@@ -104,6 +104,17 @@ db.once('connected', () => {
 			getMatches(result)
 		])
 		.then(() => {
+			return result.map(elem => {
+				elem.links = ['ru', 'ua', 'en'].map(lang => {
+					return {
+						lang: lang,
+						url: `${elem.url}?lang=${lang}`
+					};
+				});
+				return elem;
+			});
+		})
+		.then((result) => {
 			return new Promise((resolve, reject) => {
 				new sm.createSitemapIndex({
 					cacheTime: 600000,
