@@ -104,10 +104,30 @@ var devmessage = (function (storage) {
 			.replace(/__italic__/gm, '<i>')
 			.replace(/__\/italic__/gm, '</i>');
 
-		var print = `<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + message.topic.name + '</a>' : ''}\n${text}`;
-		config.v1.telegram.channels.forEach((channel) => {
-			bot.sendMessage(channel, print, { parse_mode: 'HTML' });
-		});
+		const head = `<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + message.topic.name + '</a>' : ''}\n`;
+		const SIZE = 4096 - head.length;
+
+		const length = text.length;
+
+		let send = function (text) {
+			let print = `${head}${text}`;
+			config.v1.telegram.channels.forEach((channel) => {
+				bot.sendMessage(channel, print, { parse_mode: 'HTML' });
+			});
+		};
+
+		for (let size = 0; size < length;) {
+			let chunk = text.substr(size, SIZE);
+			let lastDot = chunk.lastIndexOf('.');
+			if (lastDot) {
+				lastDot += 1;
+				send(text.substr(size, lastDot));
+				size += lastDot;
+			} else {
+				send(chunk);
+				size += SIZE;
+			}
+		}
 
 		setTimeout(() => { next(true) } , Math.random() * 1000 + 1000);
 	};
