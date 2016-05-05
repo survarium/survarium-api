@@ -116,16 +116,20 @@ var devmessage = (function (storage) {
 			});
 		};
 
-		for (let size = 0; size < length;) {
-			let chunk = text.substr(size, SIZE);
-			let lastDot = chunk.lastIndexOf('.');
-			if (lastDot) {
-				lastDot += 1;
-				send(text.substr(size, lastDot));
-				size += lastDot;
-			} else {
-				send(chunk);
-				size += SIZE;
+		if (length < SIZE) {
+			send(text);
+		} else {
+			for (let size = 0; size < length;) {
+				let chunk = text.substr(size, SIZE);
+				let lastDot = chunk.lastIndexOf('.');
+				if (lastDot !== -1) {
+					lastDot += 1;
+					send(text.substr(size, lastDot));
+					size += lastDot;
+				} else {
+					send(chunk);
+					size += SIZE;
+				}
 			}
 		}
 
