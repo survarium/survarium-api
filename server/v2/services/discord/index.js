@@ -45,7 +45,7 @@ var sendMessage = function (message) {
 			if (!channel) {
 				return resolve();
 			}
-
+			
 			bot
 				.sendMessage(channel, message)
 				.then(() => debug('bot:message:ok'))
@@ -56,6 +56,19 @@ var sendMessage = function (message) {
 		next();
 	});
 };
+
+function toMD(val) {
+	return val.replace(/^\s+/, '')
+		.replace(/<\/blockquote>/gm, '\n')
+		.replace(/<br>{1,}/gm, '\n')
+		.replace(/&quot;/gm, '"')
+		.replace(/<cite>((?:.|\n)*?)<\/cite>/gm, '*$1*\n')
+		.replace(/<b>((?:.|\n)*?)<\/b>/gm, '**$1**')
+		.replace(/<([^>]+) (style="([^"]*)font-weight: bold([^"]*)")([^>]*)>([^<]*)<\/[^<]+>/gm, '**$6**')
+		.replace(/<a([^>]*) (href="([^"]*)")([^>]*)>([^<]*)<\/a>/igm, '$5 ($3)')
+		.replace(/<(?:.|\n)*?>/gm, '')
+		;
+}
 
 var devmessage = (function (storage) {
 	var running;
@@ -75,19 +88,13 @@ var devmessage = (function (storage) {
 		running = true;
 
 		return sendMessage(message)
-			.then(() => next(true))
-			.catch(err => debug('bot:message:err', err));
-	};
-
-	var toMD = function (val) {
-		return val.replace(/^\s+/, '')
-			.replace(/<\/blockquote>/gm, '\n')
-			.replace(/<br>/gm, '\n\n')
-			.replace(/&quot;/gm, '"')
-			.replace(/<cite>((?:.|\n)*?)<\/cite>/gm, '*$1*\n\n')
-			.replace(/<b>((?:.|\n)*?)<\/b>/gm, '**$1**')
-			.replace(/<a([^>]*) (href="([^"]*)")([^>]?)>([^<]*)<\/a>/igm, '$5 ($3)')
-			.replace(/<(?:.|\n)*?>/gm, '');
+			.then(() => {
+				debug('bot:message:sent', message);
+			})
+			.catch(err => debug('bot:message:err', err))
+			.then(() => {
+				next(true);
+			});
 	};
 
 	var post = function (params) {
