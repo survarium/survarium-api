@@ -45,7 +45,7 @@ var sendMessage = function (message) {
 			if (!channel) {
 				return resolve();
 			}
-			
+
 			bot
 				.sendMessage(channel, message)
 				.then(() => debug('bot:message:ok'))
@@ -59,7 +59,6 @@ var sendMessage = function (message) {
 
 function toMD(val) {
 	return val.replace(/^\s+/, '')
-		.replace(/<\/blockquote>/gm, '\n')
 		.replace(/<br>{1,}/gm, '\n')
 		.replace(/&quot;/gm, '"')
 		.replace(/<cite>((?:.|\n)*?)<\/cite>/gm, '*$1*\n')
@@ -104,7 +103,7 @@ var devmessage = (function (storage) {
 
 		let text = toMD(message.text);
 
-		const head = toMD(`<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + message.topic.name + '</a>' : ''}\n`);
+		const head = toMD(`<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + message.topic.name + '</a>' : ''}\n\n`);
 		const SIZE = 2000 - head.length;
 
 		const length = text.length;
