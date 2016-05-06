@@ -1,14 +1,15 @@
 'use strict';
 
-const debug = require('debug')('importer:vg-messages');
-const Promise = require('bluebird');
-const db = require('../../../v1/lib/db');
-const utils = require('../../../v1/lib/utils');
-const config = require('../../../configs');
+const debug      = require('debug')('importer:vg-messages');
+const Promise    = require('bluebird');
+const db         = require('../../../v1/lib/db');
+const utils      = require('../../../v1/lib/utils');
+const config     = require('../../../configs');
 const developers = config.v2.developers;
-const notifications = require('../../../v1/services/telegram/triggers');
-const got = require('got');
-const cheerio = require('cheerio');
+const telegram   = require('../../../v1/services/telegram/triggers');
+const discord    = require('../../services/discord');
+const got        = require('got');
+const cheerio    = require('cheerio');
 const VgMessages = require('./model');
 
 var headers = {
@@ -131,7 +132,8 @@ function parseSearch(html, options) {
 						.then(function (response) {
 							return parseMessage(response.body, { target: options.target, dev: options.dev, message: message })
 								.then(function (message) {
-									notifications.devmessage({ message: message, dev: options.dev, url: url });
+									telegram.devmessage({ message: message, dev: options.dev, url: url });
+									discord.devmessage({ message: message, dev: options.dev, url: url });
 									return message;
 								});
 						});

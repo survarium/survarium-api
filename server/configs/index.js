@@ -85,5 +85,10 @@ module.exports = {
 			{ id: '561692',  name: 'Gramb' },
 			//{ id: '1080565', name: 'Esmer' }
 		]
+	},
+
+	discord: {
+		token: process.env.DISCORD_TOKEN,
+		devChannel: process.env.DISCORD_DEVCHANNEL || 'devmessages'
 	}
 };
