@@ -31,21 +31,24 @@ function setStatus() {
 		.catch(err => debug('bot:status:err', err));
 }
 
-function onReady() {
-	debug('bot:ready');
+var pmChannels = [];
+function getPM() {
+	let pms = config.discord.pmChannels;
+	let botPMs = bot.privateChannels;
+	pmChannels = Object
+		.keys(botPMs)
+		.map(Number)
+		.reduce((result, pos) => {
+			if (isNaN(pos) || pms.indexOf(botPMs[pos].recipient.username) === -1) {
+				return result;
+			}
 
-	getChannels();
-	setStatus();
+			result.push(botPMs[pos]);
+			return result;
+		}, []);
 }
 
-bot
-	.on('error', (err) => {
-		debug('bot:err', err);
-	})
-	.on('ready', onReady)
-	.loginWithToken(config.discord.token);
-
-var sendMessage = function (message) {
+var sendMessage = function (channels, message) {
 	return new Promise((resolve, reject) => {
 		if (!channels.length) {
 			return reject(`no target channels available`);
@@ -69,6 +72,33 @@ var sendMessage = function (message) {
 		next();
 	});
 };
+
+function onReady() {
+	debug('bot:ready');
+
+	getChannels();
+	setStatus();
+	getPM();
+}
+
+bot
+	.on('error', (err) => {
+		debug('bot:err', err);
+	})
+	.on('ready', onReady)
+	.on('message', message => {
+		let author = message.author;
+		if (bot.user.id === author.id) {
+			return;
+		}
+		let source = message.channel.name ? `channel="${message.channel.name}"` :
+			message.channel instanceof Discord.PMChannel ? 'PM' : `type="${message.channel.type}"`;
+
+		let txt = `<@!${author.id}> [${source}]\n${message.content}`;
+
+		sendMessage(pmChannels, txt);
+	})
+	.loginWithToken(config.discord.token);
 
 function toMD(val) {
 	return val.replace(/^\s+/, '')
@@ -99,7 +129,7 @@ var devmessage = (function (storage) {
 
 		running = true;
 
-		return sendMessage(message)
+		return sendMessage(channels, message)
 			.then(() => {
 				debug('bot:message:sent', message);
 			})

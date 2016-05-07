@@ -89,6 +89,7 @@ module.exports = {
 
 	discord: {
 		token: process.env.DISCORD_TOKEN,
-		devChannel: process.env.DISCORD_DEVCHANNEL || 'devmessages'
+		devChannel: process.env.DISCORD_DEVCHANNEL || 'devmessages',
+		pmChannels: process.env.DISCORD_PM_CHANNELS ? process.env.DISCORD_PM_CHANNELS.split(',') : ['Vaseker']
 	}
 };
