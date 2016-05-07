@@ -10,26 +10,39 @@ var channels = [];
 
 var bot = new Discord.Client(connectionParams);
 
+function getChannels() {
+	let botChannels = bot.channels;
+	channels = Object
+		.keys(botChannels)
+		.map(Number)
+		.reduce((result, pos) => {
+			if (isNaN(pos) || botChannels[pos].name !== config.discord.devChannel) {
+				return result;
+			}
+
+			result.push(botChannels[pos]);
+			return result;
+		}, []);
+}
+
+function setStatus() {
+	return bot
+		.setPlayingGame('Survarium')
+		.catch(err => debug('bot:status:err', err));
+}
+
+function onReady() {
+	debug('bot:ready');
+
+	getChannels();
+	setStatus();
+}
+
 bot
 	.on('error', (err) => {
 		debug('bot:err', err);
 	})
-	.on('ready', () => {
-		debug('bot:ready');
-
-		let botChannels = bot.channels;
-		channels = Object
-			.keys(botChannels)
-			.map(Number)
-			.reduce((result, pos) => {
-				if (isNaN(pos) || botChannels[pos].name !== config.discord.devChannel) {
-					return result;
-				}
-
-				result.push(botChannels[pos]);
-				return result;
-			}, []);
-	})
+	.on('ready', onReady)
 	.loginWithToken(config.discord.token);
 
 var sendMessage = function (message) {
