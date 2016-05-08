@@ -82,19 +82,22 @@ function onReady() {
 }
 
 bot
-	.on('error', (err) => {
-		debug('bot:err', err);
-	})
+	.on('error', err => debug('bot:err', err))
 	.on('ready', onReady)
 	.on('message', message => {
 		let author = message.author;
+		let source;
 		if (bot.user.id === author.id) {
 			return;
+		} else if (message.channel instanceof Discord.PMChannel) {
+			source = 'PM';
+		} else if (message.mentions && message.mentions.length && message.mentions.filter(elem => elem.id === bot.user.id).length) {
+			source = message.channel.name || message.channel.type;
+		} else {
+			return;
 		}
-		let source = message.channel.name ? `channel="${message.channel.name}"` :
-			message.channel instanceof Discord.PMChannel ? 'PM' : `type="${message.channel.type}"`;
-
-		let txt = `<@!${author.id}> [${source}]\n${message.content}`;
+		
+		let txt = `<@${author.id}> [${source}]\n${message.content}`;
 
 		sendMessage(pmChannels, txt);
 	})
