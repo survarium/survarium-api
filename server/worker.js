@@ -15,5 +15,5 @@ app.listen(config.handle, function (err) {
 	if (err) {
 		throw err;
 	}
-	console.log('app listening handle', config.handle);
+	console.log(`app [${process.pid}] listening handle`, config.handle);
 });
