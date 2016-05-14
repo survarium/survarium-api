@@ -2,6 +2,7 @@
 
 var Discord = require('discord.js');
 var debug = require('debug')('discord');
+var hiDebug = require('debug')('discord:high');
 
 var config = require('../../../configs');
 
@@ -87,6 +88,9 @@ bot
 	.on('message', message => {
 		let author = message.author;
 		let source;
+
+		hiDebug(`message. ${author.nickname}: ${message.content}`);
+
 		if (bot.user.id === author.id) {
 			return;
 		} else if (message.channel instanceof Discord.PMChannel) {
@@ -96,14 +100,21 @@ bot
 		} else {
 			return;
 		}
-		
+
 		let txt = `<@${author.id}> [${source}]\n${message.content}`;
 
 		sendMessage(pmChannels, txt);
 	})
 	.loginWithToken(config.discord.token);
 
+['debug', 'warn', 'messageDeleted', 'messageUpdated', 'disconnected','raw', 'serverCreated', 'serverDeleted', 'serverUpdated', 'channelCreated', 'channelDeleted', 'channelUpdated', 'serverRoleCreated', 'serverRoleDeleted', 'serverRoleUpdated', 'serverNewMember', 'serverMemberRemoved', 'serverMemberUpdated', 'presence', 'userTypingStarted', 'userTypingStopped', 'userBanned', 'userUnbanned', 'voiceJoin', 'voiceLeave', 'voiceStateUpdate']
+	.forEach(event => bot
+		.on(event, () => {
+			debug(`bot:event:${event}`);
+		}));
+
 function toMD(val) {
+	debug('htmlToMD');
 	return val.replace(/^\s+/, '')
 		.replace(/<br>{1,}/gm, '\n')
 		.replace(/&quot;/gm, '"')
@@ -119,19 +130,24 @@ var devmessage = (function (storage) {
 	var running;
 
 	var next = function (done) {
+		debug('bot:message:send');
 		if (done) {
+			debug('bot:message:send:sended');
 			running = false;
 		}
 		if (running) {
+			debug('bot:message:send:inProgress');
 			return;
 		}
 		var message = storage.shift();
 		if (!message) {
+			debug('bot:message:send:stackIsEmpty');
 			return;
 		}
 
 		running = true;
 
+		debug('bot:message:send:exec');
 		return sendMessage(channels, message)
 			.then(() => {
 				debug('bot:message:sent', message);
@@ -143,6 +159,8 @@ var devmessage = (function (storage) {
 	};
 
 	var post = function (params) {
+		debug('bot:message:prepare');
+
 		let message = params.message;
 		let dev     = params.dev;
 		let url     = params.url;
@@ -155,22 +173,27 @@ var devmessage = (function (storage) {
 		const length = text.length;
 
 		let send = function (text) {
+			debug('bot:message:prepare:addChunkToStack');
 			let print = `${head}${text}`;
 			storage.push(print);
 			next();
 		};
 
 		if (length < SIZE) {
+			debug('bot:message:prepare:short');
 			send(text);
 		} else {
+			debug('bot:message:prepare:long');
 			for (let size = 0; size < length;) {
 				let chunk = text.substr(size, SIZE);
 				let lastDot = chunk.lastIndexOf('.');
 				if (lastDot !== -1) {
+					debug('bot:message:prepare:long:dotChunk');
 					lastDot += 1;
 					send(text.substr(size, lastDot));
 					size += lastDot;
 				} else {
+					debug('bot:message:prepare:long:chunk');
 					send(chunk);
 					size += SIZE;
 				}
@@ -179,6 +202,7 @@ var devmessage = (function (storage) {
 	};
 
 	return function (params) {
+		debug('bot:message:addToStack');
 		post(params);
 	};
 })([]);
