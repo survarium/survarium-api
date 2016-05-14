@@ -89,7 +89,7 @@ bot
 		let author = message.author;
 		let source;
 
-		hiDebug(`message. ${author.nickname}: ${message.content}`);
+		hiDebug(`message. ${author.username}: ${message.content}`);
 
 		if (bot.user.id === author.id) {
 			return;
