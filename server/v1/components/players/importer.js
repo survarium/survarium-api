@@ -40,7 +40,7 @@ function assignDataToModel(source, update) {
 
 	var kills = +data.matches_stats.kills || 0;
 	var dies = +data.matches_stats.dies || 0;
-	var result = {
+	var $set = {
 		'progress.elo': +data.progress.elo || 0,
 		'progress.level': +data.progress.level || 0,
 		'progress.experience': +data.progress.experience || 0,
@@ -60,16 +60,22 @@ function assignDataToModel(source, update) {
 		})
 	};
 
+	var $push = {};
+
 	if (!update) {
-		result.id = source.data.pid;
-		result.nickname = data.nickname;
+		$set.id = source.data.pid;
+		$set.nickname = data.nickname;
 	} else {
 		if (data.nickname !== update.nickname) {
-			result.nickname = data.nickname;
+			$push['nicknames'] = {
+				nickname: update.nickname,
+				until: Date.now()
+			};
+			$set.nickname = data.nickname;
 		}
 	}
 
-	return result;
+	return { $set, $push };
 }
 
 /**
@@ -192,7 +198,7 @@ function load(params) {
 						debug(`player ${id} will be ${isNew ? 'created' : 'updated'}`);
 						return (isNew ?
 								self
-									.create(assignDataToModel(fetched))
+									.create(assignDataToModel(fetched).$set)
 									.tap(function () {
 										debug(`player ${id} created`);
 									})
@@ -203,7 +209,7 @@ function load(params) {
 										}
 										throw err;
 									}):
-								self.update({ id: id },  { $set: assignDataToModel(fetched, player) } ).exec()
+								self.update({ id: id },  assignDataToModel(fetched, player)).exec()
 									.then(function () {
 										debug(`player ${id} updated`);
 										return player;

@@ -26,6 +26,15 @@ const PlayersSchema = new Schema({
 		required: true,
 		trim: true
 	},
+	nicknames: [
+		{
+			until: {
+				type: Date,
+				default: Date.now
+			},
+			nickname: String
+		}
+	],
 	clan: {
 		type: Schema.Types.ObjectId,
 		ref : 'Clans'
