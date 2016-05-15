@@ -501,6 +501,11 @@ function loadByTS(last) {
 								 */
 								if (length > 1 && lastImport === matches[ids[length - 2]]) {
 									debug(`increasing offset for lastImport`);
+									/**
+									 * Setting last import ts to start
+									 * And align it with offset
+									 */
+									lastImport = last.ts;
 									offset += matchesToImport;
 								} else {
 									offset = 0;
@@ -509,6 +514,16 @@ function loadByTS(last) {
 									.then(resolve)
 									.catch(reject);
 							}
+
+							if (lastImport - 1 !== last.ts) {
+								/**
+								 * getNewMatches responds by matches
+								 * which import time if $GT than timestamp,
+								 * not $GTE, so moving timestamp little backwards
+								 */
+								lastImport = lastImport - 1;
+							}
+
 							return resolve();
 						})
 						.catch(resolve);
@@ -567,8 +582,8 @@ function loadByTS(last) {
 }
 
 var startOfTimes = {
-	date: new Date(process.env.IMPORTER_START || '2015-04-30T21:08:03Z'),
-	match: +process.env.IMPORTER_MATCH || 2253096
+	date: new Date(process.env.IMPORTER_START || '2016-05-15T21:08:03Z'),
+	match: +process.env.IMPORTER_MATCH || 4895046
 };
 
 /**
