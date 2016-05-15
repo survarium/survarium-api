@@ -60,22 +60,22 @@ function assignDataToModel(source, update) {
 		})
 	};
 
-	var $push = {};
+	var $update = { $set };
 
 	if (!update) {
 		$set.id = source.data.pid;
 		$set.nickname = data.nickname;
 	} else {
 		if (data.nickname !== update.nickname) {
-			$push['nicknames'] = {
+			($update.$push || ($update.$push = {}))['nicknames'] = {
 				nickname: update.nickname,
-				until: Date.now()
+				until   : Date.now()
 			};
 			$set.nickname = data.nickname;
 		}
 	}
 
-	return { $set, $push };
+	return $update;
 }
 
 /**
