@@ -17,8 +17,6 @@ var headers = {
 	cookie: 'lang=ru'
 };
 
-var MAXPOST = 0;
-
 const targets = [
 	{
 		lang: 'ru',
@@ -57,8 +55,11 @@ function parseMessage(html, options) {
 	let $message = search(`#message_${message.post}`);
 	message.text = $message.html();
 
+	search = null;
+	$message = null;
+
 	if (!message.text) {
-		console.log(html);
+		debug(`parseMessage:noText "${html}"`);
 	}
 
 	return message.save();
@@ -80,22 +81,31 @@ function getMaxPost(dev) {
  */
 function parseSearch(html, options) {
 	return getMaxPost(options.dev)
-		.then(function (MAXPOST) {
-			debug(`last ${options.dev.name} message is #${MAXPOST}`);
+		.then(MAXPOST => {
+			MAXPOST && debug(`last ${options.dev.name} message is #${MAXPOST}`);
 
 			let search = cheerio.load(html, { decodeEntities: false });
+
+			let searchError = search('#message p').text();
+			if (searchError) {
+				if (searchError.match(/(Подходящих\sтем\sили\sсообщений\sне\sнайдено|No\ssuitable\smatches\swere\sfound)/)) {
+					return;
+				} else {
+					throw new Error(searchError);
+				}
+			}
+
 			let posts  = search('.search.post');
+			let messages = [];
 
-			let promises = [];
-
-			posts.each(function (i, post) {
+			posts.each(function parseSearchPost(i, post) {
 				let $post = search(post);
 
 				let postURL = $post.find('.searchresults a').attr('href');
 
 				let postId = Number(postURL.match(/p\=(\d+)/)[1]);
 
-				if (postId <= MAXPOST) {
+				if (MAXPOST && postId <= MAXPOST) {
 					return;
 				}
 
@@ -124,56 +134,45 @@ function parseSearch(html, options) {
 				/**
 				 * Планируем загрузку полного тела сообщения
 				 */
-				promises.push(function () {
-					debug(`loading ${options.dev.name} message #${message.post} in ${options.target.lang} forum`);
-					return got(message.url, {
-						headers: headers
-					})
-						.then(function (response) {
-							return parseMessage(response.body, { target: options.target, dev: options.dev, message: message })
-								.then(function (message) {
-									telegram.devmessage({ message: message, dev: options.dev, url: url });
-									discord.devmessage({ message: message, dev: options.dev, url: url });
-									return message;
-								});
-						});
-				});
+				messages.push(message);
 			});
 
-			if (!promises.length) {
-				var error = search('#message p').text();
-				if (!error || !error.length) {
-					debug(`${options.dev.name} has no NEW messages in ${options.target.lang} forum`);
-				}
-				else if (!error.match(/(Подходящих\sтем\sили\sсообщений\sне\sнайдено|No\ssuitable\smatches\swere\sfound)/)) {
-					throw new Error(error);
-				} else {
-					debug(`${options.dev.name} has no messages in ${options.target.lang} forum`);
-				}
-			}
-
-			return promises.reverse();
+			return messages.reverse();
 		});
 }
 
-function loadMessages(messagesFn, params) {
+function loadMessage(message, options) {
+	debug(`loading ${options.dev.name} message #${message.post} in ${options.target.lang} forum`);
+	return got(message.url, {
+			headers: headers
+		})
+		.then(function (response) {
+			return parseMessage(response.body, { target: options.target, dev: options.dev, message: message })
+				.then(function (message) {
+					telegram.devmessage({ message: message, dev: options.dev, url: url });
+					discord .devmessage({ message: message, dev: options.dev, url: url });
+					return message;
+				});
+		});
+}
+
+function loadMessages(messages, params) {
+	if (!messages) {
+		return debug(`${params.dev.name} has no messages in ${params.target.lang} forum`);
+	}
+	if (!messages.length) {
+		return debug(`${params.dev.name} has no new messages in ${params.target.lang} forum`);
+	}
 	return new Promise(function (resolve) {
-		var messages = [];
-		var errors = [];
 		var next = function () {
-			var messageFn = messagesFn.shift();
-			if (!messageFn) {
-				return resolve({ messages: messages, errors: errors });
+			var message = messages.shift();
+			if (!message) {
+				return resolve();
 			}
 			return Promise
 				.delay(params.target.delay)
-				.then(messageFn)
-				.then(function (message) {
-					messages.push(message);
-				})
-				.catch(function (err) {
-					errors.push(err);
-				})
+				.then(() => loadMessage(message, params))
+				.catch(debug)
 				.then(next);
 		};
 		next();
@@ -202,19 +201,17 @@ function loadTarget(target) {
 				return got(searchUrl, {
 					headers: headers
 				})
-					.then(function (response) {
+					.then(response => {
 						return parseSearch(response.body, { target: target, dev: dev });
 					})
-					.then(function(messages) {
+					.then(messages => {
 						return loadMessages(messages, { target: target, dev: dev });
 					})
-					.then(function (result) {
-						console.log(JSON.stringify(result, null, 4));
+					.then(() => {
+						debug(`${dev.name} messages in ${target.lang} forum loaded`);
 						done++;
 					})
-					.catch(function (err) {
-						errors.push({ lang: target.lang, dev: dev, searchError: true, err: err.message });
-					})
+					.catch(debug)
 					.then(next);
 			});
 		};
@@ -253,7 +250,8 @@ function auth() {
 				'user-agent': headers['user-agent']
 			}
 		})
-		.then(function (res) {
+		.then(res => {
+			debug(`auth:gotLoginForm`);
 			var html = cheerio.load(res.body, { decodeEntities: false });
 			var form = html('form');
 			var data = {
@@ -263,11 +261,15 @@ function auth() {
 			};
 			var cookie = getCookie(res.headers['set-cookie']);
 
+			html = null;
+			form = null;
+
 			return { cookie: cookie, data: data };
 		})
 		.then(function (params) {
-			return new Promise(function (resolve, reject) {
-				got
+			return new Promise((resolve, reject) => {
+				debug(`auth:authentification`);
+				var signin = got
 					.stream(url + '/signin', {
 						headers: {
 							'user-agent': headers['user-agent'],
@@ -275,24 +277,28 @@ function auth() {
 						},
 						body: params.data
 					})
-					.on('error', function (err, body, res) {
+					.on('error', (err, body, res) => {
+						debug(`auth error`, body);
 						reject(err);
 					})
-					.on('response', function (res) {
+					.on('response', res => {
+						signin.end();
 						resolve(getCookie(res.headers['set-cookie']));
-					});
+					})
+					.on('finish', () => signin = null);
 			});
 		})
-		.then(function (cookie) {
+		.then(cookie => {
+			debug(`auth:getPhpBBCookies`);
 			return got('https://forum.survarium.com/ru/', {
 					headers: {
 						cookie: cookie,
 						'user-agent': headers['user-agent']
 					}
 				})
-				.then(function (res) {
+				.then(res => {
 					headers.cookie = getCookie(res.headers['set-cookie']);
-					debug(`auth ok: "${headers.cookie}"`);
+					debug(`auth:ok`);
 				});
 		});
 }
@@ -300,36 +306,36 @@ function auth() {
 function loader () {
 	debug('loading dev messages');
 
+	function load() {
+		return (new Promise(resolve => {
+			var _targets = targets.slice();
+			var next = () => {
+				var target = _targets.shift();
+
+				if (!target) {
+					debug('loader:loaded');
+					return resolve();
+				}
+
+				return loadTarget(target)
+					.catch(err => debug(`loadTarget:error:${err}`))
+					.then(next);
+			};
+
+			next();
+		}));
+	}
+
 	return auth()
-		.then(function () {
-			return (new Promise(function (resolve) {
-					var _targets = targets.slice();
-					var next = function () {
-						var target = _targets.shift();
-
-						if (!target) {
-							return resolve();
-						}
-
-						return loadTarget(target)
-							.catch(function (err) {
-								console.log(err);
-							})
-							.then(next);
-					};
-
-					next();
-				}));
-		})
-		.then(function () {
-			debug('loaded');
-			setTimeout(loader, 1000 * 60 * 10);
-		})
-		.catch(function (error) {
-			console.log(error);
+		.then(load)
+		.catch(err => debug(`loader:critical:${err}`))
+		.then(() => {
+			setTimeout(loader, 1000 * 60 * 5);
 		});
 }
-setTimeout(loader, (Math.random() * 30000) >>> 0);
+
+loader();
+//setTimeout(loader, (Math.random() * 30000) >>> 0);
 
 module.exports = {
 	loader: loader
