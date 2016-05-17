@@ -82,12 +82,13 @@ module.exports = {
 			{ id: '74710',   name: 'Андрияш Козловский' },
 			{ id: '392554',  name: 'Альбертыч' },
 			{ id: '457474',  name: 'Survarium DevTeam' },
-			{ id: '561692',  name: 'Gramb' },
+			{ id: '561692',  name: 'Gramb' }
 			//{ id: '1080565', name: 'Esmer' }
 		]
 	},
 
 	discord: {
+		server: process.env.DISCORD_SERVER === 'true',
 		token: process.env.DISCORD_TOKEN,
 		devChannel: process.env.DISCORD_DEVCHANNEL || 'devmessages',
 		pmChannels: process.env.DISCORD_PM_CHANNELS ? process.env.DISCORD_PM_CHANNELS.split(',') : ['Vaseker']

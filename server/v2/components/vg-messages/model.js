@@ -28,7 +28,8 @@ const VgMessages = new Schema({
 	dev: {
 		type: Number,
 		index: true
-	}
+	},
+	banlist: Boolean
 }, {
 	collection: 'vg_messages'
 });

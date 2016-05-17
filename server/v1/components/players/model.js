@@ -107,6 +107,14 @@ const PlayersSchema = new Schema({
 			points: Number
 		}
 	],
+	banned: {
+		type: Boolean,
+		index: true
+	},
+	ban: {
+		type: Schema.Types.ObjectId,
+		ref: 'Bans'
+	},
 	deletedAt: Date
 }, { timestamps: true });
 
