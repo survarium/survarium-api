@@ -11,7 +11,8 @@ exports.list = function list(options) {
 	var query  = {};
 	var fields = {
 		_id: 0,
-		__v: 0
+		__v: 0,
+		'players._id': 0
 	};
 	var sort   = options.sort || { date: -1 };
 	var limit  = 10;
@@ -30,15 +31,15 @@ exports.list = function list(options) {
 		.populate([
 			{
 				path: 'players.player',
-				select: { nickname: 1, 'progress.level': 1 }
+				select: { nickname: 1, 'progress.level': 1, _id: 0 }
 			},
 			{
 				path: 'players.clan',
-				select: { abbr: 1 }
+				select: { abbr: 1, _id: 0 }
 			},
 			{
 				path: 'vg_message',
-				select: { date: 1, forum: 1, topic: 1, post: 1 }
+				select: { date: 1, forum: 1, topic: 1, post: 1, _id: 0 }
 			}
 		])
 		.sort(sort);
