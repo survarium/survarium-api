@@ -149,8 +149,8 @@ function loadMessage(message, options) {
 		.then(function (response) {
 			return parseMessage(response.body, { target: options.target, dev: options.dev, message: message })
 				.then(function (message) {
-					telegram.devmessage({ message: message, dev: options.dev, url: url });
-					discord .devmessage({ message: message, dev: options.dev, url: url });
+					telegram.devmessage({ message: message, dev: options.dev, url: message.url });
+					discord .devmessage({ message: message, dev: options.dev, url: message.url });
 					return message;
 				});
 		});
