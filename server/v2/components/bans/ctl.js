@@ -39,7 +39,7 @@ exports.list = function list(options) {
 			},
 			{
 				path: 'vg_message',
-				select: { date: 1, forum: 1, topic: 1, post: 1, _id: 0 }
+				select: { lang: 1, date: 1, forum: 1, topic: 1, post: 1, _id: 0 }
 			}
 		])
 		.sort(sort);

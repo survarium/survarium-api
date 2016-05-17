@@ -22,6 +22,7 @@ exports.list = function list (options) {
 		clan: 0,
 		stats: 0,
 		ammunition: 0,
+		ban: 0,
 		skills: 0,
 		_id: 0,
 		__v: 0,
@@ -80,6 +81,7 @@ exports.fetch = function (player) {
 		stats: 0,
 		ammunition: 0,
 		skills: 0,
+		ban: 0,
 		createdAt: 0,
 		__v: 0
 	});
