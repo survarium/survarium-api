@@ -8,7 +8,7 @@ const debug      = Discord.debug;
 
 function router (message) {
 	let match = message.content.match(/^Banlist (\d+)/i);
-	let postId = match[1];
+	let postId = match && match[1];
 	if (!postId) {
 		return;
 	}
