@@ -16,12 +16,17 @@ function router (message) {
 	debug('bans:router');
 
 	let post;
+	let ban;
 	return VgMessages
-		.findOne({ post: postId }, { text: 1, date: 1 })
+		.findOne({ post: postId }, { text: 1, date: 1, banlist: 1 })
 		.then(elem => {
 			if (!elem) {
 				throw new Error(`No vg-message ${postId} found`);
 			}
+			if (elem.banlist) {
+				throw new Error(`Vg-message ${postId} is banlist already`);
+			}
+
 			debug(`bans:loaded message ${postId}`);
 
 			post = elem;
@@ -46,17 +51,18 @@ function router (message) {
 					date: post.date,
 					vg_message: post._id
 				})
-				.then(ban => {
+				.then(banlist => {
 					debug(`bans:banlist created`);
-					ban.players = players.map(player => {
+					banlist.players = players.map(player => {
 						let result = { player: player._id };
 						player.clan && (result.clan = player.clan);
 						return result;
 					});
 
-					return ban.save();
+					return banlist.save();
 				})
-				.then(ban => {
+				.then(banlist => {
+					ban = banlist;
 					return Players
 						.update(
 							{
@@ -65,7 +71,7 @@ function router (message) {
 							{
 								$set: {
 									banned: true,
-									ban: ban._id
+									ban: banlist._id
 								}
 							},
 							{
@@ -76,7 +82,7 @@ function router (message) {
 				})
 				.then(() => {
 					debug(`bans:cheaters banned`);
-					post.banlist = true;
+					post.banlist = ban._id;
 					return post.save();
 				});
 		})

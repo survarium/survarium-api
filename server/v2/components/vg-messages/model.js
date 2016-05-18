@@ -29,7 +29,10 @@ const VgMessages = new Schema({
 		type: Number,
 		index: true
 	},
-	banlist: Boolean
+	banlist: {
+		type: Schema.Types.ObjectId,
+		ref : 'Bans'
+	}
 }, {
 	collection: 'vg_messages'
 });
