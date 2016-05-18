@@ -18,6 +18,7 @@ function getPages(result) {
 		{ url: HOST + '/', changefreq: 'always' },
 		{ url: HOST + '/info/messages', changefreq: 'always' },
 		{ url: HOST + '/info/about', changefreq: 'monthly' },
+		{ url: HOST + '/info/bans', changefreq: 'weekly' },
 		{ url: HOST + '/streams/youtube', changefreq: 'monthly' },
 		{ url: HOST + '/streams/twitch', changefreq: 'monthly' },
 		{ url: HOST + '/players', changefreq: 'monthly' },
