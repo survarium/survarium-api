@@ -127,9 +127,16 @@ exports.players = function players (clan, options) {
 			if (roleSort) {
 				var Ranks = {
 					commander: 99,
+					Командир: 99,
 					assistant: 80,
+					'Зам. командира': 80,
+					Магистр: 70,
+					Хранитель: 60,
 					warlord  : 50,
-					soldier  : 10
+					Мастер: 50,
+					soldier  : 10,
+					Волхв: 10,
+					Следопыт: 5
 				};
 
 				ids = ids.sort(function (a, b) {
