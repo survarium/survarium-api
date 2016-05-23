@@ -95,6 +95,18 @@ function getPlayers(result) {
 	});
 }
 
+function addAlternates(result) {
+	return result.map(elem => {
+		elem.links = ['ru', 'ua', 'en'].map(lang => {
+			return {
+				lang: lang,
+				url: `${elem.url}?lang=${lang}`
+			};
+		});
+		return elem;
+	});
+}
+
 db.once('connected', () => {
 	var result = [];
 	return Promise
@@ -104,18 +116,8 @@ db.once('connected', () => {
 		    getPlayers(result),
 			getMatches(result)
 		])
+		//.then(() => result = addAlternates(result))
 		.then(() => {
-			return result = result.map(elem => {
-				elem.links = ['ru', 'ua', 'en'].map(lang => {
-					return {
-						lang: lang,
-						url: `${elem.url}?lang=${lang}`
-					};
-				});
-				return elem;
-			});
-		})
-		.then((result) => {
 			return new Promise((resolve, reject) => {
 				new sm.createSitemapIndex({
 					cacheTime: 600000,
