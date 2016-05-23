@@ -37,7 +37,8 @@ const PlayersSchema = new Schema({
 	],
 	clan: {
 		type: Schema.Types.ObjectId,
-		ref : 'Clans'
+		ref : 'Clans',
+		index: true
 	},
 	clan_meta: {
 		id: {
@@ -151,6 +152,29 @@ PlayersSchema.methods.addStat = function (stat) {
 		.then(function () {
 			return self;
 		});
+};
+
+PlayersSchema.methods.attachClan = function (clan) {
+	return this
+		.update({
+			clan: clan._id,
+			clan_meta: {
+				id: clan.id,
+				abbr: clan.abbr
+			}
+		})
+		.exec();
+};
+
+PlayersSchema.methods.detachClan = function () {
+	return this
+		.update({
+			$unset: {
+				clan: '',
+				clan_meta: ''
+			}
+		})
+		.exec();
 };
 
 module.exports = db.model('Players', PlayersSchema);

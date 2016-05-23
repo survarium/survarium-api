@@ -101,52 +101,10 @@ function assignClan(params, player) {
 				id: clanId
 			})
 			.tap(function (clan) {
-				return player.update({
-					clan: clan._id,
-					clan_meta: {
-						id: clan.id,
-						abbr: clan.abbr
-					}
-				}).exec();
+				return player.attachClan(clan);
 			})
 			.tap(function (clan) {
-				debug(`clan ${clanId} assigned to player ${player.nickname}`);
-				debug(`player ${player.nickname} will be added to clan ${clanId}`);
-				return ClansImporter
-					.fetch({ id: clanId })
-					.then(function (clanInfo) {
-						var members = clanInfo.members.members;
-						var keys = Object.keys(members);
-						var role;
-						keys.forEach(function (key) {
-							var member = members[key];
-							if (member.pid === player.id) {
-								role = member.role_name;
-							}
-						});
-						return clan
-							.update({
-								$pull: {
-									players: {
-										player: player._id
-									}
-								}
-							})
-							.exec()
-							.then(function () {
-								return clan.update({
-									$push: {
-										players: {
-											player: player._id,
-											role: role
-										}
-									}
-								}).exec();
-							})
-							.tap(function () {
-								debug(`player ${player.nickname} added to clan ${clanId} with role ${role}`);
-							});
-						});
+				return ClansImporter.attachClan(clan, player);
 			})
 			.then(function () {
 				debug(`clan ${clanId} assigned to player ${player.nickname}`);
@@ -155,29 +113,11 @@ function assignClan(params, player) {
 	}
 	if (!clanId && !isNew && player.clan) {
 		debug(`current clan for ${player.nickname} will be removed`);
-		return player
-			.update({
-				$unset: {
-					clan: '',
-					clan_meta: ''
-				}
-			})
-			.exec()
+		return player.detachClan()
+			.tap(ClansImporter.detachClan)
 			.then(function () {
 				debug(`current clan for ${player.nickname} is removed`);
 				return player;
-			})
-			.tap(function () {
-				debug(`player will be removed from clan members`);
-				return ClansImporter.model.update({ _id: player.clan }, {
-					$pull: {
-						players: {
-							player: player._id
-						}
-					}
-				}).exec().tap(function () {
-					debug(`player removed from clan members`);
-				});
 			});
 	}
 	debug(`clan ${clanId} is not assigned to player ${player.nickname}`);

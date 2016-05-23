@@ -1,16 +1,25 @@
 'use strict';
 
-const debug = require('debug')('importer:clans');
-const Promise = require('bluebird');
+const debug     = require('debug')('importer:clans');
+const Promise   = require('bluebird');
 const apiNative = require('../../lib/api-native');
-const cache = require('../../lib/cache');
-const model = require('./model');
-const Stats = require('../stats/model');
-const utils    = require('../../lib/utils');
+const cache     = require('../../lib/cache');
+const db        = require('../../lib/db');
+const model     = require('./model');
+const Stats     = require('../stats/model');
+const utils     = require('../../lib/utils');
+
+var Players;
+/**
+ * Players initing only after connection open
+ * WTF!!!
+ */
+db.once('open', () => {
+	Players = require('../../components/players/model');
+});
 
 const CACHEKEY = 'clans:load';
-const EXPIRE = 60 * 5;
-const logKey = 'clans:';
+const EXPIRE   = 60 * 10;
 
 /**
  * Fetch data from API
@@ -25,8 +34,9 @@ function fetch(params) {
 	return cache.get(key)
 		.then(function (clanInfo) {
 			if (!clanInfo) {
-				return Promise.props({
-						clan: apiNative.getClanInfo({ id: params.id }),
+				return Promise
+					.props({
+						clan   : apiNative.getClanInfo({ id: params.id }),
 						members: apiNative.getClanMembers({ id: params.id })
 					})
 					.tap(function (clanInfo) {
@@ -39,22 +49,73 @@ function fetch(params) {
 		});
 }
 
+function getClanMembers(fetched, clan) {
+	let members = fetched.members.members;
+	let keys    = Object.keys(members);
+	let pids    = [];
+	let players = keys.reduce((result, key) => {
+		let member         = members[key];
+		result[member.pid] = {
+			pid : pids.push(member.pid),
+			role: member['role_name']
+		};
+		return result;
+	}, {});
+
+	let clanId = clan._id;
+
+	return Players
+		.find({ $or: [{ id: { $in: pids } }, { clan: clanId }] }, {
+			id  : 1,
+			clan: 1,
+			nickname: 1
+		})
+		.exec()
+		.then(data => {
+			clanId = clanId.toString();
+
+			return data.reduce((list, player) => {
+				let id     = player.id;
+				let source = players[id];
+				let playerClan = player.clan && player.clan.toString();
+
+				if (playerClan === clanId) {
+					if (source) {
+						debug(`keeping player ${player.nickname} in clan ${clan.abbr} members with role ${source.role}`);
+						list.push({
+							role  : source.role,
+							player: player._id
+						});
+					} else {
+						debug(`pulling player ${player.nickname} from clan ${clan.abbr}`);
+						player.detachClan();
+					}
+				} else {
+					debug(`player ${player.nickname} looks like not in ${clan.abbr} anymore. drop it from clan members.`);
+				}
+
+				return list;
+			}, []);
+		});
+}
+
 /**
  * Map API data to database model schema
  * @param {Object} source   API data
  * @param {Object} [update] Document if exists
+ * @param {Array}  [clanMembers] Array of clan members
  * @returns {Object}
  */
-function assignDataToModel(source, update) {
-	var data = source.clan.clan_info;
+function assignDataToModel(source, update, clanMembers) {
+	var data   = source.clan.clan_info;
 	var result = {
-		name: data.name,
+		name : data.name,
 		level: data.level,
-		elo: data.elo
+		elo  : data.elo
 	};
 	if (!update) {
-		result.id = source.clan.clan_id;
-		result.abbr = data.abbreviation;
+		result.id         = source.clan.clan_id;
+		result.abbr       = data.abbreviation;
 		result.foundation = new Date(data.creation_time.replace(/\s/, 'T'));
 	} else {
 		if (update.abbr !== data.abbreviation) {
@@ -63,6 +124,7 @@ function assignDataToModel(source, update) {
 		if (!update.foundation) {
 			result.foundation = new Date(data.creation_time.replace(/\s/, 'T'));
 		}
+		clanMembers && (result.players = clanMembers);
 	}
 	return result;
 }
@@ -86,22 +148,21 @@ function load(params) {
 				debug(`clan ${id} being ${isNew ? 'created' : 'updated'}`);
 				return fetch(params)
 					.then(function (fetched) {
-						return isNew ?
-							model
-								.create(assignDataToModel(fetched))
-								.catch(function (err) {
-									if (err.code === 11000) {
-										debug(`clan ${id} should be created, but its already exists`);
-										return model.findOne({ id: id });
-									}
-									throw err;
-								}):
-							model
-								.update({ id: id }, { $set: assignDataToModel(fetched, clan) })
+						return isNew ? model
+							.create(assignDataToModel(fetched))
+							.catch(function (err) {
+								if (err.code === 11000) {
+									debug(`clan ${id} should be created, but its already exists`);
+									return model.findOne({ id: id });
+								}
+								throw err;
+							}) : getClanMembers(fetched, clan)
+							.then(clanMembers => model
+								.update({ id: id }, { $set: assignDataToModel(fetched, clan, clanMembers) })
 								.exec()
 								.then(function () {
 									return clan;
-								});
+								}))
 					});
 			}
 			debug(`clan ${id} is fresh`);
@@ -110,33 +171,38 @@ function load(params) {
 }
 
 function teamWin(stat) {
-	return stat.victory ? stat.team :
-		stat.team ? 0 : 1;
+	return stat.victory ? stat.team : stat.team ? 0 : 1;
 }
 
-function publicStat (id, stat) {
+function publicStat(id, stat) {
 	return model
 		.findOneAndUpdate({ _id: id }, {
 			$push: {
 				stats: stat._id
 			},
-			$inc: {
-				'totalPublic.matches': 1,
+			$inc : {
+				'totalPublic.matches'  : 1,
 				'totalPublic.victories': stat.victory ? 1 : 0,
-				'totalPublic.kills': stat.kills || 0,
-				'totalPublic.dies': stat.dies || 0,
+				'totalPublic.kills'    : stat.kills || 0,
+				'totalPublic.dies'     : stat.dies || 0,
 
-				'totalPublic.headshots': stat.headshots || 0,
-				'totalPublic.grenadeKills': stat.grenadeKills || 0,
-				'totalPublic.meleeKills': stat.meleeKills || 0,
+				'totalPublic.headshots'    : stat.headshots || 0,
+				'totalPublic.grenadeKills' : stat.grenadeKills || 0,
+				'totalPublic.meleeKills'   : stat.meleeKills || 0,
 				'totalPublic.artefactKills': stat.artefactKills || 0,
 				'totalPublic.pointCaptures': stat.pointCaptures || 0,
-				'totalPublic.boxesBringed': stat.boxesBringed || 0,
-				'totalPublic.artefactUses': stat.artefactUses || 0,
+				'totalPublic.boxesBringed' : stat.boxesBringed || 0,
+				'totalPublic.artefactUses' : stat.artefactUses || 0,
 
 				'totalPublic.score': stat.score || 0
 			}
-		}, { new: true, fields: { abbr: 1, totalPublic: 1 } })
+		}, {
+			new   : true,
+			fields: {
+				abbr       : 1,
+				totalPublic: 1
+			}
+		})
 		.then(function (clan) {
 			clan.set('totalPublic.winRate', ((+clan.totalPublic.victories || 0) / (+clan.totalPublic.matches || 0) * 100) || 0);
 			clan.set('totalPublic.scoreAvg', +((clan.totalPublic.score || 0) / (clan.totalPublic.matches)).toFixed(0));
@@ -149,9 +215,9 @@ function publicStat (id, stat) {
 }
 
 function matchStat(allStats, team, win, clan) {
-	var keys = Object.keys(allStats);
+	var keys        = Object.keys(allStats);
 	var statUpdates = [];
-	var $inc = keys.reduce(function  (inc, key) {
+	var $inc        = keys.reduce(function (inc, key) {
 		var stat = allStats[key];
 		if (stat.team !== team) {
 			return inc;
@@ -169,18 +235,18 @@ function matchStat(allStats, team, win, clan) {
 		inc['total.score'] += stat.score || 0;
 		return inc;
 	}, {
-		'total.matches': 1,
-		'total.victories': win ? 1: 0,
-		'total.kills': 0,
-		'total.dies': 0,
-		'total.headshots': 0,
-		'total.grenadeKills': 0,
-		'total.meleeKills': 0,
+		'total.matches'      : 1,
+		'total.victories'    : win ? 1 : 0,
+		'total.kills'        : 0,
+		'total.dies'         : 0,
+		'total.headshots'    : 0,
+		'total.grenadeKills' : 0,
+		'total.meleeKills'   : 0,
 		'total.artefactKills': 0,
 		'total.pointCaptures': 0,
-		'total.boxesBringed': 0,
-		'total.artefactUses': 0,
-		'total.score': 0
+		'total.boxesBringed' : 0,
+		'total.artefactUses' : 0,
+		'total.score'        : 0
 	});
 
 	if ($inc['total.score'] === 0) {
@@ -189,12 +255,15 @@ function matchStat(allStats, team, win, clan) {
 
 	var $set = {
 		'total.scoreAvg': +(((clan.total.score + $inc['total.score']) || 0) / (clan.total.matches + 1)).toFixed(0),
-		'total.winRate': (((+clan.total.victories + $inc['total.victories']) || 0) / ((+clan.total.matches + 1) || 0) * 100) || 0,
-		'total.kd': +utils.kd(clan.total.kills + $inc['total.kills'], clan.total.dies + $inc['total.dies'])
+		'total.winRate' : (((+clan.total.victories + $inc['total.victories']) || 0) / ((+clan.total.matches + 1) || 0) * 100) || 0,
+		'total.kd'      : +utils.kd(clan.total.kills + $inc['total.kills'], clan.total.dies + $inc['total.dies'])
 	};
 
-	return Stats.update({ _id: { $in: statUpdates }}, { $set: { clanwar: true } }, { multi: true }).then(function () {
-		return { $inc: $inc, $set: $set };
+	return Stats.update({ _id: { $in: statUpdates } }, { $set: { clanwar: true } }, { multi: true }).then(function () {
+		return {
+			$inc: $inc,
+			$set: $set
+		};
 	});
 }
 
@@ -210,8 +279,8 @@ function clanwar(params) {
 		return Promise.resolve(undefined);
 	}
 	var matchData = params.matchData;
-	var match = params.match;
-	var stats = params.stats;
+	var match     = params.match;
+	var stats     = params.stats;
 
 	if (!matchData.is_clan || !matchData.clan_match) {
 		debug(`match ${match.id} is not a clanwar`);
@@ -221,7 +290,7 @@ function clanwar(params) {
 	debug(`match ${match.id} is a clanwar`);
 
 	var statsKeys = Object.keys(stats);
-	var clanKeys = {};
+	var clanKeys  = {};
 
 	var clans = Object.keys(matchData.clan_match).map(function (num) {
 		clanKeys[matchData.clan_match[num]] = +num;
@@ -231,35 +300,46 @@ function clanwar(params) {
 	var win = teamWin(stats[statsKeys[0]]);
 
 	return model
-		.find({ id: {
-			$in: clans
-		}}, { _id: 1, id: 1, abbr: 1, total: 1 })
+		.find({
+			id: {
+				$in: clans
+			}
+		}, {
+			_id  : 1,
+			id   : 1,
+			abbr : 1,
+			total: 1
+		})
 		.then(function (clanData) {
 			debug(`assigning clanwar ${match.id} to its clans`);
 			return Promise
 				.all(clanData.map(function (clan) {
 					var victory = win === clanKeys[clan.id];
 					return matchStat(stats, clanKeys[clan.id], victory, clan)
-					.then(function (updaters) {
-						if (!updaters) {
-							debug(`cannot assign empty stat for clan ${clan.abbr} in clanwar ${match.id}`);
-							throw new Error('empty team score');
-						}
-						var inc = updaters.$inc;
-						return clan
-							.update({ $push: { matches: match._id }, $inc: inc, $set: updaters.$set })
-							.exec()
-							.then(function () {
-								return {
-									clan: clan._id,
-									win: victory,
-									total: Object.keys(inc).reduce(function (total, key) {
-										total[key.replace('total.', '')] = inc[key];
-										return total;
-									}, {})
-								};
-							});
-					})
+						.then(function (updaters) {
+							if (!updaters) {
+								debug(`cannot assign empty stat for clan ${clan.abbr} in clanwar ${match.id}`);
+								throw new Error('empty team score');
+							}
+							var inc = updaters.$inc;
+							return clan
+								.update({
+									$push: { matches: match._id },
+									$inc : inc,
+									$set : updaters.$set
+								})
+								.exec()
+								.then(function () {
+									return {
+										clan : clan._id,
+										win  : victory,
+										total: Object.keys(inc).reduce(function (total, key) {
+											total[key.replace('total.', '')] = inc[key];
+											return total;
+										}, {})
+									};
+								});
+						})
 				}))
 				.then(function (clanwar) {
 					debug(`clanwar ${match.id} assigned to its clans`);
@@ -274,10 +354,68 @@ function clanwar(params) {
 		});
 }
 
+function attachClan(clan, player) {
+	let clanId = clan.id;
+	debug(`clan ${clanId} assigned to player ${player.nickname}`);
+	debug(`player ${player.nickname} will be added to clan ${clanId}`);
+	return fetch({ id: clanId })
+		.then(function (clanInfo) {
+			var members = clanInfo.members.members;
+			var keys    = Object.keys(members);
+			var role;
+			keys.forEach(function (key) {
+				var member = members[key];
+				if (member.pid === player.id) {
+					role = member.role_name;
+				}
+			});
+			return clan
+				.update({
+					$pull: {
+						players: {
+							player: player._id
+						}
+					}
+				})
+				.exec()
+				.then(function () {
+					return clan.update({
+						$push: {
+							players: {
+								player: player._id,
+								role  : role
+							}
+						}
+					}).exec();
+				})
+				.tap(function () {
+					debug(`player ${player.nickname} added to clan ${clanId} with role ${role}`);
+				});
+		});
+}
+
+function detachClan(player) {
+	debug(`player will be removed from clan members`);
+	return model
+		.update({ _id: player.clan }, {
+			$pull: {
+				players: {
+					player: player._id
+				}
+			}
+		})
+		.exec()
+		.tap(function () {
+			debug(`player removed from clan members`);
+		});
+}
+
 module.exports = {
-	load: load,
-	fetch: fetch,
-	clanwar: clanwar,
+	attachClan: attachClan,
+	detachClan: detachClan,
+	load      : load,
+	fetch     : fetch,
+	clanwar   : clanwar,
 	publicStat: publicStat,
-	model: model
+	model     : model
 };

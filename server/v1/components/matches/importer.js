@@ -105,7 +105,8 @@ function saveStats(matchData, match) {
 					return promise();
 				}))
 			.catch(function (err) {
-				console.error(`${logKey} error happen while creating stat`, err);
+				console.error(`${logKey} error happen while creating stat`);
+				console.error(err.stack);
 			})
 			.then(function () {
 				return ClansImporter.clanwar({ match: match, stats: createdStats, matchData: matchData });
