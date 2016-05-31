@@ -51,5 +51,12 @@ router.get('/:nickname/stats', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/:nickname/history', (req, res, next) => {
+	ctl
+		.history(req.player, req.query)
+		.then(res.json.bind(res))
+		.catch(next);
+});
+
 module.exports = router;
 

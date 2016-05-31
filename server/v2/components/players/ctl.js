@@ -162,6 +162,72 @@ exports.stats = function (player, options) {
 	});
 };
 
+exports.history = function (player, options) {
+	options = options || {};
+
+	let from = new Date();
+	let dateFormat;
+
+	switch (options.range) {
+		case 'day':
+		default:
+			dateFormat = '%Y-%m-%dT%H:00:00';
+			from.setUTCSeconds(0, 0);
+			from.setUTCDate(from.getUTCDate() - 2);
+			break;
+		case 'week':
+			dateFormat = '%Y-%m-%d';
+			from.setUTCMinutes(0, 0, 0);
+			from.setUTCDate(from.getUTCDate() - 7);
+			break;
+		case 'month':
+			dateFormat = '%Y-%m-%d';
+			from.setUTCHours(0, 0, 0, 0);
+			from.setUTCMonth(from.getUTCMonth() - 3);
+			break;
+	}
+
+	let fields = ['kills', 'dies', 'score', 'headshots', 'grenadeKills', 'meleeKills', 'artefactUses'];
+	let project = {
+		date: { $dateToString: {
+			format: dateFormat,
+			date  : '$date'
+		} },
+		victory: { $cond : [ '$victory', 1, 0 ] },
+		level: 1
+	};
+	let output = { _id: 0, date: '$_id', matches: 1, victories: 1, level: 1 };
+	let group = { _id: '$date', matches: { $sum: 1 }, victories: { $sum: '$victory' }, level: { $avg: '$level' } };
+	let grouper;
+
+	switch (options.group) {
+		case 'avg':
+			grouper = '$avg';
+			break;
+		case 'sum':
+		default:
+			grouper = '$sum';
+			break;
+	}
+
+	fields.reduce((result, field) => {
+		let $field = `$${field}`;
+		group[field] = { [`${grouper}`]: $field };
+		project[field] = $field;
+		output[field]  = $field;
+	}, null);
+
+	return stats
+		.aggregate([
+			{ $match: { player: player._id, date: { $gte: from } } },
+			{ $project: project },
+			{ $group: group },
+			{ $sort: { _id: 1 } },
+			{ $project: output }
+		])
+		.allowDiskUse(true).exec();
+};
+
 exports.top = function (query) {
 	var date = new Date();
 	var period = query.period === 'day' ? 'day' : 'hour';
