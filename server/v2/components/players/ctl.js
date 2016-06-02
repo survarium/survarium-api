@@ -24,6 +24,7 @@ exports.list = function list (options) {
 		ammunition: 0,
 		ban: 0,
 		skills: 0,
+		nicknames: 0,
 		_id: 0,
 		__v: 0,
 		createdAt: 0,
@@ -83,6 +84,7 @@ exports.fetch = function (player) {
 		skills: 0,
 		ban: 0,
 		createdAt: 0,
+		'nicknames._id': 0,
 		__v: 0
 	});
 
