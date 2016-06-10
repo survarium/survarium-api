@@ -131,7 +131,7 @@ exports.stats = function (match, options) {
 			cursor.populate([
 				{
 					path: 'player',
-					select: { _id: 0, nickname: 1, 'progress.level': 1, 'clan_meta.abbr': 1, banned: 1 }
+					select: { _id: 0, nickname: 1, 'progress.level': 1, 'progress.elo': 1, 'clan_meta.abbr': 1, banned: 1 }
 				}
 			]);
 
