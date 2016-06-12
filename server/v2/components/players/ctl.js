@@ -91,6 +91,16 @@ exports.fetch = function (player) {
 	return cursor.lean();
 };
 
+exports.skills = function (player) {
+	var cursor = model.aggregate([
+		{ $match: { _id: player._id } },
+		{ $unwind: '$skills' },
+		{ $project: { id: '$skills.id', points: '$skills.points', _id: 0 } }
+	]);
+
+	return cursor.allowDiskUse(true).exec();
+};
+
 exports.stats = function (player, options) {
 	options = options || {};
 

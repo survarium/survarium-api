@@ -58,5 +58,12 @@ router.get('/:nickname/history', (req, res, next) => {
 		.catch(next);
 });
 
+router.get('/:nickname/skills', (req, res, next) => {
+	ctl
+		.skills(req.player)
+		.then(res.json.bind(res))
+		.catch(next);
+});
+
 module.exports = router;
 
