@@ -65,9 +65,9 @@ function parseMessage(html, options) {
 	return message.save();
 }
 
-function getMaxPost(dev) {
+function getMaxPost(dev, lang) {
 	return VgMessages
-		.findOne({ dev: dev.id }, { post: 1 })
+		.findOne({ dev: dev.id, lang: lang }, { post: 1 })
 		.sort({ post: -1 })
 		.lean()
 		.exec()
@@ -80,7 +80,7 @@ function getMaxPost(dev) {
  * Парсинг результатов поиска сообщений
  */
 function parseSearch(html, options) {
-	return getMaxPost(options.dev)
+	return getMaxPost(options.dev, options.target.lang)
 		.then(MAXPOST => {
 			MAXPOST && debug(`last ${options.dev.name} message is #${MAXPOST}`);
 

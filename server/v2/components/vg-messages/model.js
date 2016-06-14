@@ -23,7 +23,8 @@ const VgMessages = new Schema({
 	text: String,
 	lang: {
 		type: String,
-		enum: ['ru', 'en']
+		enum: ['ru', 'en'],
+		index: true
 	},
 	dev: {
 		type: Number,
