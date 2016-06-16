@@ -86,28 +86,23 @@ const PlayersSchema = new Schema({
 			ref : 'Stats'
 		}
 	],
-	ammunition: [{
-		slot: {
-			type: Schema.Types.ObjectId,
-			ref : 'Slots'
-		},
-		item: {
-			type: Schema.Types.ObjectId,
-			ref : 'Items'
-		},
+	ammunition: [new Schema({
 		profile: Number,
-		amount: Number,
-		mods: [Number]
-	}],
-	skills: [
-		{
-			id: {
-				type: Number,
-				index: true
-			},
-			points: Number
-		}
-	],
+		active: Boolean,
+		items: [new Schema({
+			slot: Number,
+			item: { type: Number, index: true },
+			amount: Number,
+			mods: [{ type: Number, index: true }]
+		}, { _id: false })]
+	}, { _id: false })],
+	skills: [new Schema({
+		id: {
+			type: Number,
+			index: true
+		},
+		points: Number
+	}, { _id: false })],
 	banned: {
 		type: Boolean,
 		index: true

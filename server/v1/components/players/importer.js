@@ -34,6 +34,36 @@ function fetch(params) {
 		});
 }
 
+function assignAmmunition(ammunition) {
+	function assignProfile(profile) {
+		var dataset = ammunition[profile];
+
+		return {
+			profile: +profile,
+			active: !!dataset.active,
+			items: Object
+				.keys(dataset)
+				.filter(function (key) {
+					return key.match(/^\d+$/);
+				})
+				.map(function (key) {
+					var item = dataset[key];
+					return {
+						item: +item.item_id,
+						slot: +item.slot_id,
+						amount: +item.amount,
+						mods: item.modification_ids ? item.modification_ids.split(',').map(Number) : undefined
+					};
+				})
+		};
+	}
+
+	return Object.keys(ammunition).reduce(function (result, profile) {
+		result.push(assignProfile(profile));
+		return result;
+	}, []);
+}
+
 function assignDataToModel(source, update) {
 	var data = source.data.userdata;
 	var skills = source.skills.skills;
@@ -57,7 +87,9 @@ function assignDataToModel(source, update) {
 				id: Number(id),
 				points: Number(skills[id])
 			};
-		})
+		}),
+
+		ammunition: assignAmmunition(data.ammunition)
 	};
 
 	var $update = { $set };
@@ -165,6 +197,13 @@ function load(params) {
 			return player;
 		});
 }
+
+/*setTimeout(function () {
+	// Import test
+	load.call(db.model('Players'), { id: '15238791817735151910' }).then(function (player) {
+		console.log(player);
+	});
+}, 1000);*/
 
 module.exports = {
 	load: load

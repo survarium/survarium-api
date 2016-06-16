@@ -5,7 +5,7 @@
     "botanio": "0.0.6",
     "debug": "^2.2.0",
     "ioredis": "^1.13.1",
-    "mongoose": "^4.4.17",
+    "mongoose": "^4.5.0",
     "node-telegram-bot-api": "^0.21.1",
     "survarium-api-client": "git+https://github.com/vaseker/survarium-api-client.git"
   }
