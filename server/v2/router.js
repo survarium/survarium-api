@@ -12,5 +12,6 @@ router.use('/players',    require('./components/players'));
 router.use('/matches',    require('./components/matches'));
 router.use('/vg',         require('./components/vg-messages'));
 router.use('/bans',       require('./components/bans'));
+router.use('/game',       require('./components/game'));
 
 module.exports = router;

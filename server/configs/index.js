@@ -21,6 +21,16 @@ module.exports = {
 		retries: 2 || process.env.SV_API_RETRIES
 	},
 
+	shortLangs: {
+		russian: 'ru',
+		english: 'en',
+		ukrainian: 'ua',
+		french: 'fr',
+		german: 'de',
+		polish: 'pl',
+		spanish: 'sp'
+	},
+
 	front: process.env.FRONT || 'https://survarium.pro',
 
 	workers: +process.env.NODE_WORKERS || require('os').cpus().length,
@@ -85,6 +95,10 @@ module.exports = {
 			{ id: '561692',  name: 'Gramb' }
 			//{ id: '1080565', name: 'Esmer' }
 		]
+	},
+
+	game: {
+		langs: ['russian', 'english', 'ukrainian']
 	},
 
 	discord: {
