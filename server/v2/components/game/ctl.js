@@ -42,20 +42,29 @@ function getProjections(versions, language, thin) {
 		project['ver'] = `${versionPath}.ver`;
 		project['icon'] = `${versionPath}.ui_desc.icon`;
 		project['props'] = `${versionPath}.ui_desc.props_list`;
+		project['level'] = `${versionPath}.parameters.item_level`;
+		project['faction'] = `${versionPath}.parameters.faction_data.faction_id`;
+		project['is_premium'] = `${versionPath}.is_premium`;
+		project['category'] = `$item_category`;
 
-		projections.push({ $unwind: '$props' });
+		projections.push({ $unwind: { path: '$props', preserveNullAndEmptyArrays: true } });
 
 		projections.push({ $lookup: { from: UiProps.collection.name, localField: `props.prop_id`, foreignField: '_id', as: `prop` } });
 
-		projections.push({ $unwind: '$prop' });
+		projections.push({ $unwind: { path: '$prop', preserveNullAndEmptyArrays: true } });
 
 		projections.push({
 			$group: {
 				_id: '$id',
 				name: { $last: '$name' },
+				desc: { $last: '$desc' },
 				icon: { $last: '$icon' },
 				ver: { $last: '$ver' },
 				key: { $last: '$key' },
+				level: { $last: '$level' },
+				faction: { $last: '$faction' },
+				premium: { $last: '$is_premium' },
+				category: { $last: '$category' },
 				props: { $push: { name: `$prop.langs.${language}.name`, value: `$props.prop_value` } }
 			}
 		});
@@ -65,10 +74,15 @@ function getProjections(versions, language, thin) {
 				_id: 0,
 				id: '$_id',
 				name: 1,
+				desc: 1,
 				icon: 1,
 				ver: 1,
 				'props': 1,
-				key: 1
+				key: 1,
+				level: 1,
+				faction: 1,
+				premium: 1,
+				category: 1
 			}
 		});
 	}
@@ -124,9 +138,22 @@ exports.items = function items(items, params) {
 			pipeline.unshift(match);
 		}
 
+		console.log(JSON.stringify(pipeline, null, 2));
+
 		return Items.aggregate(pipeline);
 	}
 
 	return getVersion(params.version)
 		.then(load);
+};
+
+exports.versions = function versions() {
+	return Versions.aggregate([
+		{ $project: {
+			date: 1,
+			_id: 0,
+			id: '$_id'
+		} },
+		{ $sort: { date: -1 } }
+	]);
 };

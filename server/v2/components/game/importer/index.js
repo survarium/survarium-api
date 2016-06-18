@@ -142,7 +142,8 @@ db.once('connected', function () {
 					case 'grenade':
 						copy([
 							'parameters',
-						    'ui_desc.hud_icon'
+						    'ui_desc.hud_icon',
+							'ui_desc.icon'
 						], item, opt);
 						break;
 					case 'arm':
@@ -159,19 +160,22 @@ db.once('connected', function () {
 					case 'ammo':
 						copy([
 							'parameters',
-						    'data'
+						    'data',
+							'ui_desc.icon'
 						], item, opt);
 						break;
 					case 'drugs':
 						copy([
 							'parameters',
-						    'data'
+						    'data',
+							'ui_desc.icon'
 						], item, opt);
 						break;
 					case 'trap':
 						copy([
 							'parameters',
 							'ui_desc.hud_icon',
+							'ui_desc.icon',
 							'data.placement',
 						    'data.trap',
 						    'data.destroyable',
