@@ -3,6 +3,17 @@
 const router = require('express').Router();
 const ctl    = require('./ctl');
 
+router.get('/factions', function (req, res, next) {
+	var query = req.query;
+
+	ctl
+		.factions(query)
+		.then(function (result) {
+			return res.json(result);
+		})
+		.catch(next);
+});
+
 router.get('/versions', function (req, res, next) {
 	var query = req.query;
 

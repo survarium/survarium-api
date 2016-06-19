@@ -7,6 +7,7 @@ const config = require('../../../../configs');
 const Versions = require('../models/versions');
 const Items = require('../models/items');
 const UiProps = require('../models/ui_properties');
+const Factions = require('../models/factions');
 const db = Versions.db;
 
 const VERSION = process.env.VERSION;
@@ -225,10 +226,29 @@ db.once('connected', function () {
 			});
 		}
 
+		function buildFactions(factions) {
+			let keys = Object.keys(factions);
+			return keys.map(key => {
+				let faction = factions[key];
+				let item = {
+					_id: faction.id,
+					langs: localize({ name: faction.name }),
+					levels: faction.levels && faction.levels.map(level => {
+						return {
+							value: level.value,
+							langs: localize({ name: level.name, unlock_message: level.unlock_message })
+						};
+					})
+				};
+				return Factions.findOneAndUpdate({ _id: faction.id }, item, { new: true, upsert: true })
+			});
+		}
+
 		return Promise
 			.all([].concat(
 				ITEMS.map(buildItem),
-				buildUiProperties(STATIC_GAME_PARAMS.ui_properties)
+				buildUiProperties(STATIC_GAME_PARAMS.ui_properties),
+				buildFactions(INDEX.factions_dict)
 			))
 			.then(() => {
 				console.log('items done');

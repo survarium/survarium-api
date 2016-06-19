@@ -5,6 +5,7 @@ const config   = require('../../../configs');
 const Items    = require('./models/items');
 const Versions = require('./models/versions');
 const UiProps  = require('./models/ui_properties');
+const Factions = require('./models/factions');
 
 const langs = config.game.langs;
 const shortLangs = config.shortLangs;
@@ -156,5 +157,19 @@ exports.versions = function versions() {
 			id: '$_id'
 		} },
 		{ $sort: { date: -1 } }
+	]);
+};
+
+exports.factions = function factions(params) {
+	let language = getLang(params.language);
+
+	return Factions.aggregate([
+		{ $project: {
+			date: 1,
+			_id: 0,
+			id: '$_id',
+			name: `$langs.${language}.name`
+		} },
+		{ $sort: { id: 1 } }
 	]);
 };
