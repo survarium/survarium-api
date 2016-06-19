@@ -24,7 +24,6 @@ function getProjections(versions, language, thin) {
 	};
 
 	project['name'] = `$langs.${language}.name`;
-	project['desc'] = `$langs.${language}.description`;
 
 	if (!thin) {
 		project['is_stack'] = 1;
@@ -59,7 +58,6 @@ function getProjections(versions, language, thin) {
 			$group: {
 				_id: '$id',
 				name: { $last: '$name' },
-				desc: { $last: '$desc' },
 				icon: { $last: '$icon' },
 				ver: { $last: '$ver' },
 				drop_weight: { $last: '$drop_weight' },
@@ -77,7 +75,6 @@ function getProjections(versions, language, thin) {
 				_id: 0,
 				id: '$_id',
 				name: 1,
-				desc: 1,
 				icon: 1,
 				ver: 1,
 				drop_weight: 1,
