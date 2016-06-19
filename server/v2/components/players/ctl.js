@@ -80,7 +80,6 @@ exports.fetch = function (player) {
 		_id: 0,
 		clan: 0,
 		stats: 0,
-		ammunition: 0,
 		skills: 0,
 		ban: 0,
 		createdAt: 0,

@@ -3,8 +3,8 @@
 var router = require('express').Router();
 var config = require('../configs');
 
-//router.use('/slots',     require('./components/slots'));
-//router.use('/items',     require('./components/items'));
+router.use('/slots',     require('./components/slots'));
+router.use('/items',     require('./components/items'));
 router.use('/maps',      require('./components/maps'));
 
 router.use('/clanroles', require('./components/clanroles'));
