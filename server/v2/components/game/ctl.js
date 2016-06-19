@@ -44,6 +44,7 @@ function getProjections(versions, language, thin) {
 		project['props'] = `${versionPath}.ui_desc.props_list`;
 		project['level'] = `${versionPath}.parameters.item_level`;
 		project['faction'] = `${versionPath}.parameters.faction_data.faction_id`;
+		project['drop_weight'] = `${versionPath}.parameters.drop_weight`;
 		project['is_premium'] = `${versionPath}.is_premium`;
 		project['category'] = `$item_category`;
 
@@ -60,6 +61,7 @@ function getProjections(versions, language, thin) {
 				desc: { $last: '$desc' },
 				icon: { $last: '$icon' },
 				ver: { $last: '$ver' },
+				drop_weight: { $last: '$drop_weight' },
 				key: { $last: '$key' },
 				level: { $last: '$level' },
 				faction: { $last: '$faction' },
@@ -77,6 +79,7 @@ function getProjections(versions, language, thin) {
 				desc: 1,
 				icon: 1,
 				ver: 1,
+				drop_weight: 1,
 				'props': 1,
 				key: 1,
 				level: 1,
@@ -137,8 +140,6 @@ exports.items = function items(items, params) {
 			match['$match'][items.type] = { $in: items.list };
 			pipeline.unshift(match);
 		}
-
-		console.log(JSON.stringify(pipeline, null, 2));
 
 		return Items.aggregate(pipeline);
 	}
