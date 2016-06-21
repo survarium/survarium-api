@@ -100,6 +100,15 @@ exports.players = function players (clan, options) {
 		}
 	}
 
+	const MAX_LIMIT = 50;
+
+	if (options.limit) {
+		var __limit = Number(options.limit);
+		if (!isNaN(__limit) && (__limit > 0)) {
+			limit = Math.min(MAX_LIMIT, __limit);
+		}
+	}
+
 	var roleSort = sort.role;
 	if (roleSort) {
 		delete sort.role;
@@ -171,10 +180,10 @@ exports.players = function players (clan, options) {
 				});
 
 			if (!roleSort) {
-				cursor
+				cursor = cursor
 					.sort(sort)
 					.skip(skip)
-					.limit(limit)
+					.limit(limit);
 			}
 
 			return Promise.props({
@@ -231,6 +240,15 @@ exports.matches = function matches(clan, options) {
 		var __skip = Number(options.skip);
 		if (!isNaN(__skip) && (__skip > 0)) {
 			skip = __skip;
+		}
+	}
+
+	const MAX_LIMIT = 50;
+
+	if (options.limit) {
+		var __limit = Number(options.limit);
+		if (!isNaN(__limit) && (__limit > 0)) {
+			limit = Math.min(MAX_LIMIT, __limit);
 		}
 	}
 
@@ -300,6 +318,15 @@ exports.clanwars = function clanwars(clan, options) {
 		var __skip = Number(options.skip);
 		if (!isNaN(__skip) && (__skip > 0)) {
 			skip = __skip;
+		}
+	}
+
+	const MAX_LIMIT = 50;
+
+	if (options.limit) {
+		var __limit = Number(options.limit);
+		if (!isNaN(__limit) && (__limit > 0)) {
+			limit = Math.min(MAX_LIMIT, __limit);
 		}
 	}
 
