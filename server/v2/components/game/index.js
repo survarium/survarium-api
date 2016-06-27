@@ -36,6 +36,15 @@ router.get('/items', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/items/:item/usage', function (req, res, next) {
+	ctl
+		.itemUsage(Number(req.params.item))
+		.then(function (result) {
+			return res.json(result);
+		})
+		.catch(next);
+});
+
 router.get('/items/:items', function (req, res, next) {
 	var query = req.query;
 	var items = req.params.items;

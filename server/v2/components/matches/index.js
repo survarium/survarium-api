@@ -59,6 +59,13 @@ router.get('/:id/stats', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/:id/replay', function (req, res, next) {
+	ctl
+		.replay(req.match)
+		.then(res.json.bind(res))
+		.catch(next);
+});
+
 router.get('/:importId/import', function (req, res, next) {
 	let id = Number(req.params.importId);
 	let key = req.query.special;

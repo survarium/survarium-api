@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const config   = require('../../../../configs');
-const Version = require('./versions');
+require('./versions');
 
 const Schema = mongoose.Schema;
 

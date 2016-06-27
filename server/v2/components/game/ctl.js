@@ -6,6 +6,8 @@ const Items    = require('./models/items');
 const Versions = require('./models/versions');
 const UiProps  = require('./models/ui_properties');
 const Factions = require('./models/factions');
+const Players  = require('../../../v1/components/players/model');
+const cache    = require('../../../v1/lib/cache');
 
 const langs = config.game.langs;
 const shortLangs = config.shortLangs;
@@ -144,6 +146,43 @@ exports.items = function items(items, params) {
 
 	return getVersion(params.version)
 		.then(load);
+};
+
+exports.itemUsage = function itemUsage(id) {
+	const cacheKey = `itemUsage:${id}`;
+	const NONUSED = `no usage data found`;
+	return Promise
+		.props({
+			used: cache
+				.get(cacheKey)
+				.then(count => {
+					if (count !== null) {
+						return Number(count);
+					}
+
+					return Players
+						.aggregate([
+							{ $match: { 'ammunition.items.item': id } },
+							{ $group: { _id: '$_id' } },
+							{ $group: { _id  : 1, count: { $sum: 1 } } },
+							{ $project: { _id  : 0, count: 1 } }
+						])
+						.allowDiskUse(true)
+						.exec()
+						.then(result => {
+							if (!result || !result.length) {
+								return null;
+							}
+
+							return result[0].count;
+						})
+						.then(count => {
+							cache.set(cacheKey, count, 'EX', 60 * 30);
+							return count;
+						});
+				}),
+			total: Players.activeCount()
+		});
 };
 
 exports.versions = function versions() {

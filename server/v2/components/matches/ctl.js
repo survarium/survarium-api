@@ -5,6 +5,7 @@ const model   = require('../../../v1/components/matches/model');
 const Stats   = require('../../../v1/components/stats/model');
 const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
+const got     = require('got');
 
 exports.id = function (id) {
 	if (!/^\d+$/.test(id)) {
@@ -151,4 +152,39 @@ exports.timeline = function () {
 		{ $group: { _id: '$_id.level', hours: { $push: { hour: '$_id.hour', total: '$total', date: '$date' } }, total: { $sum: '$total' } } },
 		{ $project: { level: '$_id', hours: '$hours', date: '$date', total: '$total', _id: 0 }}
 	]).allowDiskUse(true).exec();
+};
+
+exports.replay = function (match) {
+	let id = match.id.toString();
+	let base = id.length === 7 ? 3 : 4;
+
+	let range = [
+		`${id.slice(0, base)}0000`,
+		`${id.slice(0, base)}9999`
+	];
+
+	let servers = [
+		`node-1.survarium.com`,
+		`node-2.survarium.com`,
+		`node-3.survarium.com`,
+		`node-4.survarium.com`
+	];
+
+	function checkReplay(replay) {
+		return got
+			.head(replay, {
+				retries: 0,
+				headers: {
+					'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4'
+				}
+			});
+	}
+
+	return Promise
+		.any(servers.map(server => {
+			let replay = `http://${server}/replays/${range[0]}-${range[1]}/${id}.sur`;
+
+			return checkReplay(replay)
+				.then(res => replay);
+		}));
 };

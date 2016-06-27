@@ -1,6 +1,9 @@
+'use strict';
+
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
 const db = require('../../lib/db');
+const cache = require('../../lib/cache');
 const importer = require('./importer');
 const ClansImporter = require('../clans/importer');
 
@@ -171,5 +174,26 @@ PlayersSchema.methods.detachClan = function () {
 		})
 		.exec();
 };
+
+PlayersSchema.statics.activeCount = function () {
+	const cacheKey = `player:activeCount`;
+	return cache
+		.get(cacheKey)
+		.then(count => {
+			if (count !== null) {
+				return Number(count);
+			}
+
+			return this
+				//.find({ banned: { $exists: false } })
+				.count()
+				.then(count => {
+					cache.set(cacheKey, count, 'EX', 60 * 30);
+					return count;
+				});
+		});
+};
+
+
 
 module.exports = db.model('Players', PlayersSchema);
