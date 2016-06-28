@@ -12,7 +12,7 @@ exports.id = function (id) {
 		return Promise.resolve();
 	}
 
-	return model.findOne({ id: id }, { _id: 1, id: 1 }).lean();
+	return model.findOne({ id: id }, { _id: 1, id: 1, replay: 1 }).lean();
 };
 
 exports.list = function list (options) {
@@ -155,6 +155,10 @@ exports.timeline = function () {
 };
 
 exports.replay = function (match) {
+	if (match.replay) {
+		return Promise.resolve(match.replay);
+	}
+
 	let id = match.id.toString();
 	let base = id.length === 7 ? 3 : 4;
 
