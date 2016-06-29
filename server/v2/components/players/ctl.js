@@ -296,6 +296,8 @@ exports.unique = function getUnique() {
 exports.search = function performSearch(query) {
 	var search;
 
+	var wideSearch = query.wide === 'true';
+
 	if (query.nickname) {
 		let nickname = decodeURIComponent(query.nickname).trim();
 
@@ -316,20 +318,22 @@ exports.search = function performSearch(query) {
 			},
 			{
 				nickname: {
-					$regex: `^${escaped}`, $options: ''
+					$regex: `${wideSearch ? '' : '^'}${escaped}`, $options: wideSearch ? 'i' : ''
 				}
 			}
 		];
 
-		let firstChar = escaped.slice(0, 1);
-		let bigFirstLetter = firstChar.toUpperCase();
+		if (!wideSearch) {
+			let firstChar = escaped.slice(0, 1);
+			let bigFirstLetter = firstChar.toUpperCase();
 
-		if (firstChar !== bigFirstLetter) {
-			search.push({
-				nickname: {
-					$regex: `^${bigFirstLetter}${escaped.slice(1)}`, $options: ''
-				}
-			});
+			if (firstChar !== bigFirstLetter) {
+				search.push({
+					nickname: {
+						$regex: `^${bigFirstLetter}${escaped.slice(1)}`, $options: ''
+					}
+				});
+			}
 		}
 
 		search = { $or: search };
