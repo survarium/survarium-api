@@ -301,7 +301,7 @@ exports.search = function performSearch(query) {
 	if (query.nickname) {
 		let nickname = decodeURIComponent(query.nickname).trim();
 
-		if (nickname.length < 2) {
+		if (nickname.length < 3) {
 			return Promise.resolve(null);
 		}
 
