@@ -98,7 +98,7 @@ function getData(options) {
  * @param {String} [req.query.nickname]         Nickname to find.
  * @param {String} [req.query.pid]              PID to find.
  */
-router.get('/', function (req, res, next) {
+router.get('/', function getPlayersList(req, res, next) {
 	var query = req.query;
 
 	var middlewares = [];
@@ -106,10 +106,15 @@ router.get('/', function (req, res, next) {
 	/^(\d{5,}\,?)+$/g.test(pid) ? (pid = pid.split(',')) : (pid = undefined);
 
 	if (pid || ([undefined, null, ''].indexOf(query.nickname) !== 0 && query.nickname.length > 1)) {
+		let nickname = new Buffer(query.nickname, 'binary').toString('utf8');
+
 		query.search = pid ? { id: { $in: pid } } : { $or: [
-			{ $text: { $search: `\"${query.nickname}\"`, $diacriticSensitive: true } },
-			{ nickname: { $regex: new RegExp(`${query.nickname
-				.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^)/g, '\\$1')}`, 'i') } }
+			{ $text: { $search: `\"${nickname}\"`, $diacriticSensitive: true } },
+			{ nickname: {
+				$regex: `^${nickname
+					.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^|\'|\")/g, '\\$1')}`,
+				$options: ''
+			} }
 		]};
 		query.stats = ~[undefined, null, ''].indexOf(query.stats) ? 1 : Number(query.stats);
 		query.limit = pid ? pid.length : (query.limit || 5);
@@ -152,7 +157,7 @@ router.get('/', function (req, res, next) {
  * @param {String} [req.query.statsort=desc]    Sort destination for stats [asc,desc].
  * @param {String} [req.query.statskip=0]       Amount of skipped stats elems.
  */
-router.get('/:player', function (req, res, next) {
+router.get('/:player', function getPlayerData(req, res, next) {
 	var query = req.query;
 
 	var searchParam = req.params.player;

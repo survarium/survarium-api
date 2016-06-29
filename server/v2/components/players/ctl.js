@@ -7,11 +7,11 @@ const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
 const Query   = require('./query');
 
-exports.id = function (nickname) {
+exports.id = function getPlayerId(nickname) {
 	return model.findOne({ nickname: nickname }, { _id: 1, nickname: 1 }).lean();
 };
 
-exports.list = function list (options) {
+exports.list = function list(options) {
 	options = options || {};
 
 	var totalQuery = {};
@@ -70,7 +70,7 @@ exports.list = function list (options) {
 	});
 };
 
-exports.fetch = function (player) {
+exports.fetch = function getPlayer(player) {
 	var cursor = model
 		.findOne({
 			_id: player._id
@@ -90,7 +90,7 @@ exports.fetch = function (player) {
 	return cursor.lean();
 };
 
-exports.skills = function (player) {
+exports.skills = function getSkills(player) {
 	var cursor = model.aggregate([
 		{ $match: { _id: player._id } },
 		{ $unwind: '$skills' },
@@ -100,7 +100,7 @@ exports.skills = function (player) {
 	return cursor.allowDiskUse(true).exec();
 };
 
-exports.stats = function (player, options) {
+exports.stats = function getStats(player, options) {
 	options = options || {};
 
 	var totalQuery = {
@@ -182,7 +182,7 @@ exports.stats = function (player, options) {
 	});
 };
 
-exports.history = function (player, options) {
+exports.history = function getHistory(player, options) {
 	options = options || {};
 
 	let from = new Date();
@@ -248,7 +248,7 @@ exports.history = function (player, options) {
 		.allowDiskUse(true).exec();
 };
 
-exports.top = function (query) {
+exports.top = function getTop(query) {
 	var date = new Date();
 	var period = query.period === 'day' ? 'day' : 'hour';
 	if (period === 'day') {
@@ -277,7 +277,7 @@ exports.top = function (query) {
 		.allowDiskUse(true).exec();
 };
 
-exports.unique = function () {
+exports.unique = function getUnique() {
 	var date = new Date();
 	date.setMinutes(0, 0, 0);
 	date.setDate(date.getDate() - 1);
@@ -291,4 +291,46 @@ exports.unique = function () {
 		.allowDiskUse(true).exec().then(function (result) {
 			return { count: result[0] ? result[0].count : 0 };
 		});
+};
+
+exports.search = function performSearch(query) {
+	var search;
+
+	if (query.nickname) {
+		let nickname = decodeURIComponent(query.nickname).trim();
+
+		if (nickname.length < 3) {
+			return Promise.resolve(null);
+		}
+
+		let escaped = nickname
+			.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^|\'|\")/g, '\\$1');
+
+		search = {
+			$or: [
+				{
+					$text: {
+						$search            : `\"${nickname}\"`,
+						$diacriticSensitive: true,
+						$caseSensitive     : false
+					}
+				},
+				{
+					nickname: {
+						$regex: `^${escaped}`, $options: ''
+					}
+				}
+			]
+		};
+	}
+
+	if (!search) {
+		return Promise.resolve(null);
+	}
+
+	return model.aggregate([
+		{ $match: search },
+		{ $project: { _id: 0, nickname: 1, clan: '$clan_meta', rel: { $meta: "textScore" } } },
+		{ $sort: { rel: -1 } }
+	]).allowDiskUse(true).exec();
 };
