@@ -299,7 +299,7 @@ exports.search = function performSearch(query) {
 	if (query.nickname) {
 		let nickname = decodeURIComponent(query.nickname).trim();
 
-		if (nickname.length < 3) {
+		if (nickname.length < 2) {
 			return Promise.resolve(null);
 		}
 
