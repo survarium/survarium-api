@@ -190,5 +190,9 @@ exports.replay = function (match) {
 
 			return checkReplay(replay)
 				.then(res => replay);
-		}));
+		}))
+		.catch(() => {
+			console.error(`Cannot get replay for match ${id}`);
+			return null;
+		});
 };
