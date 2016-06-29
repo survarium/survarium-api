@@ -306,22 +306,33 @@ exports.search = function performSearch(query) {
 		let escaped = nickname
 			.replace(/(\||\$|\.|\*|\+|\-|\?|\(|\)|\[|\]|\{|\}|\^|\'|\")/g, '\\$1');
 
-		search = {
-			$or: [
-				{
-					$text: {
-						$search            : `\"${nickname}\"`,
-						$diacriticSensitive: true,
-						$caseSensitive     : false
-					}
-				},
-				{
-					nickname: {
-						$regex: `^${escaped}`, $options: ''
-					}
+		search = [
+			{
+				$text: {
+					$search            : `\"${nickname}\"`,
+					$diacriticSensitive: true,
+					$caseSensitive     : false
 				}
-			]
-		};
+			},
+			{
+				nickname: {
+					$regex: `^${escaped}`, $options: ''
+				}
+			}
+		];
+
+		let firstChar = escaped.slice(0, 1);
+		let bigFirstLetter = firstChar.toUpperCase();
+
+		if (firstChar !== bigFirstLetter) {
+			search.push({
+				nickname: {
+					$regex: `^${bigFirstLetter}${escaped.slice(1)}`, $options: ''
+				}
+			});
+		}
+
+		search = { $or: search };
 	}
 
 	if (!search) {
