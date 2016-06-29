@@ -4,6 +4,8 @@
 
 process.chdir(__dirname);
 
+require('newrelic');
+
 const path    = require('path');
 const fs      = require('fs');
 const cluster = require('cluster');

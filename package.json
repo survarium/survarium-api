@@ -24,5 +24,8 @@
   "devDependencies": {
     "tap-spec": "^4.1.1",
     "tape": "^4.4.0"
+  },
+  "dependencies": {
+    "newrelic": "^1.28.1"
   }
 }
