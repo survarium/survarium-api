@@ -92,7 +92,8 @@ module.exports = {
 			{ id: '74710',   name: 'Андрияш Козловский' },
 			{ id: '392554',  name: 'Альбертыч' },
 			{ id: '457474',  name: 'Survarium DevTeam' },
-			{ id: '561692',  name: 'Gramb' }
+			{ id: '561692',  name: 'Gramb' },
+            { id: '95359',   name: 'plecheg' }
 			//{ id: '1080565', name: 'Esmer' }
 		]
 	},
