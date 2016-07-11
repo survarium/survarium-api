@@ -7,13 +7,13 @@ const Discord    = require('./index');
 const debug      = Discord.debug;
 
 function router (message) {
-	let match = message.content.match(/^Banlist (\d+)/i);
+    debug('bans:router');
+
+	let match = message.content.match(/^Banlist (\d+)( (revoke))?/i);
 	let postId = match && match[1];
 	if (!postId) {
 		return;
 	}
-
-	debug('bans:router');
 
 	let post;
 	let ban;
@@ -36,7 +36,7 @@ function router (message) {
 			debug(`bans:possibles ${possibles.length}`);
 
 			return Players
-				.find({ nickname: { $in: possibles }}, { 'progress.level': 1, nickname: 1, clan: 1 })
+				.find({ nickname: { $in: possibles }, $unset: { ban: '' }}, { 'progress.level': 1, nickname: 1, clan: 1 })
 				.exec();
 		})
 		.then(players => {
