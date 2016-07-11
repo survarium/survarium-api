@@ -23,7 +23,11 @@ const Bans = new Schema({
 				ref : 'Clans'
 			}
 		}
-	]
+	],
+    deletedAt: {
+        type: Date,
+        index: true
+    }
 }, {
 	validateBeforeSave: false
 });

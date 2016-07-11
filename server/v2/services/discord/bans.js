@@ -36,7 +36,7 @@ function router (message) {
 			debug(`bans:possibles ${possibles.length}`);
 
 			return Players
-				.find({ nickname: { $in: possibles }, $unset: { ban: '' }}, { 'progress.level': 1, nickname: 1, clan: 1 })
+				.find({ nickname: { $in: possibles }, ban: { $exists: 0 } }, { 'progress.level': 1, nickname: 1, clan: 1 })
 				.exec();
 		})
 		.then(players => {
