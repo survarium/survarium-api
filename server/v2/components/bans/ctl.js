@@ -9,9 +9,9 @@ exports.list = function list(options) {
 	var totalQuery = {};
 
 	var query  = {
-        deletedAt: { $exists: 0 }
+        deletedAt: { $exists: false }
     };
-    
+
 	var fields = {
 		_id: 0,
 		__v: 0,
