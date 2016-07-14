@@ -18,6 +18,7 @@ module.exports = db.model('GameItems', base.schema({
 				/*index: true*/
 			}
 		],
-		usage: Number
+		usage: Number,
+        visual: Boolean
 	}
 }));

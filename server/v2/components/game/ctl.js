@@ -30,6 +30,7 @@ function getProjections(versions, language, thin) {
 	if (!thin) {
 		project['is_stack'] = 1;
 		project['category'] = '$item_category';
+        project['visual'] = 1;
 	}
 
 	if (!thin && versions && versions.length) {
@@ -150,7 +151,6 @@ exports.items = function items(items, params) {
 
 exports.itemUsage = function itemUsage(id) {
 	const cacheKey = `itemUsage:${id}`;
-	const NONUSED = `no usage data found`;
 	return Promise
 		.props({
 			used: cache
