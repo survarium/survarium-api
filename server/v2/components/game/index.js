@@ -94,7 +94,7 @@ router.get('/items/:item/model', modelAuth, ctl.one, function (req, res, next) {
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, '/Users/vaseker/www/survarium-front-ng2-2/models');
+        cb(null, config.game.upload);
     },
     filename: (req, file, cb) => {
         cb(null, req.item.name + '.mview');
