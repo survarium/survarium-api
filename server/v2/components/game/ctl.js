@@ -209,3 +209,56 @@ exports.factions = function factions(params) {
 		{ $sort: { id: 1 } }
 	]);
 };
+
+exports.one = function (req, res, next) {
+    let name = req.params.item;
+    
+    return Items
+        .findOne({
+            name: name
+        }, {
+            name: 1,
+            visual: 1
+        })
+        .then(item => {
+            if (!item) {
+                throw new Error(`No item ${name} found`);
+            }
+            
+            req.item = item;
+            next();
+        })
+        .catch(next);
+};
+
+exports.modelForm = function modelForm(params) {
+    let item = params.item;
+
+    return new Promise(resolve => resolve(`<!DOCTYPE html>
+        <html>
+            <head><title>Item ${item.name} model uploader</title></head>
+            <body>
+                <h3>Item ${item.name} model uploader</h3>
+                <form enctype="multipart/form-data" method="post">
+                    <p>Upload ${item.name}.mview</p>
+                    <input type="file" name="mview" accept="mview" />
+                    <input type="submit">
+                </form>
+            </body>
+        </html>`));
+};
+
+exports.modelUpload = function modelUpload(params) {
+    let item = params.item;
+    let name = item.name;
+    
+    return item
+        .update({ $set: { visual: true } })
+        .then(() => `<!DOCTYPE html>
+        <html>
+            <head><title>Item ${name} model updater</title></head>
+            <body>
+                <h3>Item ${name} model uploaded OK</h3>
+            </body>
+        </html>`);
+};

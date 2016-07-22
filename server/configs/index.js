@@ -41,6 +41,9 @@ module.exports = {
 	},
 
 	special: process.env.SPECIAL_KEY,
+    keys: {
+	    models: (process.env.MODELS_KEY || '').split(',')
+    },
 
 	importer: {
 		matches: !!process.env.IMPORT_MATCHES,
@@ -99,7 +102,8 @@ module.exports = {
 	},
 
 	game: {
-		langs: ['russian', 'english', 'ukrainian']
+		langs: ['russian', 'english', 'ukrainian'],
+        upload: process.env.GAME_UPLOAD_DIR || 'uploads/'
 	},
 
 	discord: {

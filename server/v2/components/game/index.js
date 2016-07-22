@@ -2,6 +2,9 @@
 
 const router = require('express').Router();
 const ctl    = require('./ctl');
+const config = require('../../../configs');
+
+const multer = require('multer');
 
 router.get('/factions', function (req, res, next) {
 	var query = req.query;
@@ -68,6 +71,46 @@ router.get('/items/:items', function (req, res, next) {
 			return res.json(result);
 		})
 		.catch(next);
+});
+
+function modelAuth(req, res, next) {
+    let key = req.query.key;
+    
+    if (!key || !~config.keys.models.indexOf(key)) {
+        return next({ message: '`Key` is invalid' });
+    }
+    
+    next();
+}
+
+router.get('/items/:item/model', modelAuth, ctl.one, function (req, res, next) {
+    ctl
+        .modelForm({
+            item: req.item
+        })
+        .then(html => res.type('html').send(html))
+        .catch(next);
+});
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, '/Users/vaseker/www/survarium-front-ng2-2/models');
+    },
+    filename: (req, file, cb) => {
+        cb(null, req.item.name + '.mview');
+    }
+});
+
+const upload = multer({ storage: storage });
+
+router.post('/items/:item/model', modelAuth, ctl.one, upload.single('mview'), function (req, res, next) {
+    ctl
+        .modelUpload({
+            item: req.item,
+            file: req.file
+        })
+        .then(html => res.type('html').send(html))
+        .catch(next);
 });
 
 module.exports = router;
