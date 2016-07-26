@@ -99,6 +99,11 @@ const ClansSchema = new Schema({
 			ref : 'Matches'
 		}
 	],
+    
+    banned: [{
+        type: Schema.Types.ObjectId,
+        ref : 'Players'
+    }],
 
 	level: scoreMicro,
 	elo: scoreMicro,

@@ -24,8 +24,10 @@ exports.list = function list (options) {
 		players: 0,
 		_id: 0,
 		__v: 0,
-		updatedAt: 0
+		updatedAt: 0,
+        banned: 0
 	};
+	
 	var sort = options.sort || { elo: -1 };
 	var limit = 20;
 	var skip = 0;
@@ -69,21 +71,27 @@ exports.list = function list (options) {
 };
 
 exports.fetch = function (clan) {
-	var cursor = model
-		.findOne({
-			_id: clan._id
-		});
-
-	cursor.select({
-		_id: 0,
-		players: 0,
-		stats: 0,
-		matches: 0,
-		createdAt: 0,
-		__v: 0
-	});
-
-	return cursor.lean();
+    return model
+        .aggregate([
+            { $match: { _id: clan._id } },
+            { $project: {
+                _id: 0,
+                banned: {
+                    $size: { '$ifNull': ['$banned', [] ] }
+                },
+                updatedAt: 1,
+                name: 1,
+                level: 1,
+                elo: 1,
+                id: 1,
+                abbr: 1,
+                foundation: 1,
+                total: 1,
+                totalPublic: 1
+            } },
+        ])
+        .exec()
+        .then(res => res && res[0]);
 };
 
 exports.players = function players (clan, options) {
