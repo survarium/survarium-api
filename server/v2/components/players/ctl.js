@@ -277,10 +277,17 @@ exports.top = function getTop(query) {
 		.allowDiskUse(true).exec();
 };
 
-exports.unique = function getUnique() {
+exports.unique = function getUnique(query) {
 	var date = new Date();
-	date.setMinutes(0, 0, 0);
-	date.setDate(date.getDate() - 1);
+    
+    if (query.period === 'hour') {
+        date.setHours(date.getHours() - 1, 0, 0, 0);
+    } else if (query.period === 'half') {
+        date.setMinutes(date.getMinutes() - 30, 0, 0);
+    } else {
+        date.setMinutes(0, 0, 0);
+        date.setDate(date.getDate() - 1);
+    }
 
 	return stats
 		.aggregate([
