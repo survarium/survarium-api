@@ -25,10 +25,10 @@ router.all('*', (req, res, next) => {
             headers: req.headers
         })
         .then(an => {
-            let replacer = `${req.protocol}://${incomingHost}${req.baseUrl}`;
-            let body = an.body
-                .replace(/https:\/\/an\.yandex\.ru/g, replacer)
-                .replace(new RegExp(`abuseInfo: "${replacer.replace(/([/.])/g, '\$1')}`, 'g'), 'abuseInfo: "https://an.yandex.ru');
+            //let replacer = `${req.protocol}://${incomingHost}${req.baseUrl}`;
+            let body = an.body;
+                /*.replace(/https:\/\/an\.yandex\.ru/g, replacer)
+                .replace(new RegExp(`abuseInfo: "${replacer.replace(/([/.])/g, '\$1')}`, 'g'), 'abuseInfo: "https://an.yandex.ru');*/
             
             return res.set(an.headers).send(body);
         })
