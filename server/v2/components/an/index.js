@@ -15,6 +15,8 @@ router.all('*', (req, res, next) => {
     }
     
     let incomingHost = req.headers.host;
+    let hostname = req.hostname;
+    
     req.headers.host = HOST;
     
     got(`https://${HOST}${req.path}`,
@@ -24,13 +26,26 @@ router.all('*', (req, res, next) => {
             retries: 0,
             headers: req.headers
         })
-        .then(an => {
-            //let replacer = `${req.protocol}://${incomingHost}${req.baseUrl}`;
-            let body = an.body;
-                /*.replace(/https:\/\/an\.yandex\.ru/g, replacer)
-                .replace(new RegExp(`abuseInfo: "${replacer.replace(/([/.])/g, '\$1')}`, 'g'), 'abuseInfo: "https://an.yandex.ru');*/
+        /*.then(an => {
+            let replacer = `${req.protocol}://${incomingHost}${req.baseUrl}`;
             
-            return res.set(an.headers).send(body);
+            an.body = an.body
+                .replace(/https:\/\/an\.yandex\.ru/g, replacer)
+                .replace(new RegExp(`abuseInfo: "${replacer.replace(/([/.])/g, '\$1')}`, 'g'), 'abuseInfo: "https://an.yandex.ru');
+            
+            return an;
+        })*/
+        .then(an => {
+            let cookie = an.headers && an.headers['set-cookie'];
+            
+            if (cookie) {
+                an.headers['set-cookie'] = cookie.map(cook => cook.replace(/domain=an\.yandex\.ru;/, `domain=${hostname};`));
+            }
+            
+            return an;
+        })
+        .then(an => {
+            return res.set(an.headers).send(an.body);
         })
         .catch(next);
 });
