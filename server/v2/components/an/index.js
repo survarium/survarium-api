@@ -11,7 +11,7 @@ router.all('*', (req, res, next) => {
         req.query['page-ref'] = req.query['target-ref'] = req.headers.referer = req.query['target-ref']
             .replace('http:', 'https:')
             .replace('.dev', '.pro')
-            .replace(':3000', '');
+            .replace(/:\d+/, '');
     }
     
     let incomingHost = req.headers.host;
@@ -25,17 +25,12 @@ router.all('*', (req, res, next) => {
             headers: req.headers
         })
         .then(an => {
-            let replacer;
+            let replacer = `${req.protocol}://${incomingHost}${req.baseUrl}`;
+            let body = an.body
+                .replace(/https:\/\/an\.yandex\.ru/g, replacer)
+                .replace(new RegExp(`abuseInfo: "${replacer.replace(/([/.])/g, '\$1')}`, 'g'), 'abuseInfo: "https://an.yandex.ru');
             
-            if (req.secure) {
-                replacer = /an\.yandex\.ru/g;
-                incomingHost = `${incomingHost}${req.baseUrl}`;
-            } else {
-                replacer = /(https:\/\/)?an\.yandex\.ru/g;
-                incomingHost = `${req.protocol}://${incomingHost}${req.baseUrl}`;
-            }
-            
-            res.set(an.headers).send(an.body.replace(replacer, incomingHost));
+            return res.set(an.headers).send(body);
         })
         .catch(next);
 });
