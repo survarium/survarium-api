@@ -29,7 +29,7 @@ function patchCookie(hostname, an) {
     if (cookie) {
         let cookieDomain = /domain=an\.yandex\.ru;/;
         
-        an.headers['set-cookie'] = cookie.forEach(cook => {
+        cookie.forEach(cook => {
             if (cookieDomain.test(cook)) {
                 an.headers['set-cookie'].push(cook.replace(cookieDomain, `domain=${hostname};`));
             }
@@ -69,6 +69,33 @@ function answer(headers, res, an) {
     return body.pipe(res);
 }
 
+function getHeaders(req) {
+    let headers = req.headers;
+    
+    let result = [
+        'connection',
+        'host',
+        'x-real-ip',
+        'x-forwarded-for',
+        'accept-encoding',
+        'user-agent',
+        'accept',
+        'accept-language',
+        'referer',
+        'cookie'
+    ].reduce((result, key) => {
+        let val = headers[key];
+        
+        val && (result[key] = val);
+        
+        return result;
+    }, {});
+    
+    result.cookie && (result.cookie = result.cookie.replace(/undefined(;\s?)?/g, ''));
+    
+    return result;
+}
+
 router.all('*', (req, res, next) => {
     if (config.env !== 'production' && req.path.match(/^\/page/)) {
         req.query['page-ref'] = req.query['target-ref'] = req.headers.referer = req.query['target-ref']
@@ -77,16 +104,13 @@ router.all('*', (req, res, next) => {
             .replace(/:\d+/, '');
     }
     
-    let headers = req.headers;
+    let headers = getHeaders(req);
     let incomingHost = headers.host;
     let hostname = req.hostname;
     
     headers.host = 'an.yandex.ru';
     
     headers.pragma = headers['cache-control'] = 'no-cache';
-    
-    delete headers['if-none-match'];
-    delete headers['if-modified-since'];
     
     let flow = got(`https://an.yandex.ru${req.path}`,
         {
