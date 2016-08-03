@@ -284,6 +284,9 @@ exports.unique = function getUnique(query) {
         date.setHours(date.getHours() - 1, 0, 0, 0);
     } else if (query.period === 'half') {
         date.setMinutes(date.getMinutes() - 30, 0, 0);
+    } else if (query.period === 'month') {
+        date.setHours(date.getHours() - 1, 0, 0, 0);
+        date.setMonth(date.getMonth() - 1);
     } else {
         date.setMinutes(0, 0, 0);
         date.setDate(date.getDate() - 1);
@@ -292,8 +295,8 @@ exports.unique = function getUnique(query) {
 	return stats
 		.aggregate([
 			{ $match: { date: { $gte: date } } },
-			{ $group: { _id: null, players: { $addToSet: '$player' } }},
-			{ $project: { count: { $size: '$players' } } }
+			{ $group: { _id: '$player' }},
+            { $group: { _id: null, count: { $sum: 1 } } }
 		])
 		.allowDiskUse(true).exec().then(function (result) {
 			return { count: result[0] ? result[0].count : 0 };
