@@ -7,6 +7,7 @@ const db = require('../../lib/db');
 const utils = require('../../lib/utils');
 const Matches = db.model('Matches');
 const ClansImporter = require('../clans/importer');
+const ItemsUsage = require('../../../v2/components/game/importer/items').assignAmmunitionUsage;
 const Promise = require('bluebird');
 
 const CACHEKEY = 'players:load';
@@ -181,12 +182,14 @@ function load(params) {
 										}
 										throw err;
 									}):
-								self.update({ id: id },  assignDataToModel(fetched, player)).exec()
+								self.update({ id: id },  assignDataToModel(fetched, player))
+                                    .exec()
 									.then(function () {
 										debug(`player ${id} updated`);
 										return player;
 									})
 							)
+                            .tap(ItemsUsage.bind({ debug: debug }))
 							.then(assignClan.bind(null, { isNew: isNew, source: fetched }));
 					})
 					.then(function (player) {
@@ -201,7 +204,7 @@ function load(params) {
 /*setTimeout(function () {
 	// Import test
 	load.call(db.model('Players'), { id: '15238791817735151910' }).then(function (player) {
-		console.log(player);
+		console.log('ok')//player);
 	});
 }, 1000);*/
 

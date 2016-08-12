@@ -32,6 +32,7 @@ function getProjections(versions, language, thin) {
 		project['is_stack'] = 1;
 		project['category'] = '$item_category';
         project['visual'] = 1;
+        project['owners'] = { $size: '$owners' }
 	}
 
 	if (!thin && versions && versions.length) {
