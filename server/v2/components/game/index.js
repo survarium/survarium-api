@@ -73,6 +73,22 @@ router.get('/items/:items', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/modifications/:mods', function (req, res, next) {
+	var query = req.query;
+    var mods = req.params.mods.split(',').map(Number).filter(function (id) {
+        return !isNaN(id);
+    });
+
+	ctl
+		.modifications({
+			list: mods
+		}, query)
+		.then(function (result) {
+			return res.json(result);
+		})
+		.catch(next);
+});
+
 function modelAuth(req, res, next) {
     let key = req.query.key;
     
@@ -83,6 +99,17 @@ function modelAuth(req, res, next) {
     next();
 }
 
+const upload = multer({
+    storage: multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, config.game.upload);
+        },
+        filename: (req, file, cb) => {
+            cb(null, req.item.name + '.mview');
+        }
+    })
+});
+
 router.get('/items/:item/model', modelAuth, ctl.one, function (req, res, next) {
     ctl
         .modelForm({
@@ -91,17 +118,6 @@ router.get('/items/:item/model', modelAuth, ctl.one, function (req, res, next) {
         .then(html => res.type('html').send(html))
         .catch(next);
 });
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, config.game.upload);
-    },
-    filename: (req, file, cb) => {
-        cb(null, req.item.name + '.mview');
-    }
-});
-
-const upload = multer({ storage: storage });
 
 router.post('/items/:item/model', modelAuth, ctl.one, upload.single('mview'), function (req, res, next) {
     ctl

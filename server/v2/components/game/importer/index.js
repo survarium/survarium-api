@@ -8,6 +8,7 @@ const Versions = require('../models/versions');
 const Items = require('../models/items');
 const UiProps = require('../models/ui_properties');
 const Factions = require('../models/factions');
+const Modifications = require('../models/modifications');
 const db = Versions.db;
 
 const VERSION = process.env.VERSION;
@@ -34,6 +35,7 @@ db.once('connected', function () {
 
 	const INDEX = require(path.join(basePath, 'gameplay', 'db_static_dictionaries'));
 	const STATIC_GAME_PARAMS = require(path.join(basePath, 'gameplay', 'static_game_parameters'));
+    const MODIFICATIONS = require(path.join(basePath, 'gameplay', 'items', 'modifications', 'modifications'));
 	const LOCALIZATION = config.game.langs.map(lang => {
 		return {
 			lang: config.shortLangs[lang],
@@ -214,8 +216,9 @@ db.once('connected', function () {
 				let item = copy([
 					'direction',
 					'min_value',
-					'comparable',
-					'max_value',
+                    'max_value',
+                    'comparable',
+                    'postfix',
 					'mod_type'
 				], prop, {
 					_id: prop.prop_id,
@@ -243,15 +246,68 @@ db.once('connected', function () {
 				return Factions.findOneAndUpdate({ _id: faction.id }, item, { new: true, upsert: true })
 			});
 		}
+		
+		function reduceProps(propsList) {
+		    return propsList.reduce((props, prop) => {
+		        prop.langs = localize({ name: prop.prop_name });
+		        
+		        props[prop['prop_id']] = prop;
+		        return props;
+            }, {});
+        }
+		
+		function buildModifications(modifications, propsList) {
+		    const props = reduceProps(propsList);
+		    
+		    return modifications.map(item => {
+                item._id = item.id;
+                delete item.id;
+            
+                let info = item['lobby_info'];
+                if (info) {
+                    item['lobby_info'] = Object.keys(info).map(key => {
+                        return {
+                            prop: key,
+                            value: info[key]
+                        };
+                    });
+    
+                    item.value = Number(item['lobby_info'][0]['value']);
+                }
+                
+                if (item['ui_desc'] && item['ui_desc']['props_list']) {
+                    if (item['ui_desc']['props_list'].length) {
+                        let prop = item['ui_desc']['props_list'][0];
+                        let param = props[prop['prop_id']];
+                        
+                        item.langs = localize({ name: param['prop_name'] });
+                        item.postfix = param.postfix;
+                    } else {
+                        delete item['ui_desc']['props_list'];
+                    }
+                }
+                
+                return Modifications.findOneAndUpdate({ _id: item._id }, item, { new: true, upsert: true });
+            });
+        }
 
 		return Promise
 			.all([].concat(
-				ITEMS.map(buildItem),
-				buildUiProperties(STATIC_GAME_PARAMS.ui_properties),
-				buildFactions(INDEX.factions_dict)
+			    Promise
+                    .all(ITEMS.map(buildItem))
+                    .tap(() => console.log('items done')),
+				Promise
+                    .all(buildUiProperties(STATIC_GAME_PARAMS.ui_properties))
+                    .tap(() => console.log('static params done')),
+                Promise
+                    .all(buildFactions(INDEX.factions_dict))
+                    .tap(() => console.log('factions done')),
+                Promise
+                    .all(buildModifications(MODIFICATIONS.modifications, STATIC_GAME_PARAMS.ui_properties))
+                    .tap(() => console.log('modifications done'))
 			))
 			.then(() => {
-				console.log('items done');
+				console.log('game import done');
 				db.close();
 			});
 	}

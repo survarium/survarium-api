@@ -6,6 +6,7 @@ const Items    = require('./models/items');
 const Versions = require('./models/versions');
 const UiProps  = require('./models/ui_properties');
 const Factions = require('./models/factions');
+const Mods     = require('./models/modifications');
 const Players  = require('../../../v1/components/players/model');
 const cache    = require('../../../v1/lib/cache');
 
@@ -208,6 +209,44 @@ exports.factions = function factions(params) {
 		} },
 		{ $sort: { id: 1 } }
 	]);
+};
+
+exports.modifications = function modifications(params, query) {
+    let language = getLang(query.language);
+    let thin = query.thin !== undefined;
+    
+    let projection = {
+        _id: 0,
+        id: '$_id',
+        name: `$langs.${language}.name`,
+        value: 1,
+        postfix: 1
+    };
+    
+    let pipeline = [
+        { $project: projection }
+    ];
+    
+    if (params.list) {
+        pipeline.unshift({
+            $match: { _id: { $in: params.list } }
+        });
+    }
+    
+    if (!thin) {
+        [
+            'drop_weight',
+            'modifiers',
+            'type_requirements_mask',
+            'type_mask',
+            'ui_desc',
+            'lobby_info'
+        ].forEach(field => projection[field] = 1);
+    }
+    
+    pipeline.push({ $sort: { id: 1 } });
+    
+    return Mods.aggregate(pipeline);
 };
 
 exports.one = function (req, res, next) {
