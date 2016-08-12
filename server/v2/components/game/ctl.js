@@ -242,6 +242,78 @@ exports.modifications = function modifications(params, query) {
             'ui_desc',
             'lobby_info'
         ].forEach(field => projection[field] = 1);
+        
+        let unprop = [
+            'id',
+            'name',
+            'value',
+            'postfix',
+            'drop_weight',
+            'modifiers',
+            'type_requirements_mask',
+            'type_mask',
+            'lobby_info',
+            'ui_desc.name',
+            'ui_desc.icon',
+            'ui_desc.min_value',
+            'ui_desc.max_value'
+        ].reduce((unprop, field) => {
+            unprop[field] = 1;
+            return unprop;
+        }, {
+            'prop.value': '$ui_desc.props_list.prop_value',
+            'prop.id': '$prop._id',
+            'prop.mod_type': '$prop.mod_type',
+            'prop.min_value': '$prop.min_value',
+            'prop.max_value': '$prop.max_value',
+            'prop.comparable': '$prop.comparable',
+            'prop.direction': '$prop.direction',
+            'prop.name': `$prop.langs.${language}.name`,
+        });
+        
+        let group = [
+            'name',
+            'value',
+            'postfix',
+            'drop_weight',
+            'modifiers',
+            'type_requirements_mask',
+            'type_mask',
+            'lobby_info',
+            'ui_desc'
+        ].reduce((group, field) => {
+            group[field] = { $last: `$${field}` };
+            return group;
+        }, {
+            _id: '$id',
+            props: { $push: '$prop' }
+        });
+        
+        let finalize = [
+            'name',
+            'value',
+            'postfix',
+            'drop_weight',
+            'modifiers',
+            'type_requirements_mask',
+            'type_mask',
+            'lobby_info',
+            'ui_desc',
+            'props'
+        ].reduce((finalize, field) => {
+            finalize[field] = 1;
+            return finalize;
+        }, {
+            _id: 0,
+            id: '$_id'
+        });
+    
+        pipeline.push({ $unwind: { path: '$ui_desc.props_list', preserveNullAndEmptyArrays: true } });
+        pipeline.push({ $lookup: { from: UiProps.collection.name, localField: `ui_desc.props_list.prop_id`, foreignField: '_id', as: `prop` } });
+        pipeline.push({ $unwind: { path: '$prop', preserveNullAndEmptyArrays: true } });
+        pipeline.push({ $project: unprop });
+        pipeline.push({ $group: group });
+        pipeline.push({ $project: finalize })
     }
     
     pipeline.push({ $sort: { id: 1 } });
