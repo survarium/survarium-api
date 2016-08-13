@@ -182,7 +182,12 @@ exports.itemUsage = function itemUsage(id) {
 						.then(count => {
 							cache.set(cacheKey, count, 'EX', 60 * 30);
 							return count;
-						});
+						})
+                        .then(count => Items
+                            .update({ _id: id }, { $set: { usage: count } })
+                            .exec()
+                            .then(() => count)
+                        );
 				}),
 			total: Players.activeCount()
 		});
