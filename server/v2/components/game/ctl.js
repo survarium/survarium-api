@@ -227,7 +227,8 @@ exports.modifications = function modifications(params, query) {
         id: '$_id',
         name: `$langs.${language}.name`,
         value: 1,
-        postfix: 1
+        postfix: 1,
+        item_level_depended: 1,
     };
     
     let pipeline = [
@@ -240,7 +241,9 @@ exports.modifications = function modifications(params, query) {
         });
     }
     
-    if (!thin) {
+    if (thin) {
+        projection['modifier'] = { $arrayElemAt: [ '$modifiers.value', 0 ] };
+    } else {
         [
             'drop_weight',
             'modifiers',
@@ -260,6 +263,7 @@ exports.modifications = function modifications(params, query) {
             'type_requirements_mask',
             'type_mask',
             'lobby_info',
+            'item_level_depended',
             'ui_desc.name',
             'ui_desc.icon',
             'ui_desc.min_value',
@@ -287,6 +291,7 @@ exports.modifications = function modifications(params, query) {
             'type_requirements_mask',
             'type_mask',
             'lobby_info',
+            'item_level_depended',
             'ui_desc'
         ].reduce((group, field) => {
             group[field] = { $last: `$${field}` };
@@ -305,6 +310,7 @@ exports.modifications = function modifications(params, query) {
             'type_requirements_mask',
             'type_mask',
             'lobby_info',
+            'item_level_depended',
             'ui_desc',
             'props'
         ].reduce((finalize, field) => {

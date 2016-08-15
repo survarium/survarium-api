@@ -19,7 +19,8 @@ const Modifications = new Schema({
 	langs: langs,
     value: Number,
     postfix: String,
-    drop_weight: Number
+    drop_weight: Number,
+    item_level_depended: Boolean
 }, { collection: 'game_modifications', validateBeforeSave: false, strict: false });
 
 module.exports = db.model('Modifications', Modifications);
