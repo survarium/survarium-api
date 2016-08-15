@@ -52,6 +52,7 @@ function getProjections(versions, language, thin) {
 		project['faction'] = `${versionPath}.parameters.faction_data.faction_id`;
 		project['drop_weight'] = `${versionPath}.parameters.drop_weight`;
 		project['is_premium'] = `${versionPath}.is_premium`;
+		project['default_modifications'] = `${versionPath}.default_modifications`;
 		project['category'] = `$item_category`;
 
 		projections.push({ $unwind: { path: '$props', preserveNullAndEmptyArrays: true } });
@@ -72,7 +73,8 @@ function getProjections(versions, language, thin) {
 				faction: { $last: '$faction' },
 				premium: { $last: '$is_premium' },
 				category: { $last: '$category' },
-				props: { $push: { name: `$prop.langs.${language}.name`, value: `$props.prop_value` } }
+				props: { $push: { name: `$prop.langs.${language}.name`, value: `$props.prop_value` } },
+                default_modifications: { $last: '$default_modifications' }
 			}
 		});
 
@@ -89,7 +91,8 @@ function getProjections(versions, language, thin) {
 				level: 1,
 				faction: 1,
 				premium: 1,
-				category: 1
+				category: 1,
+                default_modifications: 1
 			}
 		});
 	}
