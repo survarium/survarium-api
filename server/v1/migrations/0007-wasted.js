@@ -33,31 +33,61 @@ db.once('connected', function () {
 
 	let matches = db.collection('matches');
 	let players = db.collection('players');
-
-	status(true);
     
-	var aggregator = matches.aggregate([
-        { $unwind: { path: '$stats', preserveNullAndEmptyArrays: true } },
-	    { $lookup: { from: Stats.collection.name, localField: 'stats', foreignField: '_id', as: 'stats' } },
-        { $unwind: { path: '$stats', preserveNullAndEmptyArrays: true } },
-        { $project: { _id: 1, duration: 1, 'player': '$stats.player' } },
-        { $group: { _id: '$_id', duration: { $last: '$duration' }, players: { $push: '$player' } } }
-    ], { cursor: { batchSize: 1 } });
+    const PAGE = 10000;
+    var SKIP = 0;
 
-	function row(match) {
-		status(true);
-        let duration = match.duration;
-        let list = match.players;
-        if (duration && list && list.length) {
-            players.update({ _id: { $in: list } }, { $inc: { wasted: duration } }, { multi: true }).then(() => status()).catch(err => { console.error(err); status(); });
-        } else {
-            status();
+    function waste() {
+        status(true);
+        
+        console.log(`computing next ${PAGE} matches`);
+        
+        var rows = 0;
+        
+        var aggregator = matches.aggregate([
+            { $skip: SKIP },
+            { $limit: PAGE },
+            { $unwind: { path: '$stats', preserveNullAndEmptyArrays: true } },
+            { $lookup: { from: Stats.collection.name, localField: 'stats', foreignField: '_id', as: 'stats' } },
+            { $unwind: { path: '$stats', preserveNullAndEmptyArrays: true } },
+            { $project: { _id: 1, duration: 1, 'player': '$stats.player' } },
+            { $group: { _id: '$_id', duration: { $last: '$duration' }, players: { $push: '$player' } } }
+        ], { cursor: { batchSize: 1 }, allowDiskUse: true });
+    
+        function row(match) {
+            status(true);
+            
+            let duration = match.duration;
+            let list = match.players;
+            if (duration && list && list.length) {
+                return players.update({ _id: { $in: list } }, { $inc: { wasted: duration } }, { multi: true });
+            } else {
+                return (new Promise(resolve => resolve()));
+            }
         }
-	}
-
-	aggregator
-		.on('data', row)
-		.once('end', function () {
-			status();
-		});
+    
+        aggregator
+            .on('data', match => row(match).then(() => status() ))
+            .once('end', function () {
+                if (rows) {
+                    SKIP += PAGE;
+                    waste();
+                }
+                
+                status();
+            });
+    }
+    
+    status(true);
+    players
+        .update({}, { $set: { wasted: 0 } }, { multi: true })
+        .then((stats) => {
+            console.log(`players revert waste ${stats}`);
+            
+            waste();
+            
+            status();
+            
+        })
+        .catch(console.error);
 });
