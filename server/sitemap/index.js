@@ -27,7 +27,8 @@ function getPages(result) {
 		{ url: HOST + '/matches/clanwars', changefreq: 'monthly' },
 		{ url: HOST + '/matches/search', changefreq: 'monthly' },
 		{ url: HOST + '/clans', changefreq: 'monthly' },
-		{ url: HOST + '/clans/search', changefreq: 'monthly' }
+		{ url: HOST + '/clans/search', changefreq: 'monthly' },
+		{ url: HOST + '/armory', changefreq: 'monthly' }
 	]);
 	return new Promise(resolve => resolve(result));
 }
@@ -95,6 +96,27 @@ function getPlayers(result) {
 	});
 }
 
+function getArmory(result) {
+	result = result || [];
+	return new Promise((resolve, reject) => {
+		var changefreq = 'monthly';
+		var url = HOST + '/armory/';
+
+		var aggregator = db.collection('game_items').aggregate([
+			{ $project: { path: '$name', _id: 0 } }
+		], { cursor: { batchSize: 1 } });
+
+		aggregator
+			.on('data', function (elem) {
+				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
+			})
+			.once('end', function () {
+				resolve(result);
+			})
+			.once('error', reject);
+	});
+}
+
 function addAlternates(result) {
 	return result.map(elem => {
 		elem.links = ['ru', 'ua', 'en'].map(lang => {
@@ -114,7 +136,8 @@ db.once('connected', () => {
 			getPages(result),
 		    getClans(result),
 		    getPlayers(result),
-			getMatches(result)
+			getMatches(result),
+            getArmory(result)
 		])
 		//.then(() => result = addAlternates(result))
 		.then(() => {
