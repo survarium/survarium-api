@@ -114,7 +114,10 @@ const PlayersSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref: 'Bans'
 	},
-    wasted: Number,
+    wasted: {
+	    type: Number,
+        index: true
+    },
 	deletedAt: Date
 }, { timestamps: true });
 
