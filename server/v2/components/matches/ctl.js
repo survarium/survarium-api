@@ -5,6 +5,7 @@ const model   = require('../../../v1/components/matches/model');
 const Stats   = require('../../../v1/components/stats/model');
 const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
+const Query   = require('./query');
 const got     = require('got');
 
 exports.id = function (id) {
@@ -19,8 +20,9 @@ exports.list = function list (options) {
 	options = options || {};
 
 	var totalQuery = {};
-
-	var query = {};
+    
+    var query = Query.list(options.filter);
+    
 	var fields = {
 		stats: 0,
 		_id: 0,

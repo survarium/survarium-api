@@ -42,6 +42,60 @@ var number = (function () {
 	};
 })();
 
+var date = (function () {
+	var check = function check(min, max, val) {
+        if (typeof val !== 'string') {
+            return false;
+        }
+		
+		let checker = (new Date(val)).getTime();
+        
+        if (!checker) {
+            return false;
+        }
+
+		if (max !== undefined) {
+		    let maxCheck = (new Date(max)).getTime();
+            if (maxCheck && maxCheck < checker) {
+                return false;
+            }
+		}
+        
+		if (min !== undefined) {
+            let minCheck = (new Date(min)).getTime();
+            if (minCheck && minCheck > checker) {
+                return false;
+            }
+		}
+
+		return true;
+	};
+
+	return function (field, params, query, result) {
+		var max = params.max;
+		var min = params.min;
+
+		var $eq = query.$eq;
+		var $lte = query.$lte;
+		var $gte = query.$gte;
+
+		if (check(min, max, $eq)) {
+			result[field] = $eq;
+			return result;
+		}
+
+		if (check(min, max, $lte)) {
+			(result[field] ? result[field] : result[field] = {}).$lte = $lte;
+		}
+
+		if (check(min, max, $gte)) {
+			(result[field] ? result[field] : result[field] = {}).$gte = $gte;
+		}
+
+		return result;
+	};
+})();
+
 exports.build = function build(filters) {
 	return function parse(query, result) {
 		result = result || {};
@@ -75,6 +129,10 @@ exports.build = function build(filters) {
 				case 'number':
 					number(field, params, search, result);
 					break;
+                
+                case 'date':
+                    date(field, params, search, result);
+                    break;
 
 				default:
 					break;
