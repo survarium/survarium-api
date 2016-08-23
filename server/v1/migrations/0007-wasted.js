@@ -6,6 +6,7 @@
 
 const db    = require('../lib/db');
 const Stats = require('../components/stats/model');
+const Promise = require('bluebird');
 
 db.once('connected', function () {
 	var status = (function () {
@@ -16,7 +17,7 @@ db.once('connected', function () {
 			console.log(`planning exit`);
 			quitter = setTimeout(function () {
 				db.close();
-			}, 1000);
+			}, 10000);
 		}
 
 		return function (add) {
@@ -27,7 +28,7 @@ db.once('connected', function () {
 				return exit();
 			}
 			clearTimeout(quitter);
-			console.log(`remains ${count} operations`);
+			//console.log(`remains ${count} operations`);
 		}
 	})();
 
@@ -50,9 +51,9 @@ db.once('connected', function () {
             { $unwind: { path: '$stats', preserveNullAndEmptyArrays: true } },
             { $lookup: { from: Stats.collection.name, localField: 'stats', foreignField: '_id', as: 'stats' } },
             { $unwind: { path: '$stats', preserveNullAndEmptyArrays: true } },
-            { $project: { _id: 1, duration: 1, 'player': '$stats.player' } },
-            { $group: { _id: '$_id', duration: { $last: '$duration' }, players: { $push: '$player' } } }
-        ], { cursor: { batchSize: 1 }, allowDiskUse: true });
+            { $project: { id: 1, duration: 1, 'player': '$stats.player' } },
+            { $group: { _id: '$id', duration: { $last: '$duration' }, players: { $push: '$player' } } }
+        ], { allowDiskUse: true });
     
         function row(match) {
             status(true);
@@ -65,16 +66,26 @@ db.once('connected', function () {
                 return (new Promise(resolve => resolve()));
             }
         }
+        
+        let promises = [];
     
         aggregator
-            .on('data', match => row(match).then(() => status() ))
+            .on('data', match => { rows++; promises.push(row(match).then(() => status()) ); })
             .once('end', function () {
-                if (rows) {
-                    SKIP += PAGE;
-                    waste();
-                }
+                status(true);
                 
-                status();
+                Promise
+                    .all(promises)
+                    .then(() => {
+                        status();
+                        
+                        if (rows) {
+                            SKIP += PAGE;
+                            waste();
+                        }
+    
+                        status();
+                    });
             });
     }
     
