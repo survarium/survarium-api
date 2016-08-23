@@ -114,6 +114,7 @@ const PlayersSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref: 'Bans'
 	},
+    wasted: Number,
 	deletedAt: Date
 }, { timestamps: true });
 
@@ -121,7 +122,7 @@ PlayersSchema.statics.load = function () {
 	return importer.load.apply(this, arguments);
 };
 
-PlayersSchema.methods.addStat = function (stat) {
+PlayersSchema.methods.addStat = function (stat, matchData) {
 	var self = this;
 	var updaters = [this.update({
 		$push: {
@@ -136,7 +137,8 @@ PlayersSchema.methods.addStat = function (stat) {
 			'total.boxesBringed': stat.boxesBringed || 0,
 			'total.artefactUses': stat.artefactUses || 0,
 			'total.stats': 1,
-			'total.score': stat.score || 0
+			'total.score': stat.score || 0,
+            'wasted': matchData.game_duration || 0
 		},
 		$set: {
 			'total.scoreAvg': +((this.total.score + stat.score || 0) / (this.total.stats + 1)).toFixed(0)

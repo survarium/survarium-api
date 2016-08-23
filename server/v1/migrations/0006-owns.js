@@ -46,7 +46,7 @@ db.once('connected', function () {
 	function row(player) {
 		status(true);
         
-        Items(player).then(() => status).catch(err => { console.error(err); status(); });
+        Items(player).then(() => status()).catch(err => { console.error(err); status(); });
 	}
 
 	aggregator

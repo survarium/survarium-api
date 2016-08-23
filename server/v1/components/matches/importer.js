@@ -88,7 +88,7 @@ function saveStats(matchData, match) {
 							})
 							.tap(function (stat) {
 								debug(`stats document for player ${player.nickname} and match ${match.id} created`);
-								return player.addStat(stat);
+								return player.addStat(stat, matchData);
 							});
 					});
 			};
