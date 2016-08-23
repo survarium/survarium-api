@@ -35,7 +35,7 @@ db.once('connected', function () {
 	let matches = db.collection('matches');
 	let players = db.collection('players');
     
-    const PAGE = 10000;
+    const PAGE = 1000000;
     var SKIP = 0;
 
     function waste() {
