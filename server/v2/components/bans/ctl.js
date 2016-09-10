@@ -20,8 +20,8 @@ function list(options) {
 		__v: 0,
 		'players._id': 0
 	};
-	var sort   = options.sort || { date: -1 };
-	var limit  = 10;
+	var sort  = options.sort || { date: -1 };
+	var limit = 10;
 	var skip   = 0;
 
 	if (options.skip) {
@@ -30,6 +30,15 @@ function list(options) {
 			skip = __skip;
 		}
 	}
+	
+    const MAX_LIMIT = 10;
+    
+    if (options.limit) {
+        var __limit = Number(options.limit);
+        if (!isNaN(__limit) && (__limit > 0)) {
+            limit = Math.min(MAX_LIMIT, __limit);
+        }
+    }
 
 	var cursor = model
 		.find(query)

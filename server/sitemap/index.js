@@ -21,12 +21,12 @@ function getPages(result) {
 		{ url: HOST + '/info/bans', changefreq: 'weekly' },
 		{ url: HOST + '/streams/youtube', changefreq: 'monthly' },
 		{ url: HOST + '/streams/twitch', changefreq: 'monthly' },
-		{ url: HOST + '/players', changefreq: 'monthly' },
+		{ url: HOST + '/players/list', changefreq: 'monthly' },
 		{ url: HOST + '/players/search', changefreq: 'monthly' },
 		{ url: HOST + '/matches/list', changefreq: 'always' },
 		{ url: HOST + '/matches/clanwars', changefreq: 'monthly' },
 		{ url: HOST + '/matches/search', changefreq: 'monthly' },
-		{ url: HOST + '/clans', changefreq: 'monthly' },
+		{ url: HOST + '/clans/list', changefreq: 'monthly' },
 		{ url: HOST + '/clans/search', changefreq: 'monthly' },
 		{ url: HOST + '/armory', changefreq: 'monthly' }
 	]);
