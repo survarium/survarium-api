@@ -112,7 +112,10 @@ var devmessage = (function (storage) {
 		let send = function (text) {
 			let print = `${head}${text}`;
 			config.v1.telegram.channels.forEach((channel) => {
-				bot.sendMessage(channel, print, { parse_mode: 'HTML' });
+				bot.sendMessage(channel, print, {
+				    parse_mode: 'HTML',
+                    disable_web_page_preview: true
+				});
 			});
 		};
 
