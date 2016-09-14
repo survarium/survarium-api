@@ -23,7 +23,7 @@ const ClansSchema = new Schema({
 	abbr: {
 		type: String,
 		required: true,
-		index: { unique: true },
+		index: true,
 		text: true,
 		trim: true
 	},

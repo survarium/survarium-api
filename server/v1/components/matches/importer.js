@@ -263,7 +263,7 @@ function importMatch(id, ts) {
 				});
 		})
 		.catch(function (err) {
-			console.error(logKey, 'cannot import match', id, err);
+			console.error(logKey, 'cannot import match', id, err.stack);
 			if (err.statusCode === 422) {
 				debug(`match ${id} cannot be loaded from API`);
 				return saveUnloaded(id, ts)
@@ -324,7 +324,7 @@ function loadByID(last) {
 									total: length,
 									id: id,
 									ts: lastImport,
-									lastError: lastError.error,
+									lastError: lastError.error && lastError.error.stack || lastError.error,
 									lastErrorMatch: lastError.id
 								});
 								tryToShutdown();

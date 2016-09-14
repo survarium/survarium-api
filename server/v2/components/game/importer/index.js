@@ -111,6 +111,8 @@ db.once('connected', function () {
 				};
 
 				copy(['is_premium'], ITEM, opt);
+                
+                //TODO: default_modifications typeof {} => []
 
 				switch (type) {
 					case 'wpn':
