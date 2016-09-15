@@ -14,5 +14,6 @@ router.use('/vg',         require('./components/vg-messages'));
 router.use('/bans',       require('./components/bans'));
 router.use('/game',       require('./components/game'));
 router.use('/an',         require('./components/an'));
+router.use('/steam',      require('./components/steam'));
 
 module.exports = router;
