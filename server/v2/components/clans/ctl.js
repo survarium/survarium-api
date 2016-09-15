@@ -9,7 +9,11 @@ const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
 
 exports.id = function (abbr) {
-	return model.findOne({ abbr: abbr }, { _id: 1, abbr: 1 }).lean();
+	return model
+        .find({ abbr: abbr }, { _id: 1, abbr: 1, id: 1 })
+        .sort({ id: -1 })
+        .lean()
+        .then(result => result[0]);
 };
 
 exports.list = function list (options) {
