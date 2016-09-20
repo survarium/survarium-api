@@ -6,7 +6,7 @@
   "scripts": {
     "test": "DEBUG=importer*,survarium-api-client DB_NAME=sv-test ./node_modules/.bin/tape tests/**/*.js | ./node_modules/.bin/tap-spec",
     "start": "LISTEN=3010 ./server/index.js",
-    "deps": "npm i && (cd server && npm run deps)"
+    "deps": "npm i --no-optional && (cd server && npm run deps)"
   },
   "repository": {
     "type": "git",

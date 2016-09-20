@@ -2,7 +2,7 @@
   "name": "@survarium-api/server",
   "dependencies": {
     "bluebird": "^3.3.3",
-    "discord.js": "^7.0.1",
+    "discord.js": "hydrabolt/discord.js#indev-old",
     "express": "^4.13.3",
     "mkdirp": "^0.5.1",
     "morgan": "^1.6.1",
@@ -10,6 +10,6 @@
     "survarium-api-client": "git+https://github.com/vaseker/survarium-api-client.git"
   },
   "scripts": {
-    "deps": "npm i && (cd v1 && npm i) && (cd v2 && npm i)"
+    "deps": "npm i --no-optional && (cd v1 && npm i --no-optional) && (cd v2 && npm i --no-optional)"
   }
 }
