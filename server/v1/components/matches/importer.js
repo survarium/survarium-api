@@ -171,15 +171,72 @@ var lastImportMatch;
 var importInProgress;
 
 /**
+ * Remove bots from stats
+ * @param match
+ */
+function filterMatch (match) {
+    if (!match || !match.stats || !match.stats.accounts) {
+        return;
+    }
+    
+    var realPlayers = 0;
+    var teams = match.stats.accounts;
+    var playerIndex;
+    var filteredAccounts = {};
+    
+    var checkPlayer = (team, result, index) => {
+        var player = team[index];
+        
+        if (!player.pid) {
+            return;
+        }
+        
+        realPlayers++;
+        result[playerIndex++] = player;
+    };
+    
+    Object.keys(teams).forEach(teamId => {
+        var team = teams[teamId];
+        var filteredTeam = filteredAccounts[teamId] = {};
+        
+        playerIndex = 0;
+        
+        Object.keys(team).forEach(checkPlayer.bind(null, team, filteredTeam));
+    });
+    
+    match.stats.accounts = filteredAccounts;
+    
+    return {
+        match: match,
+        realPlayers: realPlayers
+    };
+}
+
+/**
  * Match document creator
  * And related models fill trigger
  * @param {Object} data     Match data from API
  * @returns {Object|Promise}
  */
 function saveMatch(data) {
-	var id = data.match_id;
+    var id = data.match_id;
+    debug(`saving match ${id}`);
+    var filteredData = filterMatch(data);
+    
+    if (!filteredData) {
+        debug(`wrong match ${id} data structure`);
+        return Promise.resolve(null);
+    }
+    
+    if (filteredData.realPlayers < 2) {
+        debug(`match ${id} have only ${filteredData.realPlayers} real player(s)`);
+        return Promise.resolve(null);
+    }
+    
+    data = filteredData.match;
+    
 	var statsData = data.stats;
-	debug(`saving match ${id}`);
+    
 	return Promise.props({
 		map: Maps.findOne({ id: Number(statsData.map_id) }).lean()
 	})
@@ -257,6 +314,7 @@ function importMatch(id, ts) {
 					}
 					return saveMatch(match)
 						.then(function (doc) {
+						    // WARNING! DOC may be NULL after filtration
 							debug(`match ${id} imported`);
 							return { id: id, status: 'added', match: doc };
 						});
@@ -691,6 +749,8 @@ function deblock() {
 if (process.env.DEBLOCK) {
 	deblock();
 }
+
+importMatch(5709405);
 
 module.exports = {
 	deblock: deblock,
