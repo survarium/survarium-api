@@ -750,8 +750,6 @@ if (process.env.DEBLOCK) {
 	deblock();
 }
 
-importMatch(5709405);
-
 module.exports = {
 	deblock: deblock,
 	loader: loader,
