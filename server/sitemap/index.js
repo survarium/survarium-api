@@ -135,8 +135,7 @@ function getArmory(result) {
 }
 
 function addAlternates(result) {
-    // mutate result, not return new array
-	result.forEach(elem => {
+	return result.map(elem => {
 		elem.links = ALTERNATES.map(lang => {
 			return {
 				lang: lang.locale || lang.param,
@@ -158,7 +157,7 @@ db.once('connected', () => {
 			getMatches(result),
             getArmory(result)
 		])
-		.then(addAlternates)
+		.then(() => result = addAlternates(result))
 		.then(() => {
 			return new Promise((resolve, reject) => {
 				new sm.createSitemapIndex({
