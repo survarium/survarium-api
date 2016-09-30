@@ -12,30 +12,9 @@ const GZIP = process.env.GZIP === 'true';
 const SIZE = +process.env.SIZE || 50000;
 const DST  = process.env.DST || path.resolve(__dirname, '../../.sitemaps');
 
-function addAlternate(elem) {
-    elem.links = [{
-        param: 'ru',
-    }, {
-        param: 'ua',
-        locale: 'uk'
-    }, {
-        param: 'en'
-    }].map(lang => {
-        return {
-            lang: lang.locale || lang.param,
-            url: `${elem.url}?lang=${lang.param}`
-        };
-    });
-    return elem;
-}
-
-function addAlternates(result) {
-    return result.map(addAlternate);
-}
-
 function getPages(result) {
 	result = result || [];
-	[].push.apply(result, addAlternates([
+	[].push.apply(result, [
 		{ url: HOST + '/', changefreq: 'always' },
 		{ url: HOST + '/info/messages', changefreq: 'always' },
 		{ url: HOST + '/info/about', changefreq: 'monthly' },
@@ -50,7 +29,7 @@ function getPages(result) {
 		{ url: HOST + '/clans/list', changefreq: 'monthly' },
 		{ url: HOST + '/clans/search', changefreq: 'monthly' },
 		{ url: HOST + '/armory', changefreq: 'monthly' }
-	]));
+	]);
 	return new Promise(resolve => resolve(result));
 }
 
@@ -66,7 +45,7 @@ function getClans(result) {
 
 		aggregator
 			.on('data', function (elem) {
-				result.push(addAlternate({ url: url + encodeURIComponent(elem.path), changefreq: changefreq }));
+				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
 				resolve(result);
@@ -87,7 +66,7 @@ function getMatches(result) {
 
 		aggregator
 			.on('data', function (elem) {
-				result.push(addAlternate({ url: url + elem.path, changefreq: changefreq }));
+				result.push({ url: url + elem.path, changefreq: changefreq });
 			})
 			.once('end', function () {
 				resolve(result);
@@ -116,7 +95,7 @@ function getPlayers(result) {
 			        return;
                 }
                 
-				result.push(addAlternate({ url: url + encodeURIComponent(elem.path), changefreq: changefreq }));
+				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
 				resolve(result);
@@ -137,12 +116,31 @@ function getArmory(result) {
 
 		aggregator
 			.on('data', function (elem) {
-				result.push(addAlternate({ url: url + encodeURIComponent(elem.path), changefreq: changefreq }));
+				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
 				resolve(result);
 			})
 			.once('error', reject);
+	});
+}
+
+function addAlternates(result) {
+	return result.map(elem => {
+		elem.links = [{
+		    param: 'ru',
+        }, {
+            param: 'ua',
+            locale: 'uk'
+        }, {
+            param: 'en'
+        }].map(lang => {
+			return {
+				lang: lang.locale || lang.param,
+				url: `${elem.url}?lang=${lang.param}`
+			};
+		});
+		return elem;
 	});
 }
 
@@ -156,7 +154,7 @@ db.once('connected', () => {
 			getMatches(result),
             getArmory(result)
 		])
-		//.then(() => result = addAlternates(result))
+		.then(() => result = addAlternates(result))
 		.then(() => {
 			return new Promise((resolve, reject) => {
 				new sm.createSitemapIndex({
