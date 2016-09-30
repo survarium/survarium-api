@@ -148,13 +148,13 @@ db.once('connected', () => {
 	var result = [];
 	return Promise
 		.all([
-			getPages(result),
-		    getClans(result),
-		    getPlayers(result),
-			getMatches(result),
-            getArmory(result)
+			getPages(result).then(addAlternates),
+		    getClans(result).then(addAlternates),
+		    getPlayers(result).then(addAlternates),
+			getMatches(result).then(addAlternates),
+            getArmory(result).then(addAlternates)
 		])
-		.then(() => result = addAlternates(result))
+		//.then(() => result = addAlternates(result))
 		.then(() => {
 			return new Promise((resolve, reject) => {
 				new sm.createSitemapIndex({
