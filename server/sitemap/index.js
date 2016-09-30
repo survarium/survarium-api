@@ -84,9 +84,17 @@ function getPlayers(result) {
 		var aggregator = db.collection('players').aggregate([
 			{ $project: { path: '$nickname', _id: 0 } }
 		], { cursor: { batchSize: 1 } });
+        
+        var filter = /\//;
 
 		aggregator
 			.on('data', function (elem) {
+			    if (filter.test(elem.path)) {
+                    // ///ZVER///
+                    // ///FlashСаня///
+			        return;
+                }
+                
 				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
@@ -119,10 +127,17 @@ function getArmory(result) {
 
 function addAlternates(result) {
 	return result.map(elem => {
-		elem.links = ['ru', 'ua', 'en'].map(lang => {
+		elem.links = [{
+		    param: 'ru',
+        }, {
+            param: 'ua',
+            locale: 'uk'
+        }, {
+            param: 'en'
+        }].map(lang => {
 			return {
-				lang: lang,
-				url: `${elem.url}?lang=${lang}`
+				lang: lang.locale || lang.param,
+				url: `${elem.url}?lang=${lang.param}`
 			};
 		});
 		return elem;
@@ -139,7 +154,7 @@ db.once('connected', () => {
 			getMatches(result),
             getArmory(result)
 		])
-		//.then(() => result = addAlternates(result))
+		.then(() => result = addAlternates(result))
 		.then(() => {
 			return new Promise((resolve, reject) => {
 				new sm.createSitemapIndex({
