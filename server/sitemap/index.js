@@ -12,6 +12,15 @@ const GZIP = process.env.GZIP === 'true';
 const SIZE = +process.env.SIZE || 50000;
 const DST  = process.env.DST || path.resolve(__dirname, '../../.sitemaps');
 
+const ALTERNATES = [{
+    param: 'ru',
+}, {
+    param: 'ua',
+    locale: 'uk'
+}, {
+    param: 'en'
+}];
+
 function getPages(result) {
 	result = result || [];
 	[].push.apply(result, [
@@ -44,7 +53,7 @@ function getClans(result) {
 		], { cursor: { batchSize: 1 } });
 
 		aggregator
-			.on('data', function (elem) {
+			.on('data', function clansElem (elem) {
 				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
@@ -65,7 +74,7 @@ function getMatches(result) {
 		], { cursor: { batchSize: 1 } });
 
 		aggregator
-			.on('data', function (elem) {
+			.on('data', function matchesElem (elem) {
 				result.push({ url: url + elem.path, changefreq: changefreq });
 			})
 			.once('end', function () {
@@ -88,7 +97,7 @@ function getPlayers(result) {
         var filter = /\//;
 
 		aggregator
-			.on('data', function (elem) {
+			.on('data', function playersElem (elem) {
 			    if (filter.test(elem.path)) {
                     // ///ZVER///
                     // ///FlashСаня///
@@ -115,7 +124,7 @@ function getArmory(result) {
 		], { cursor: { batchSize: 1 } });
 
 		aggregator
-			.on('data', function (elem) {
+			.on('data', function armoryElem (elem) {
 				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
@@ -126,15 +135,9 @@ function getArmory(result) {
 }
 
 function addAlternates(result) {
-	return result.map(elem => {
-		elem.links = [{
-		    param: 'ru',
-        }, {
-            param: 'ua',
-            locale: 'uk'
-        }, {
-            param: 'en'
-        }].map(lang => {
+    // mutate result, not return new array
+	result.forEach(elem => {
+		elem.links = ALTERNATES.map(lang => {
 			return {
 				lang: lang.locale || lang.param,
 				url: `${elem.url}?lang=${lang.param}`
@@ -146,6 +149,7 @@ function addAlternates(result) {
 
 db.once('connected', () => {
 	var result = [];
+    
 	return Promise
 		.all([
 			getPages(result),
@@ -154,7 +158,7 @@ db.once('connected', () => {
 			getMatches(result),
             getArmory(result)
 		])
-		.then(() => result = addAlternates(result))
+		.then(addAlternates)
 		.then(() => {
 			return new Promise((resolve, reject) => {
 				new sm.createSitemapIndex({
@@ -169,12 +173,14 @@ db.once('connected', () => {
 						if (err) {
 							return reject(err);
 						}
+						
 						resolve(result);
 					}
 				});
 			});
 		})
 		.then(() => {
+		    console.log('sitemap generated');
 			db.close();
 		});
 });
