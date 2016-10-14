@@ -93,7 +93,7 @@ function getPlayers(result) {
 		var aggregator = db.collection('players').aggregate([
 			{ $project: { path: '$nickname', _id: 0 } }
 		], { cursor: { batchSize: 1 } });
-        
+
         var filter = /\//;
 
 		aggregator
@@ -103,7 +103,7 @@ function getPlayers(result) {
                     // ///FlashСаня///
 			        return;
                 }
-                
+
 				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
 			})
 			.once('end', function () {
@@ -148,7 +148,7 @@ function addAlternates(result) {
 
 db.once('connected', () => {
 	var result = [];
-    
+
 	return Promise
 		.all([
 			getPages(result),
@@ -157,7 +157,7 @@ db.once('connected', () => {
 			getMatches(result),
             getArmory(result)
 		])
-		.then(() => result = addAlternates(result))
+		//.then(() => result = addAlternates(result)) // Yandex robot errors
 		.then(() => {
 			return new Promise((resolve, reject) => {
 				new sm.createSitemapIndex({
@@ -172,7 +172,7 @@ db.once('connected', () => {
 						if (err) {
 							return reject(err);
 						}
-						
+
 						resolve(result);
 					}
 				});
