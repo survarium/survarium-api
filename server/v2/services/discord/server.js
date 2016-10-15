@@ -9,23 +9,22 @@ var PMCHANNELS = config.discord.pmChannels;
 
 function setStatus(bot) {
 	return bot
-		.setPlayingGame('Survarium')
-		.catch(err => debug('bot:status:err', err));
+		.user.setStatus('online', 'Survarium', config.front)
+		.catch(err => debug('bot:setStatus:err', err));
 }
 
 var pmChannels = [];
 function getPM(bot) {
 	let pms = PMCHANNELS;
-	let botPMs = bot.privateChannels;
-	pmChannels = Object
-		.keys(botPMs)
-		.map(Number)
-		.reduce((result, pos) => {
-			if (isNaN(pos) || pms.indexOf(botPMs[pos].recipient.username) === -1) {
+	let botPMs = bot.channels.findAll('type', 'dm');
+
+	pmChannels = botPMs
+		.reduce((result, channel) => {
+			if (pms.indexOf(channel.recipient.username) === -1) {
 				return result;
 			}
 
-			result.push(botPMs[pos]);
+			result.push(channel);
 			return result;
 		}, []);
 }

@@ -5,7 +5,7 @@ var debug = require('debug')('discord');
 
 var config = require('../../../configs');
 
-var connectionParams = { autoReconnect: true, maxCachedMessages: 5 };
+var connectionParams = { max_message_cache: 5, fetch_all_members: false };
 
 var bot = new Discord.Client(connectionParams);
 
@@ -27,8 +27,8 @@ function sendMessage(channels, message) {
 				return resolve();
 			}
 
-			bot
-				.sendMessage(channel, message)
+            channel
+				.sendMessage(message)
 				.then(() => debug('message:ok'))
 				.catch(err => debug(err))
 				.then(next);
@@ -45,7 +45,7 @@ bot
 	});
 
 setTimeout(() => {
-	bot.loginWithToken(config.discord.token);
+	bot.login(config.discord.token);
 }, 100);
 
 exports.MAXSIZE = 2000;

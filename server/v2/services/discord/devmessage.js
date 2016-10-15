@@ -6,20 +6,9 @@ var config = require('../../../configs');
 
 var channels = [];
 
-var bot = Discord.bot({
+Discord.bot({
 	onReady: function getChannels(bot) {
-		let botChannels = bot.channels;
-		channels = Object
-			.keys(botChannels)
-			.map(Number)
-			.reduce((result, pos) => {
-				if (isNaN(pos) || botChannels[pos].name !== config.discord.devChannel) {
-					return result;
-				}
-
-				result.push(botChannels[pos]);
-				return result;
-			}, []);
+        channels = bot.channels.findAll('name', config.discord.devChannel);
 	}
 });
 
