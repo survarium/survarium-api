@@ -18,6 +18,7 @@ const ClansImporter = require('../clans/importer');
 const CACHEKEY = 'matches:load';
 const CACHEIMPORTKEY = CACHEKEY + cache.options.suffix + ':last';
 const EXPIRE = 60 * 1;
+const IMPORT_MATCH_TILL = +process.env.IMPORTER_MATCH_TILL;
 const logKey = 'match:';
 
 var gracefulShutdown;
@@ -178,34 +179,34 @@ function filterMatch (match) {
     if (!match || !match.stats || !match.stats.accounts) {
         return;
     }
-    
+
     var realPlayers = 0;
     var teams = match.stats.accounts;
     var playerIndex;
     var filteredAccounts = {};
-    
+
     var checkPlayer = (team, result, index) => {
         var player = team[index];
-        
+
         if (!player.pid) {
             return;
         }
-        
+
         realPlayers++;
         result[playerIndex++] = player;
     };
-    
+
     Object.keys(teams).forEach(teamId => {
         var team = teams[teamId];
         var filteredTeam = filteredAccounts[teamId] = {};
-        
+
         playerIndex = 0;
-        
+
         Object.keys(team).forEach(checkPlayer.bind(null, team, filteredTeam));
     });
-    
+
     match.stats.accounts = filteredAccounts;
-    
+
     return {
         match: match,
         realPlayers: realPlayers
@@ -222,21 +223,21 @@ function saveMatch(data) {
     var id = data.match_id;
     debug(`saving match ${id}`);
     var filteredData = filterMatch(data);
-    
+
     if (!filteredData) {
         debug(`wrong match ${id} data structure`);
         return Promise.resolve(null);
     }
-    
+
     if (filteredData.realPlayers < 2) {
         debug(`match ${id} have only ${filteredData.realPlayers} real player(s)`);
         return Promise.resolve(null);
     }
-    
+
     data = filteredData.match;
-    
+
 	var statsData = data.stats;
-    
+
 	return Promise.props({
 		map: Maps.findOne({ id: Number(statsData.map_id) }).lean()
 	})
@@ -343,8 +344,13 @@ function loadByID(last) {
 
 	return apiNative.getMaxMatchId({})
 		.then(function (max) {
-			var latestAvailable = +max.max_match_id.api - 25;
+			var latestAvailable = +max.max_match_id.api - matchesToImport;
 			var latestPossible = matchId + matchesToImport;
+
+            if (IMPORT_MATCH_TILL) {
+                latestAvailable = Math.min(IMPORT_MATCH_TILL, latestAvailable);
+            }
+
 			var length = latestPossible > latestAvailable ?
 				latestAvailable - matchId
 				: matchesToImport;
