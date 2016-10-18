@@ -50,7 +50,7 @@ bot
 
 		if (bot.user.id === author.id) {
 			return;
-		} else if (message.channel instanceof Discord.Module.PMChannel) {
+		} else if (message.channel.type === 'dm') {
 			source = 'PM';
 		} else if (message.mentions && message.mentions.length && message.mentions.filter(elem => elem.id === bot.user.id).length) {
 			source = message.channel.name || message.channel.type;
