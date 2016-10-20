@@ -203,6 +203,9 @@ function loadTarget(target) {
 			}
 			var searchUrl = target.search.url + dev.id;
 			debug(`loading ${dev.name} messages in ${target.lang} forum (${searchUrl})`);
+			
+			console.log(headers);
+			
 			return Promise.delay(target.delay * 20).then(function () {
 				return got(searchUrl, {
 					headers: headers
