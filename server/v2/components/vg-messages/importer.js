@@ -200,7 +200,7 @@ function loadTarget(target) {
 				return resolve(done);
 			}
 			var searchUrl = target.search.url + dev.id;
-			debug(`loading ${dev.name} messages in ${target.lang} forum`);
+			debug(`loading ${dev.name} messages in ${target.lang} forum (${searchUrl})`);
 			return Promise.delay(target.delay * 20).then(function () {
 				return got(searchUrl, {
 					headers: headers
