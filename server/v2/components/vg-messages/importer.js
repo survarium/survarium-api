@@ -13,7 +13,9 @@ const cheerio    = require('cheerio');
 const VgMessages = require('./model');
 
 var headers = {
-	'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/601.4.4 (KHTML, like Gecko) Version/9.0.3 Safari/601.4.4',
+	'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 YaBrowser/16.9.1.1192 Yowser/2.5 Safari/537.36',
+	'cache-control': 'no-cache',
+	pragma: 'no-cache',
 	cookie: 'lang=ru'
 };
 
@@ -83,8 +85,7 @@ function parseSearch(html, options) {
 	return getMaxPost(options.dev, options.target.lang)
 		.then(MAXPOST => {
 			MAXPOST && debug(`last ${options.dev.name} message is #${MAXPOST}`);
-
-			console.log(html);
+		
 			let search = cheerio.load(html, { decodeEntities: false });
 
 			let searchError = search('#message p').text();
