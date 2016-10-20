@@ -84,6 +84,7 @@ function parseSearch(html, options) {
 		.then(MAXPOST => {
 			MAXPOST && debug(`last ${options.dev.name} message is #${MAXPOST}`);
 
+			console.log(html);
 			let search = cheerio.load(html, { decodeEntities: false });
 
 			let searchError = search('#message p').text();
