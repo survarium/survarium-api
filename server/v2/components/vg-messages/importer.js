@@ -104,6 +104,10 @@ function parseSearch(html, options) {
 				let postURL = $post.find('.searchresults a').attr('href');
 
 				let postId = Number(postURL.match(/p\=(\d+)/)[1]);
+				
+				if (!i) {
+					debug(`${options.dev.name} last found message is ${postId} in ${options.target.lang} forum`);
+				}
 
 				if (MAXPOST && postId <= MAXPOST) {
 					return;
