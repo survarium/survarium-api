@@ -96,7 +96,9 @@ module.exports = {
 			{ id: '392554',  name: 'Альбертыч' },
 			{ id: '457474',  name: 'Survarium DevTeam' },
 			{ id: '561692',  name: 'Gramb' },
-            { id: '95359',   name: 'plecheg' }
+            { id: '95359',   name: 'plecheg' },
+            { id: '95344',   name: 'MaJaxed' },
+            { id: '1352519',   name: 'ivan_vg' }
 			//{ id: '1080565', name: 'Esmer' }
 		]
 	},
@@ -112,7 +114,7 @@ module.exports = {
 		devChannel: process.env.DISCORD_DEVCHANNEL || 'devmessages',
 		pmChannels: process.env.DISCORD_PM_CHANNELS ? process.env.DISCORD_PM_CHANNELS.split(',') : ['Vaseker']
 	},
-    
+
     steam: {
 	    api: 'https://api.steampowered.com',
 	    appid: process.env.STEAM_APPID || 355840,
