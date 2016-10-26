@@ -6,7 +6,8 @@ const supportedListFilters = (function () {
 			type: 'number',
 			max : 100
 		},
-		'progress.elo'       : { type: 'number' },
+		'progress.rating_match_elo': { type: 'number' },
+		'progress.random_match_elo': { type: 'number' },
 		'total.scoreAvg'     : { type: 'number' },
 		'total.kills'        : { type: 'number' },
 		'total.dies'         : { type: 'number' },

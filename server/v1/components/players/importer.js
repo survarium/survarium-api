@@ -73,6 +73,8 @@ function assignDataToModel(source, update) {
 	var dies = +data.matches_stats.dies || 0;
 	var $set = {
 		'progress.elo': +data.progress.elo || 0,
+		'progress.rating_match_elo': +data.progress.rating_match_elo || 0,
+		'progress.random_match_elo': +data.progress.random_match_elo || 0,
 		'progress.level': +data.progress.level || 0,
 		'progress.experience': +data.progress.experience || 0,
 

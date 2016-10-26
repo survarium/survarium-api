@@ -58,6 +58,14 @@ const PlayersSchema = new Schema({
 			type: Number,
 			index: true
 		},
+        rating_match_elo: {
+		    type: Number,
+            index: true
+        },
+        random_match_elo: {
+            type: Number,
+            index: true
+        },
 		level: Number,
 		experience: {
 			type: Number,
