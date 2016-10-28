@@ -47,9 +47,9 @@ var date = (function () {
         if (typeof val !== 'string') {
             return false;
         }
-		
+
 		let checker = (new Date(val)).getTime();
-        
+
         if (!checker) {
             return false;
         }
@@ -60,7 +60,7 @@ var date = (function () {
                 return false;
             }
 		}
-        
+
 		if (min !== undefined) {
             let minCheck = (new Date(min)).getTime();
             if (minCheck && minCheck > checker) {
@@ -96,6 +96,16 @@ var date = (function () {
 	};
 })();
 
+var boolean = function (field, params, query, result) {
+    if (typeof params !== 'boolean') {
+        return result;
+    }
+
+    result[field] = params;
+
+    return result;
+};
+
 exports.build = function build(filters) {
 	return function parse(query, result) {
 		result = result || {};
@@ -129,9 +139,13 @@ exports.build = function build(filters) {
 				case 'number':
 					number(field, params, search, result);
 					break;
-                
+
                 case 'date':
                     date(field, params, search, result);
+                    break;
+
+                case 'boolean':
+                    boolean(field, params, search, result);
                     break;
 
 				default:

@@ -9,6 +9,9 @@ const supportedListFilters = (function () {
 			type: 'number',
 			max : 10
 		},
+        'rating_match': {
+		    type: 'boolean'
+        },
         'date': {
 		    type: 'date'
         }

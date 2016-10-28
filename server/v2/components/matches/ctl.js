@@ -20,9 +20,9 @@ exports.list = function list (options) {
 	options = options || {};
 
 	var totalQuery = {};
-    
+
     var query = Query.list(options.filter);
-    
+
 	var fields = {
 		stats: 0,
 		_id: 0,
@@ -129,7 +129,7 @@ exports.stats = function (match, options) {
 				_id: { $in: match.stats }
 			});
 
-			cursor.select({ _id: 0, match: 0, map: 0, clanwar: 0, level: 0, clan: 0, __v: 0, createdAt: 0, updatedAt: 0, date: 0 });
+			cursor.select({ _id: 0, match: 0, map: 0, clanwar: 0, level: 0, rating_match: 0, clan: 0, __v: 0, createdAt: 0, updatedAt: 0, date: 0 });
 
 			cursor.populate([
 				{

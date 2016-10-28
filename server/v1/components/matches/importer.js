@@ -64,6 +64,7 @@ function saveStats(matchData, match) {
 							player: player._id,
 							team  : teamNum,
 							level : match.level,
+                            rating_match: Boolean(match.rating_match),
 							kills : kills,
 							dies  : dies,
 							kd : +utils.kd(kills, dies),
@@ -258,6 +259,7 @@ function saveMatch(data) {
 				server: statsData.server_id,
 				replay: statsData.replay_path === '' ? undefined : statsData.replay_path,
 				level: statsData.match_level,
+                rating_match: statsData.rating_match,
 				score: [0, 1].map(function (teamNum) {
 					return statsData[`team_${teamNum + 1}_score`];
 				}).filter(Boolean).map(Number),

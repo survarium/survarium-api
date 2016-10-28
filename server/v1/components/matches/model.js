@@ -25,6 +25,10 @@ const MatchesSchema = new Schema({
 		type: Number,
 		index: true
 	},
+    rating_match: {
+	    type: Boolean,
+        index: true
+    },
 	score: [
 		Number
 	],

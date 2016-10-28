@@ -22,6 +22,10 @@ const StatsSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref : 'Maps'
 	},
+    rating_match: {
+        type: Boolean,
+        index: true
+    },
 	player : {
 		type: Schema.Types.ObjectId,
 		ref : 'Players',
