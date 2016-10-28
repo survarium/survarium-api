@@ -151,12 +151,18 @@ exports.stats = function (match, options) {
 		});
 };
 
-exports.timeline = function () {
+exports.timeline = function (query) {
 	var date = new Date();
 	date.setHours(date.getHours() - 23, 0, 0, 0);
 
+    var match = { date: { $gte: date } };
+
+    if (~['rating', 'random'].indexOf(query.type)) {
+        match.rating_match = query.type === 'rating';
+    }
+
 	return model.aggregate([
-		{ $match: { date: { $gte: date } } },
+        { $match: match },
 		{ $group: { _id: { level: '$level', hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
 		{ $group: { _id: '$_id.level', hours: { $push: { hour: '$_id.hour', total: '$total', date: '$date' } }, total: { $sum: '$total' } } },
 		{ $project: { level: '$_id', hours: '$hours', date: '$date', total: '$total', _id: 0 }}
