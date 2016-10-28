@@ -120,7 +120,7 @@ exports.stats = function (match, options) {
 		.findOne({
 			_id: match._id
 		})
-		.select('stats')
+		.select('stats rating_match')
 		.lean()
 		.then(function (match) {
 			var sort = options.sort || { score: -1 };
@@ -134,7 +134,14 @@ exports.stats = function (match, options) {
 			cursor.populate([
 				{
 					path: 'player',
-					select: { _id: 0, nickname: 1, 'progress.level': 1, 'progress.elo': 1, 'clan_meta.abbr': 1, banned: 1 }
+					select: {
+					    _id: 0,
+                        nickname: 1,
+                        'progress.level': 1,
+                        ['progress.' + (match.rating_match ? 'rating_match_elo' : 'random_match_elo')]: 1,
+                        'clan_meta.abbr': 1,
+                        banned: 1
+					}
 				}
 			]);
 
