@@ -162,14 +162,16 @@ function assignClan(params, player) {
 function load(params) {
 	var id = params.id;
 	var self = this;
+
 	debug(`loading player ${id}`);
-	return self
+
+    return self
 		.findOne({ id: id })
-		.then(function (player) {
+		.then(function playerToUpdate(player) {
 			if (!player || ((new Date()).getTime() - player.updatedAt.getTime() > EXPIRE * 1000)) {
 				var isNew = !player;
 				return fetch(params)
-					.then(function (fetched) {
+					.then(function playerFromSource(fetched) {
 						debug(`player ${id} will be ${isNew ? 'created' : 'updated'}`);
 						return (isNew ?
 								self
@@ -177,24 +179,46 @@ function load(params) {
 									.tap(function () {
 										debug(`player ${id} created`);
 									})
-									.catch(function (err) {
+									.catch(function playerCreatorError(err) {
 										if (err.code === 11000) {
-											debug(`player ${id} should be created, but its already exists`);
+											debug(`player ${id} should be created, but its already exists. ${err.message}`);
 											return self.findOne({ id: id });
 										}
+
 										throw err;
 									}):
-								self.update({ id: id },  assignDataToModel(fetched, player))
+								self.update({ id: id }, assignDataToModel(fetched, player))
                                     .exec()
-									.then(function () {
+									.then(function playerUpdaterOk() {
 										debug(`player ${id} updated`);
 										return player;
 									})
+                                    .catch(function playerUpdaterError(err) {
+                                        if (err.code === 11000 && err.message && err.message.match(/index: nickname/) && ((params.conflicts || 0) < 3)) {
+                                            debug(`player ${id} cannot be updated: duplicate found. ${err.message}`);
+
+                                            return self
+                                                .findOne({ nickname: fetched.data.userdata.nickname }, { id: 1 })
+                                                .then(function playerConflictedOk(conflicted) {
+                                                    if (!conflicted) {
+                                                        return;
+                                                    }
+
+                                                    return load
+                                                        .call(self, { id: conflicted.id, conflicts: (params.conflicts || 0) + 1 });
+                                                })
+                                                .then(function () {
+                                                    return player;
+                                                });
+                                        }
+
+                                        throw err;
+                                    })
 							)
                             .tap(ItemsUsage.bind({ debug: debug }))
 							.then(assignClan.bind(null, { isNew: isNew, source: fetched }));
 					})
-					.then(function (player) {
+					.then(function playerAfterUpdate(player) {
 						return self.findOne({ _id: player._id });
 					});
 			}
