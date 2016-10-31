@@ -36,7 +36,7 @@ const Factions = new Schema({
 		new Schema({
 			value: Number,
 			langs: levelangs
-		}, { _id: false })
+		}, { _id: false, validateBeforeSave: false })
 	]
 }, { collection: 'game_factions', validateBeforeSave: false });
 

@@ -111,7 +111,7 @@ db.once('connected', function () {
 				};
 
 				copy(['is_premium'], ITEM, opt);
-                
+
                 //TODO: default_modifications typeof {} => []
 
 				switch (type) {
@@ -245,26 +245,27 @@ db.once('connected', function () {
 						};
 					})
 				};
+
 				return Factions.findOneAndUpdate({ _id: faction.id }, item, { new: true, upsert: true })
 			});
 		}
-		
+
 		function reduceProps(propsList) {
 		    return propsList.reduce((props, prop) => {
 		        prop.langs = localize({ name: prop.prop_name });
-		        
+
 		        props[prop['prop_id']] = prop;
 		        return props;
             }, {});
         }
-		
+
 		function buildModifications(modifications, propsList) {
 		    const props = reduceProps(propsList);
-		    
+
 		    return modifications.map(item => {
                 item._id = item.id;
                 delete item.id;
-            
+
                 let info = item['lobby_info'];
                 if (info) {
                     item['lobby_info'] = Object.keys(info).map(key => {
@@ -273,22 +274,22 @@ db.once('connected', function () {
                             value: info[key]
                         };
                     });
-    
+
                     item.value = Number(item['lobby_info'][0]['value']);
                 }
-                
+
                 if (item['ui_desc'] && item['ui_desc']['props_list']) {
                     if (item['ui_desc']['props_list'].length) {
                         let prop = item['ui_desc']['props_list'][0];
                         let param = props[prop['prop_id']];
-                        
+
                         item.langs = localize({ name: param['prop_name'] });
                         item.postfix = param.postfix;
                     } else {
                         delete item['ui_desc']['props_list'];
                     }
                 }
-                
+
                 return Modifications.findOneAndUpdate({ _id: item._id }, item, { new: true, upsert: true });
             });
         }
@@ -301,9 +302,9 @@ db.once('connected', function () {
 				Promise
                     .all(buildUiProperties(STATIC_GAME_PARAMS.ui_properties))
                     .tap(() => console.log('static params done')),
-                Promise
+                /*Promise
                     .all(buildFactions(INDEX.factions_dict))
-                    .tap(() => console.log('factions done')),
+                    .tap(() => console.log('factions done')),*/
                 Promise
                     .all(buildModifications(MODIFICATIONS.modifications, STATIC_GAME_PARAMS.ui_properties))
                     .tap(() => console.log('modifications done'))
