@@ -4,6 +4,10 @@ const config = require('../../../configs');
 const router = require('express').Router();
 const ctl    = require('./ctl');
 
+router.get('/langs', (req, res) => {
+    res.json(['ru', 'en']);
+});
+
 router.get('/devs', function (req, res) {
 	res.json(ctl.devs());
 });
