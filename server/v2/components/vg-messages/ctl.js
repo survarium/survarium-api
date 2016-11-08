@@ -4,6 +4,7 @@ const Promise = require('bluebird');
 const model   = require('./model');
 const db      = require('../../../v1/lib/db');
 const config  = require('../../../configs');
+const Query   = require('./query');
 const devs    = config.v2.developers;
 
 exports.devs = function () {
@@ -15,7 +16,8 @@ exports.list = function list (options) {
 
 	var totalQuery = {};
 
-	var query = {};
+    var query = Query.list(options.filter);
+
 	var fields = {
 		_id: 0,
 		__v: 0

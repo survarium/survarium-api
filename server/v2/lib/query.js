@@ -106,6 +106,16 @@ var boolean = function (field, params, query, result) {
     return result;
 };
 
+var value = function (field, params, query, result) {
+    if (~['undefined', 'null'].indexOf(typeof query.$eq)) {
+        return result;
+    }
+
+    result[field] = query.$eq;
+
+    return result;
+};
+
 exports.build = function build(filters) {
 	return function parse(query, result) {
 		result = result || {};
@@ -146,6 +156,10 @@ exports.build = function build(filters) {
 
                 case 'boolean':
                     boolean(field, params, search, result);
+                    break;
+
+                case 'value':
+                    value(field, params, search, result);
                     break;
 
 				default:
