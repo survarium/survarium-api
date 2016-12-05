@@ -79,7 +79,7 @@ function saveStats(matchData, match) {
 							kd : +utils.kd(kills, dies),
 							victory: !!+playerStats.victory,
 							score  : +playerStats.score || 0,
-                            place: place,
+                            place: place + 1,
 							headshots: +playerStats.headshot_kill || 0,
 							grenadeKills: +playerStats.grenade_kill || 0,
 							meleeKills  : +playerStats.melee_kill || 0,
