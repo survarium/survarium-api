@@ -98,15 +98,16 @@ module.exports = {
 			{ id: '561692',  name: 'Gramb' },
             { id: '95359',   name: 'plecheg' },
             { id: '95344',   name: 'MaJaxed' },
-            { id: '1352519',   name: 'ivan_vg' },
-            { id: '1353973',   name: '__VaDiK__' },
+            { id: '1352519', name: 'ivan_vg' },
+            { id: '1353973', name: '__VaDiK__' },
 			//{ id: '1080565', name: 'Esmer' }
 		]
 	},
 
 	game: {
 		langs: ['russian', 'english', 'ukrainian'],
-        upload: process.env.GAME_UPLOAD_DIR || 'uploads/'
+        upload: process.env.GAME_UPLOAD_DIR || 'uploads/',
+        modes: ['Battery retrieval', 'Team Deathmatch', 'Research', 'Artifact Hunt']
 	},
 
 	discord: {

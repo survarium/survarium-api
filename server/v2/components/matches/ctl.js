@@ -1,12 +1,15 @@
 'use strict';
 
 const Promise = require('bluebird');
+const config  = require('../../../configs');
 const model   = require('../../../v1/components/matches/model');
 const Stats   = require('../../../v1/components/stats/model');
 const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
 const Query   = require('./query');
 const got     = require('got');
+
+const langDefault = config.api.langDefault;
 
 exports.id = function (id) {
 	if (!/^\d+$/.test(id)) {
@@ -120,7 +123,16 @@ exports.stats = function (match, options) {
 		.findOne({
 			_id: match._id
 		})
-		.select('stats rating_match')
+		.select('stats rating_match map')
+        .populate([
+            {
+                path: 'map',
+                select: {
+                    _id: 0,
+                    [`lang.${langDefault}.mode`]: 1
+                }
+            }
+        ])
 		.lean()
 		.then(function (match) {
 			var sort = options.sort || { score: -1 };
@@ -138,7 +150,7 @@ exports.stats = function (match, options) {
 					    _id: 0,
                         nickname: 1,
                         'progress.level': 1,
-                        ['progress.' + (match.rating_match ? 'rating_match_elo' : 'random_match_elo')]: 1,
+                        ['progress.elo.' + match.map.lang[langDefault].mode + '.' + (match.rating_match ? 'rating' : 'random')]: 1,
                         'clan_meta.abbr': 1,
                         banned: 1
 					}
@@ -147,7 +159,11 @@ exports.stats = function (match, options) {
 
 			cursor.sort(sort);
 
-			return cursor.lean();
+			return cursor.lean().then(result => result.map(stat => {
+			    stat.player.progress.elo = stat.player.progress.elo[match.map.lang[langDefault].mode][match.rating_match ? 'rating' : 'random'];
+
+			    return stat;
+            }));
 		});
 };
 

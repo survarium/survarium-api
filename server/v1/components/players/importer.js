@@ -2,6 +2,7 @@
 
 const debug = require('debug')('importer:players');
 const apiNative = require('../../lib/api-native');
+const config = require('../../../configs');
 const cache = require('../../lib/cache');
 const db = require('../../lib/db');
 const utils = require('../../lib/utils');
@@ -14,6 +15,9 @@ const CACHEKEY = 'players:load';
 const EXPIRE = 60 * 5;
 const logKey = 'player:';
 
+const langDefault = config.api.langDefault;
+const MODES = config.game.modes;
+
 function fetch(params) {
 	debug(`loading player ${params.id} from source`);
 	var key = `${CACHEKEY}:${params.id}`;
@@ -22,7 +26,7 @@ function fetch(params) {
 			if (!player) {
 				return Promise
 					.props({
-						data: apiNative.getUserData({ pid: params.id }),
+						data: apiNative.getUserData({ pid: params.id, language: langDefault }),
 					    skills: apiNative.getUserSkills({ pid: params.id })
 					})
 					.tap(function (user) {
@@ -71,10 +75,12 @@ function assignDataToModel(source, update) {
 
 	var kills = +data.matches_stats.kills || 0;
 	var dies = +data.matches_stats.dies || 0;
-	var $set = {
-		'progress.elo': +data.progress.elo || 0,
-		'progress.rating_match_elo': +data.progress.rating_match_elo || 0,
-		'progress.random_match_elo': +data.progress.random_match_elo || 0,
+	var $set = MODES.reduce((result, mode) => {
+	    result[`progress.elo.${mode}.random`] = +data.progress[mode].random || 0;
+	    result[`progress.elo.${mode}.rating`] = +data.progress[mode].rating || 0;
+
+	    return result;
+    }, {
 		'progress.level': +data.progress.level || 0,
 		'progress.experience': +data.progress.experience || 0,
 
@@ -93,7 +99,7 @@ function assignDataToModel(source, update) {
 		}),
 
 		ammunition: assignAmmunition(data.ammunition)
-	};
+	});
 
 	var $update = { $set };
 

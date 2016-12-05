@@ -36,6 +36,7 @@ function saveStats(matchData, match) {
 	debug(`saving stats for match ${match.id}`);
 	var statsData = matchData.accounts;
 	var createdStats = {};
+
 	function saveStat(stat, player) {
 		stat.player = player;
 		createdStats[stat._id] = stat;
@@ -44,17 +45,25 @@ function saveStats(matchData, match) {
 
 	var promises = Object.keys(statsData).reduce(function (stats, teamNum) {
 		var team = statsData[teamNum];
+
 		if (!team) {
 			return stats;
 		}
-		return stats.concat(Object.keys(team).map(function (key) {
+
+		return stats.concat(Object.keys(team)
+        .sort(function (a, b) {
+            return team[b].score - team[a].score;
+        })
+        .map(function (key, place) {
 			var playerStats = team[key];
+
 			return function () {
 				return Players
 					.load({ id: playerStats.pid })
 					.then(function (player) {
 						debug(`player ${playerStats.pid} ${player.nickname} loaded`);
 						debug(`creating stats document for player ${player.nickname} and match ${match.id}`);
+
 						var kills = +playerStats.kill || 0;
 						var dies = +playerStats.die || 0;
 						var document = {
@@ -70,6 +79,7 @@ function saveStats(matchData, match) {
 							kd : +utils.kd(kills, dies),
 							victory: !!+playerStats.victory,
 							score  : +playerStats.score || 0,
+                            place: place,
 							headshots: +playerStats.headshot_kill || 0,
 							grenadeKills: +playerStats.grenade_kill || 0,
 							meleeKills  : +playerStats.melee_kill || 0,

@@ -1,13 +1,19 @@
+const config = require('../../../configs');
 const Query = require('../../lib/query');
 
+const MODES = config.game.modes;
+
 const supportedListFilters = (function () {
-	var filters = {
+	var filters = MODES.reduce((result, mode) => {
+	    result[`progress.elo.${mode}.random`] = { type: 'number' };
+	    result[`progress.elo.${mode}.rating`] = { type: 'number' };
+
+        return result;
+    }, {
 		'progress.level'     : {
 			type: 'number',
 			max : 100
 		},
-		'progress.rating_match_elo': { type: 'number' },
-		'progress.random_match_elo': { type: 'number' },
 		'total.scoreAvg'     : { type: 'number' },
 		'total.kills'        : { type: 'number' },
 		'total.dies'         : { type: 'number' },
@@ -22,7 +28,7 @@ const supportedListFilters = (function () {
 		'total.artefactUses' : { type: 'number' },
 		'total.pointCaptures': { type: 'number' },
 		'total.boxesBringed' : { type: 'number' }
-	};
+	});
 
 	return Query.build(filters);
 })();

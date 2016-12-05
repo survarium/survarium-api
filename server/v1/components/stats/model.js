@@ -45,6 +45,10 @@ const StatsSchema = new Schema({
 
 	level: scoreMicro,
 
+    place  : {
+	    type: Number,
+        default: 0
+    },
 	score  : scoreMicro,
 	kills  : scoreMicro,
 	dies   : scoreMicro,

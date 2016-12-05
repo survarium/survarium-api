@@ -2,12 +2,14 @@
 
 const Promise = require('bluebird');
 const mongoose = require('mongoose');
+const config = require('../../../configs');
 const db = require('../../lib/db');
 const cache = require('../../lib/cache');
 const importer = require('./importer');
 const ClansImporter = require('../clans/importer');
 
 const Schema = mongoose.Schema;
+const MODES = config.game.modes;
 
 const scoreMicro = {
 	type: Number,
@@ -15,7 +17,21 @@ const scoreMicro = {
 	index: true
 };
 
-const PlayersSchema = new Schema({
+const PlayersSchema = new Schema(MODES
+    .reduce((result, mode) => {
+        result.progress.elo[mode] = {
+            random: {
+                type: Number,
+                index: true
+            },
+            rating: {
+                type: Number,
+                index: true
+            }
+        };
+
+        return result;
+    }, {
 	id: {
 		type    : String,
 		index   : { unique: true },
@@ -54,23 +70,12 @@ const PlayersSchema = new Schema({
 		}
 	},
 	progress: {
-		elo: {
-			type: Number,
-			index: true
-		},
-        rating_match_elo: {
-		    type: Number,
-            index: true
-        },
-        random_match_elo: {
-            type: Number,
-            index: true
-        },
 		level: Number,
 		experience: {
 			type: Number,
 			index: true
-		}
+		},
+        elo: {}
 	},
 	total: {
 		matches: scoreMicro,
@@ -127,7 +132,7 @@ const PlayersSchema = new Schema({
         index: true
     },
 	deletedAt: Date
-}, { timestamps: true });
+}), { timestamps: true });
 
 PlayersSchema.statics.load = function () {
 	return importer.load.apply(this, arguments);
