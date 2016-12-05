@@ -76,8 +76,10 @@ function assignDataToModel(source, update) {
 	var kills = +data.matches_stats.kills || 0;
 	var dies = +data.matches_stats.dies || 0;
 	var $set = MODES.reduce((result, mode) => {
-	    result[`progress.elo.${mode}.random`] = +data.progress[mode].random || 0;
-	    result[`progress.elo.${mode}.rating`] = +data.progress[mode].rating || 0;
+	    let progress = data.progress[mode] || {};
+
+	    result[`progress.elo.${mode}.random`] = +progress.random || 1000;
+	    result[`progress.elo.${mode}.rating`] = +progress.rating || 1000;
 
 	    return result;
     }, {
