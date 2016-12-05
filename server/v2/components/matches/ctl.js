@@ -141,6 +141,9 @@ exports.stats = function (match, options) {
 				_id: { $in: match.stats }
 			});
 
+            var mode = match.map.lang[langDefault].mode;
+            var type = match.rating_match ? 'rating' : 'random';
+
 			cursor.select({ _id: 0, match: 0, map: 0, clanwar: 0, level: 0, rating_match: 0, clan: 0, __v: 0, createdAt: 0, updatedAt: 0, date: 0 });
 
 			cursor.populate([
@@ -150,7 +153,7 @@ exports.stats = function (match, options) {
 					    _id: 0,
                         nickname: 1,
                         'progress.level': 1,
-                        ['progress.elo.' + match.map.lang[langDefault].mode + '.' + (match.rating_match ? 'rating' : 'random')]: 1,
+                        ['progress.elo.' + mode + '.' + type]: 1,
                         'clan_meta.abbr': 1,
                         banned: 1
 					}
@@ -159,11 +162,17 @@ exports.stats = function (match, options) {
 
 			cursor.sort(sort);
 
-			return cursor.lean().then(result => result.map(stat => {
-			    stat.player.progress.elo = stat.player.progress.elo[match.map.lang[langDefault].mode][match.rating_match ? 'rating' : 'random'];
+            function getElo(stat) {
+                var progress = stat.player.progress;
 
-			    return stat;
-            }));
+                if (progress && progress.elo && progress.elo[mode] && progress.elo[mode][type] !== undefined) {
+                    progress.elo = progress.elo[mode][type];
+                } else progress.elo = 1000;
+
+                return stat;
+            }
+
+			return cursor.lean().then(result => result.map(getElo));
 		});
 };
 
