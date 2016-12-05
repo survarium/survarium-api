@@ -214,10 +214,11 @@ exports.history = function getHistory(player, options) {
 			date  : '$date'
 		} },
 		victory: { $cond : [ '$victory', 1, 0 ] },
-		level: 1
+		level: 1,
+        place: 1
 	};
-	let output = { _id: 0, date: '$_id', matches: 1, victories: 1, level: 1 };
-	let group = { _id: '$date', matches: { $sum: 1 }, victories: { $sum: '$victory' }, level: { $avg: '$level' } };
+	let output = { _id: 0, date: '$_id', matches: 1, victories: 1, level: 1, place: 1 };
+	let group = { _id: '$date', matches: { $sum: 1 }, victories: { $sum: '$victory' }, level: { $avg: '$level' }, place: { $avg: '$place' } };
 	let grouper;
 
 	switch (options.group) {
@@ -279,7 +280,7 @@ exports.top = function getTop(query) {
 
 exports.unique = function getUnique(query) {
 	var date = new Date();
-    
+
     if (query.period === 'hour') {
         date.setHours(date.getHours() - 1, 0, 0, 0);
     } else if (query.period === 'half') {
