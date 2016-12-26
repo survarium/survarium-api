@@ -310,7 +310,7 @@ exports.search = function performSearch(query) {
 	var wideSearch = query.wide === 'true';
 
 	if (query.nickname) {
-		let nickname = decodeURIComponent(query.nickname).trim();
+		let nickname = decodeURIComponent(query.nickname.trim());
 
 		if (nickname.length < 3) {
 			return Promise.resolve(null);

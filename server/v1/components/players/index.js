@@ -106,7 +106,7 @@ router.get('/', function getPlayersList(req, res, next) {
 	/^(\d{5,}\,?)+$/g.test(pid) ? (pid = pid.split(',')) : (pid = undefined);
 
 	if (pid || ([undefined, null, ''].indexOf(query.nickname) !== 0 && query.nickname.length > 1)) {
-		let nickname = new Buffer(query.nickname || '', 'binary').toString('utf8');
+		let nickname = query.nickname ? decodeURIComponent(query.nickname.trim()) : '';
 
 		query.search = pid ? { id: { $in: pid } } : { $or: [
 			{ $text: { $search: `\"${nickname}\"`, $diacriticSensitive: true } },
