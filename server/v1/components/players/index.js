@@ -106,7 +106,7 @@ router.get('/', function getPlayersList(req, res, next) {
 	/^(\d{5,}\,?)+$/g.test(pid) ? (pid = pid.split(',')) : (pid = undefined);
 
 	if (pid || ([undefined, null, ''].indexOf(query.nickname) !== 0 && query.nickname.length > 1)) {
-		let nickname = new Buffer(query.nickname, 'binary').toString('utf8');
+		let nickname = new Buffer(query.nickname || '', 'binary').toString('utf8');
 
 		query.search = pid ? { id: { $in: pid } } : { $or: [
 			{ $text: { $search: `\"${nickname}\"`, $diacriticSensitive: true } },
@@ -120,12 +120,14 @@ router.get('/', function getPlayersList(req, res, next) {
 		query.limit = pid ? pid.length : (query.limit || 5);
 		!query.noUrls && middlewares.push(function (result) {
 			return result.map(function (player) {
-				player.url = `${front}/?player=${player.nickname}`;
+				player.url = `${front}/players/${player.nickname}`;
+
 				if (player.stats && player.stats.length && player.stats[0].match) {
-					player.stats[0].url = `${front}/?match=${player.stats[0].match.id}`;
+					player.stats[0].url = `${front}/matches/${player.stats[0].match.id}`;
 				}
+
 				if (player.clan) {
-					player.clan.url = `${front}/?clan=${player.clan.abbr}`;
+					player.clan.url = `${front}/clans/${player.clan.abbr}`;
 				}
 				return player;
 			});
@@ -133,11 +135,13 @@ router.get('/', function getPlayersList(req, res, next) {
 	}
 
 	var promise = getData(query);
+
 	if (middlewares.length) {
 		middlewares.forEach(function (middleware) {
 			promise = promise.then(middleware);
 		})
 	}
+
 	promise = promise.then(res.json.bind(res))
 		.catch(next);
 });
@@ -162,6 +166,7 @@ router.get('/:player', function getPlayerData(req, res, next) {
 
 	var searchParam = req.params.player;
 	var search = {};
+
 	if (searchParam.match(/^\d+$/) && query.byName === undefined) {
 		search = { id: searchParam };
 	} else {
