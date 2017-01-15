@@ -250,8 +250,9 @@ exports.history = function getHistory(player, options) {
 };
 
 exports.top = function getTop(query) {
-	var date = new Date();
-	var period = query.period === 'day' ? 'day' : 'hour';
+	let date = new Date();
+	let period = query.period === 'day' ? 'day' : 'hour';
+
 	if (period === 'day') {
 		date.setMinutes(0, 0, 0, 0);
 		date.setDate(date.getDate() - 1);
@@ -279,23 +280,47 @@ exports.top = function getTop(query) {
 };
 
 exports.unique = function getUnique(query) {
-	var date = new Date();
+    let match = { date: {} };
+	let from;
+	let till;
 
-    if (query.period === 'hour') {
-        date.setHours(date.getHours() - 1, 0, 0, 0);
-    } else if (query.period === 'half') {
-        date.setMinutes(date.getMinutes() - 30, 0, 0);
-    } else if (query.period === 'month') {
-        date.setHours(date.getHours() - 1, 0, 0, 0);
-        date.setMonth(date.getMonth() - 1);
-    } else {
-        date.setMinutes(0, 0, 0);
-        date.setDate(date.getDate() - 1);
+	if (query.date && query.date.match(/^((\d{4})-(\d{2})-(\d{2}))(T((\d{2}):(\d{2})))?$/)) {
+	    let date = RegExp.$1;
+	    let year = RegExp.$2;
+	    let month = RegExp.$3;
+	    let day = RegExp.$4;
+	    let time = RegExp.$6;
+	    let hour = RegExp.$7;
+	    let minute = RegExp.$8;
+
+        if (!time) {
+            from = new Date(`${date}T00:00Z`);
+            till = new Date(`${date}T23:59Z`);
+        }
     }
+
+	if (!from) {
+	    from = new Date();
+
+        if (query.period === 'hour') {
+            from.setHours(from.getHours() - 1, 0, 0, 0);
+        } else if (query.period === 'half') {
+            from.setMinutes(from.getMinutes() - 30, 0, 0);
+        } else if (query.period === 'month') {
+            from.setHours(from.getHours() - 1, 0, 0, 0);
+            from.setMonth(from.getMonth() - 1);
+        } else {
+            from.setMinutes(0, 0, 0);
+            from.setDate(from.getDate() - 1);
+        }
+    }
+
+    match.date['$gte'] = from;
+	till && (match.date['$lte'] = till);
 
 	return stats
 		.aggregate([
-			{ $match: { date: { $gte: date } } },
+			{ $match: match },
 			{ $group: { _id: '$player' }},
             { $group: { _id: null, count: { $sum: 1 } } }
 		])
@@ -305,9 +330,9 @@ exports.unique = function getUnique(query) {
 };
 
 exports.search = function performSearch(query) {
-	var search;
+	let search;
 
-	var wideSearch = query.wide === 'true';
+	let wideSearch = query.wide === 'true';
 
 	if (query.nickname) {
 		let nickname = decodeURIComponent(query.nickname.trim());
