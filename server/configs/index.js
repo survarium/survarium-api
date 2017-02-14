@@ -101,7 +101,8 @@ module.exports = {
             { id: '1352519', name: 'ivan_vg' },
             { id: '1353973', name: '__VaDiK__' },
             { id: '211392',  name: 'Лаборант' },
-            { id: '354018',  name: 'QQcik' }
+            { id: '354018',  name: 'QQcik' },
+            { id: '1364745', name: 'Shingan' }
 			//{ id: '1080565', name: 'Esmer' }
 		]
 	},
