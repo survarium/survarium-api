@@ -86,25 +86,26 @@ module.exports = {
 	},
 	v2: {
 		developers: [
-			{ id: '58',      name: 'Yava' },
-			{ id: '65',      name: 'dima' },
-			{ id: '67',      name: 'Stohe' },
-			{ id: '69',      name: 'joewillburn' },
-			{ id: '76',      name: 'FANTOM' },
-			{ id: '148',     name: 'Dargalon' },
-			{ id: '74710',   name: 'Андрияш Козловский' },
-			{ id: '392554',  name: 'Альбертыч' },
-			{ id: '457474',  name: 'Survarium DevTeam' },
-			{ id: '561692',  name: 'Gramb' },
+            { id: '58',      name: 'Yava' },
+            { id: '65',      name: 'dima' },
+            { id: '67',      name: 'Stohe' },
+            { id: '68',      name: 'YM2612' },
+            { id: '69',      name: 'joewillburn' },
+            { id: '76',      name: 'FANTOM' },
+            { id: '148',     name: 'Dargalon' },
+            { id: '74710',   name: 'Андрияш Козловский' },
+            { id: '392554',  name: 'Альбертыч' },
+            { id: '457474',  name: 'Survarium DevTeam' },
+            { id: '561692',  name: 'Gramb' },
             { id: '95359',   name: 'plecheg' },
             { id: '95344',   name: 'MaJaxed' },
             { id: '1352519', name: 'ivan_vg' },
             { id: '1353973', name: '__VaDiK__' },
             { id: '211392',  name: 'Лаборант' },
             { id: '354018',  name: 'QQcik' },
-            { id: '1364745', name: 'Shingan' }
-			//{ id: '1080565', name: 'Esmer' }
-		]
+            { id: '1364745', name: 'Shingan' },
+            //{ id: '1080565', name: 'Esmer' }
+        ]
 	},
 
 	game: {
