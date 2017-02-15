@@ -379,9 +379,19 @@ exports.search = function performSearch(query) {
 		return Promise.resolve(null);
 	}
 
-	return model.aggregate([
-		{ $match: search },
-		{ $project: { _id: 0, nickname: 1, clan: '$clan_meta', rel: { $meta: "textScore" } } },
-		{ $sort: { rel: -1 } }
-	]).allowDiskUse(true).exec();
+	const aggregator = [
+        { $match: search },
+        { $project: { _id: 0, nickname: 1, clan: '$clan_meta', rel: { $meta: "textScore" } } },
+        { $sort: { rel: -1 } }
+    ];
+
+    if (query.limit) {
+        let limit = Number(query.limit);
+
+        if (!isNaN(limit) && (limit > 0)) {
+            aggregator.push({ "$limit": limit });
+        }
+    }
+
+	return model.aggregate(aggregator).allowDiskUse(true).exec();
 };
