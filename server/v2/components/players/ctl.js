@@ -301,6 +301,7 @@ exports.unique = function getUnique(query) {
 
 	if (!from) {
 	    from = new Date();
+	    let minutes = Number(query.minutes);
 
         if (query.period === 'hour') {
             from.setHours(from.getHours() - 1, 0, 0, 0);
@@ -309,6 +310,8 @@ exports.unique = function getUnique(query) {
         } else if (query.period === 'month') {
             from.setHours(from.getHours() - 1, 0, 0, 0);
             from.setMonth(from.getMonth() - 1);
+        } else if (minutes && !isNaN(minutes)) {
+            from.setMinutes(from.getMinutes() - minutes, 0, 0);
         } else {
             from.setMinutes(0, 0, 0);
             from.setDate(from.getDate() - 1);
