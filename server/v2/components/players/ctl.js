@@ -311,7 +311,7 @@ exports.unique = function getUnique(query) {
             from.setHours(from.getHours() - 1, 0, 0, 0);
             from.setMonth(from.getMonth() - 1);
         } else if (minutes && !isNaN(minutes)) {
-            from.setMinutes(from.getMinutes() - minutes, 0, 0);
+            from.setMinutes(from.getMinutes() - Math.min(minutes, 21600), 0, 0); // max 15d
         } else {
             from.setMinutes(0, 0, 0);
             from.setDate(from.getDate() - 1);
