@@ -33,6 +33,15 @@ exports.list = function list (options) {
 		}
 	}
 
+    const MAX_LIMIT = 50;
+
+    if (options.limit) {
+        var __limit = Number(options.limit);
+        if (!isNaN(__limit) && (__limit > 0)) {
+            limit = Math.min(MAX_LIMIT, __limit);
+        }
+    }
+
 	var cursor = model
 		.find(query)
 		.select(fields)
