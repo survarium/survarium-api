@@ -294,21 +294,37 @@ db.once('connected', function () {
             });
         }
 
+		let max = ITEMS.length;
+
+        function next(i) {
+            if (i < max) {
+                let item = ITEMS[i];
+
+                console.log(`importing ${i}/${max} (${item.name}:${item.cfg_name})`);
+                return buildItem(item).then(next.bind(next, i + 1));
+            }
+
+            console.log('items done');
+        }
+
 		return Promise
 			.all([].concat(
-			    Promise
+			    /*Promise
                     .all(ITEMS.map(buildItem))
-                    .tap(() => console.log('items done')),
+                    .tap(() => console.log('items done'))*/
 				Promise
                     .all(buildUiProperties(STATIC_GAME_PARAMS.ui_properties))
                     .tap(() => console.log('static params done')),
                 /*Promise
                     .all(buildFactions(INDEX.factions_dict))
-                    .tap(() => console.log('factions done')),*/
+                    .tap(() => console.log('factions done'))*/
                 Promise
                     .all(buildModifications(MODIFICATIONS.modifications, STATIC_GAME_PARAMS.ui_properties))
                     .tap(() => console.log('modifications done'))
 			))
+            .then(() => {
+                return next(0);
+            })
 			.then(() => {
 				console.log('game import done');
 				db.close();
