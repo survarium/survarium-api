@@ -14,11 +14,11 @@ exports.id = function getPlayerId(nickname) {
 exports.list = function list(options) {
 	options = options || {};
 
-	var totalQuery = {};
+	let totalQuery = {};
 
-	var query = Query.list(options.filter);
+	let query = Query.list(options.filter);
 
-	var fields = {
+	let fields = {
 		clan: 0,
 		stats: 0,
 		ammunition: 0,
@@ -31,12 +31,12 @@ exports.list = function list(options) {
 		updatedAt: 0
 	};
 
-	var sort = {};
-	var limit = 20;
-	var skip = 0;
+	let sort = {};
+	let limit = 20;
+	let skip = 0;
 
 	if (options.skip) {
-		var __skip = Number(options.skip);
+		let __skip = Number(options.skip);
 		if (!isNaN(__skip) && (__skip > 0)) {
 			skip = __skip;
 		}
@@ -46,7 +46,7 @@ exports.list = function list(options) {
 		sort = options.sort;
 	}
 
-	var cursor = model
+	let cursor = model
 		.find(query)
 		.select(fields)
 		.sort(sort);
@@ -71,7 +71,7 @@ exports.list = function list(options) {
 };
 
 exports.fetch = function getPlayer(player) {
-	var cursor = model
+	let cursor = model
 		.findOne({
 			_id: player._id
 		});
@@ -91,7 +91,7 @@ exports.fetch = function getPlayer(player) {
 };
 
 exports.skills = function getSkills(player) {
-	var cursor = model.aggregate([
+	let cursor = model.aggregate([
 		{ $match: { _id: player._id } },
 		{ $unwind: '$skills' },
 		{ $project: { id: '$skills.id', points: '$skills.points', _id: 0 } }
@@ -103,15 +103,15 @@ exports.skills = function getSkills(player) {
 exports.stats = function getStats(player, options) {
 	options = options || {};
 
-	var totalQuery = {
+	let totalQuery = {
 		player: player._id
 	};
 
-	var query = {
+	let query = {
 		player: player._id
 	};
 
-	var fields = {
+	let fields = {
 		player: 0,
 		clan: 0,
 		clanwar: 0,
@@ -121,12 +121,12 @@ exports.stats = function getStats(player, options) {
 		updatedAt: 0
 	};
 
-	var sort = options.sort || { date: -1 };
-	var limit = 15;
-	var skip = 0;
+	let sort = options.sort || { date: -1 };
+	let limit = 15;
+	let skip = 0;
 
 	if (options.skip) {
-		var __skip = Number(options.skip);
+		let __skip = Number(options.skip);
 		if (!isNaN(__skip) && (__skip > 0)) {
 			skip = __skip;
 		}
@@ -135,13 +135,13 @@ exports.stats = function getStats(player, options) {
 	const MAX_LIMIT = 50;
 
 	if (options.limit) {
-		var __limit = Number(options.limit);
+		let __limit = Number(options.limit);
 		if (!isNaN(__limit) && (__limit > 0)) {
 			limit = Math.min(MAX_LIMIT, __limit);
 		}
 	}
 
-	var cursor = stats
+	let cursor = stats
 		.find(query)
 		.select(fields)
 		.sort(sort);
@@ -154,7 +154,7 @@ exports.stats = function getStats(player, options) {
 		cursor.limit(limit);
 	}
 
-	var mapProjection = libLang.selectJson(options.lang);
+	let mapProjection = libLang.selectJson();
 	mapProjection['_id'] = 0;
 	mapProjection.createdAt = 0;
 	mapProjection.updatedAt = 0;
@@ -168,7 +168,19 @@ exports.stats = function getStats(player, options) {
 		{
 			path: 'map',
 			select: mapProjection
-		}
+		},
+        {
+            path: 'battlefield',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
+        {
+            path: 'mode',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
+        {
+            path: 'weather',
+            select: '-createdAt -updatedAt -__v -_id'
+        }
 	]);
 
 	return Promise.props({

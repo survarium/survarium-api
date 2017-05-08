@@ -36,6 +36,19 @@ const MatchesSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref : 'Maps'
 	},
+	place: {
+		type: Schema.Types.ObjectId,
+		ref : 'Place'
+	},
+	mode: {
+		type: Schema.Types.ObjectId,
+		ref : 'GameMode'
+	},
+	weather: {
+		type: Schema.Types.ObjectId,
+		ref : 'Weather'
+	},
+    map_version: Number,
 	stats: [
 		{
 			type: Schema.Types.ObjectId,

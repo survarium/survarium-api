@@ -1,11 +1,12 @@
-var config = require('../../configs');
-var lang = module.exports;
-var languages = config.api.languages;
-var langDefault = config.api.langDefault;
+const config = require('../../configs');
+const lang = module.exports;
+const languages = config.api.languages;
+const langDefault = config.api.langDefault;
 
 lang.select = function (lang, pfx, noLangPfx) {
 	pfx = pfx ? pfx + '.' : '';
 	languages.indexOf(lang) === -1 && (lang = langDefault);
+
 	return languages.map(function (elem) {
 		if (elem !== lang) {
 			return '-' + pfx + (noLangPfx ? '' : 'lang.') + elem;
@@ -16,7 +17,9 @@ lang.select = function (lang, pfx, noLangPfx) {
 lang.selectJson = function (lang, pfx, noLangPfx) {
 	pfx = pfx ? pfx + '.' : '';
 	languages.indexOf(lang) === -1 && (lang = langDefault);
-	var select = {};
+
+	let select = {};
+
 	if (lang) {
 		languages.forEach(function (elem) {
 			if (elem !== lang) {
@@ -24,5 +27,6 @@ lang.selectJson = function (lang, pfx, noLangPfx) {
 			}
 		});
 	}
+
 	return select;
 };

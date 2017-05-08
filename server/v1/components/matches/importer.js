@@ -11,6 +11,9 @@ const notifications = require('../../services/telegram/triggers');
 const Matches = require('./model');
 const MatchesUnloaded = db.model('MatchesUnloaded');
 const Maps = require('../maps/model');
+const Place = require('../place/model');
+const Mode = require('../mode/model');
+const Weather = require('../weather/model');
 const Stats = require('../stats/model');
 const Players = require('../players/model');
 const ClansImporter = require('../clans/importer');
@@ -21,12 +24,13 @@ const EXPIRE = 60 * 1;
 const IMPORT_MATCH_TILL = +process.env.IMPORTER_MATCH_TILL;
 const logKey = 'match:';
 
-var gracefulShutdown;
+let gracefulShutdown;
 
 function tryToShutdown() {
 	if (gracefulShutdown) {
 		console.log(`executing ${process.pid} shutdown...`);
-		return process.nextTick(function () {
+
+		return process.nextTick(() => {
 			process.exit(0);
 		});
 	}
@@ -34,17 +38,19 @@ function tryToShutdown() {
 
 function saveStats(matchData, match) {
 	debug(`saving stats for match ${match.id}`);
-	var statsData = matchData.accounts;
-	var createdStats = {};
+
+	let statsData = matchData.accounts;
+	let createdStats = {};
 
 	function saveStat(stat, player) {
 		stat.player = player;
 		createdStats[stat._id] = stat;
+
 		return createdStats;
 	}
 
-	var promises = Object.keys(statsData).reduce(function (stats, teamNum) {
-		var team = statsData[teamNum];
+	let promises = Object.keys(statsData).reduce(function (stats, teamNum) {
+		let team = statsData[teamNum];
 
 		if (!team) {
 			return stats;
@@ -55,7 +61,7 @@ function saveStats(matchData, match) {
             return team[b].score - team[a].score;
         })
         .map(function (key, place) {
-			var playerStats = team[key];
+			let playerStats = team[key];
 
 			return function () {
 				return Players
@@ -64,12 +70,15 @@ function saveStats(matchData, match) {
 						debug(`player ${playerStats.pid} ${player.nickname} loaded`);
 						debug(`creating stats document for player ${player.nickname} and match ${match.id}`);
 
-						var kills = +playerStats.kill || 0;
-						var dies = +playerStats.die || 0;
-						var document = {
+						let kills = +playerStats.kill || 0;
+						let dies = +playerStats.die || 0;
+						let document = {
 							date : match.date,
 							match: match._id,
 							map  : match.map,
+							battlefield: match.place,
+							mode  : match.mode,
+							weather : match.weather,
 							player: player._id,
 							team  : teamNum,
 							level : match.level,
@@ -231,50 +240,76 @@ function filterMatch (match) {
  * @returns {Object|Promise}
  */
 function saveMatch(data) {
-    var id = data.match_id;
+    let id = data.match_id;
+
     debug(`saving match ${id}`);
-    var filteredData = filterMatch(data);
+
+    let filteredData = filterMatch(data);
 
     if (!filteredData) {
         debug(`wrong match ${id} data structure`);
+
         return Promise.resolve(null);
     }
 
     if (filteredData.realPlayers < 2) {
         debug(`match ${id} have only ${filteredData.realPlayers} real player(s)`);
+
         return Promise.resolve(null);
     }
 
     data = filteredData.match;
 
-	var statsData = data.stats;
+	let statsData = data.stats;
 
-	return Promise.props({
-		map: Maps.findOne({ id: Number(statsData.map_id) }).lean()
-	})
-	.then(function (result) {
-		var map = result.map;
-		if (!map) {
-			debug(`cannot load map for match ${id}`);
-			throw new Error(`no map ${statsData.map_id} found`);
-		}
+    let deps = statsData.map_id !== undefined ? {
+        map: Maps.findOne({ id: Number(statsData.map_id) }).lean()
+    } : {
+        place: Place.get({ title: statsData.map, language: config.api.langDefault }),
+        mode: Mode.get({ title: statsData.mode, language: config.api.langDefault }),
+        weather: Weather.get({ title: statsData.weather, language: config.api.langDefault })
+    };
+
+	return Promise.props(deps)
+	.then(result => {
+	    let { place, mode, weather, map } = result;
+
+	    if (!place && !mode && !weather && !map) {
+            debug(`cannot load map for match ${id}`);
+
+            throw new Error(`no map ${statsData.map_id} found`);
+        }
 
 		debug(`creating document for match ${id}`);
 
+	    let doc = {
+            id: data.match_id,
+            date: new Date(statsData.time_start.replace(/\s/, 'T')),
+            duration: statsData.game_duration,
+            server: statsData.server_id,
+            replay: statsData.replay_path === '' ? undefined : statsData.replay_path,
+            level: statsData.match_level,
+            rating_match: statsData.rating_match,
+            score: [0, 1].map(function (teamNum) {
+                return statsData[`team_${teamNum + 1}_score`];
+            }).filter(Boolean).map(Number),
+        };
+
+	    if (map) {
+	        doc.map = map._id;
+        } else {
+            doc.place = place._id;
+            doc.mode = mode._id;
+            doc.weather = weather._id;
+            doc.map_version = Number(statsData.map_version);
+
+            if (isNaN(doc.map_version)) {
+                doc.map_version = 0;
+            }
+        }
+
 		return Matches
-			.create({
-				id: data.match_id,
-				date: new Date(statsData.time_start.replace(/\s/, 'T')),
-				duration: statsData.game_duration,
-				server: statsData.server_id,
-				replay: statsData.replay_path === '' ? undefined : statsData.replay_path,
-				level: statsData.match_level,
-                rating_match: statsData.rating_match,
-				score: [0, 1].map(function (teamNum) {
-					return statsData[`team_${teamNum + 1}_score`];
-				}).filter(Boolean).map(Number),
-				map: map._id
-			})
+			.create(doc)
 			.tap(function (match) {
 				debug(`document for match ${id} created`);
 				lastImport = match.date / 1000 >>> 0;
@@ -311,69 +346,80 @@ function saveUnloaded(id, ts) {
  */
 function importMatch(id, ts) {
 	debug(`importing match ${id}`);
+
 	return Matches
 		.findOne({ id: id })
-		.then(function (match) {
+		.then(match => {
 			if (match) {
 				debug(`match ${id} exists`);
-				return { id: id, status: 'exists', match: match };
+
+				return { id, status: 'exists', match };
 			}
+
 			debug(`loading match ${id} from API`);
+
 			return apiNative.getMatchStatistic({ id: id })
-				.then(function (match) {
+				.then(match => {
 					if (!match) {
 						debug(`match ${id} cannot be loaded from API`);
+
 						return saveUnloaded(id, ts);
 					}
 					return saveMatch(match)
-						.then(function (doc) {
+						.then(doc => {
 						    // WARNING! DOC may be NULL after filtration
 							debug(`match ${id} imported`);
-							return { id: id, status: 'added', match: doc };
+
+							return { id, status: 'added', match: doc };
 						});
 				});
 		})
 		.catch(function (err) {
 			console.error(logKey, 'cannot import match', id, err.stack);
+
 			if (err.statusCode === 422) {
 				debug(`match ${id} cannot be loaded from API`);
+
 				return saveUnloaded(id, ts)
-					.then(function () {
-						return { id: id, status: 'no source', error: err };
+					.then(() => {
+						return { id, status: 'no source', error: err };
 					});
 			}
-			return { id: id, status: 'error', error: err };
+
+			return { id, status: 'error', error: err };
 		});
 }
 
 function loadByID(last) {
-	var matchId = +last.id;
+	let matchId = +last.id;
+
 	console.log(`load at ${new Date()} from match=${matchId}`);
-	var matchesToImport = +process.env.IMPORTER || 50;
-	var matches = [];
+
+	let matchesToImport = +process.env.IMPORTER || 50;
+	let matches = [];
 
 	debug(`need to import ${matchesToImport} new matches`);
 
 	return apiNative.getMaxMatchId({})
 		.then(function (max) {
-			var latestAvailable = +max.max_match_id.api - matchesToImport;
-			var latestPossible = matchId + matchesToImport;
+			let latestAvailable = +max.max_match_id.api - matchesToImport;
+			let latestPossible = matchId + matchesToImport;
 
             if (IMPORT_MATCH_TILL) {
                 latestAvailable = Math.min(IMPORT_MATCH_TILL, latestAvailable);
             }
 
-			var length = latestPossible > latestAvailable ?
+			let length = latestPossible > latestAvailable ?
 				latestAvailable - matchId
 				: matchesToImport;
 
-			for (var i = 1; i <= length; i++) {
+			for (let i = 1; i <= length; i++) {
 				matches.push(matchId + i);
 			}
 
 			return new Promise(function (resolve, reject) {
-				var errors = [];
-				var exit = function () {
+				let errors = [];
+				let exit = function () {
 					debug(`imported ${length} new matches`);
 					if (!length || length < 0) {
 						/**
@@ -690,17 +736,22 @@ function getLastImport() {
  */
 function loader() {
 	debug(`[${process.pid}] (${new Date()}) trying to import new matches slice`);
+
 	const cachekey = CACHEKEY + cache.options.suffix;
+
 	return cache
 		.get(cachekey)
-		.then(function (loading) {
+		.then(loading => {
 			if (loading) {
 				debug(`[${process.pid}] cannot start new import: another import is running on process [${loading}]`);
+
 				return;
 			}
+
 			importInProgress = true;
+
 			return cache.set(cachekey, process.pid, 'EX', EXPIRE)
-				.then(function () {
+				.then(() => {
 					return getLastImport()
 						.tap(function (last) {
 							console.log(`loader date ts=${last.ts} match=${last.id}`);

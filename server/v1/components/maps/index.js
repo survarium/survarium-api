@@ -6,7 +6,7 @@ const model  = require('./model');
 const config = require('../../../configs');
 const langs  = config.api.languages;
 
-require('./importer');
+// require('./importer');
 
 function getData(options) {
 	options = options || {};

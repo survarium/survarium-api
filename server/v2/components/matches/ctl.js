@@ -22,26 +22,36 @@ exports.id = function (id) {
 exports.list = function list (options) {
 	options = options || {};
 
-	var totalQuery = {};
+	let totalQuery = {};
 
-    var query = Query.list(options.filter);
+    let query = Query.list(options.filter);
 
-	var fields = {
+	let fields = {
 		stats: 0,
 		_id: 0,
 		__v: 0,
 		updatedAt: 0
 	};
-	var sort = options.sort || { id: -1 };
-	var limit = 20;
-	var skip = 0;
-	var populate = [{
+	let sort = options.sort || { id: -1 };
+	let limit = 20;
+	let skip = 0;
+	let populate = [{
 		path: 'map',
-        select: libLang.select(options.lang) + ' -createdAt -updatedAt -__v -_id'
+        select: libLang.select() + ' -createdAt -updatedAt -__v -_id'
+	}, {
+		path: 'place',
+        select: '-createdAt -updatedAt -__v -_id'
+	}, {
+		path: 'mode',
+        select: '-createdAt -updatedAt -__v -_id'
+	}, {
+		path: 'weather',
+        select: '-createdAt -updatedAt -__v -_id'
 	}];
 
 	if (options.skip) {
-		var __skip = Number(options.skip);
+		let __skip = Number(options.skip);
+
 		if (!isNaN(__skip) && (__skip > 0)) {
 			skip = __skip;
 		}
@@ -59,7 +69,7 @@ exports.list = function list (options) {
 		fields.clans = 0;
 	}
 
-	var cursor = model
+	let cursor = model
 		.find(query)
 		.select(fields)
 		.sort(sort);
@@ -88,7 +98,7 @@ exports.list = function list (options) {
 };
 
 exports.fetch = function (match, options) {
-	var cursor = model
+	const cursor = model
 		.findOne({
 			_id: match._id
 		});
@@ -107,8 +117,20 @@ exports.fetch = function (match, options) {
 	cursor.populate([
 		{
 			path: 'map',
-			select: libLang.select(options.lang) + ' -createdAt -updatedAt -__v -_id'
+			select: libLang.select() + ' -createdAt -updatedAt -__v -_id'
 		},
+        {
+            path: 'place',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
+        {
+            path: 'mode',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
+        {
+            path: 'weather',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
 		{
 			path: 'clans.clan',
 			select: { _id: 0, abbr: 1, name: 1, id: 1 }
@@ -123,7 +145,7 @@ exports.stats = function (match, options) {
 		.findOne({
 			_id: match._id
 		})
-		.select('stats rating_match map')
+		.select('stats rating_match map mode')
         .populate([
             {
                 path: 'map',
@@ -131,18 +153,25 @@ exports.stats = function (match, options) {
                     _id: 0,
                     [`lang.${langDefault}.mode`]: 1
                 }
+            },
+            {
+                path: 'mode',
+                select: {
+                    _id: 0,
+                    title: 1
+                }
             }
         ])
 		.lean()
 		.then(function (match) {
-			var sort = options.sort || { score: -1 };
+			let sort = options.sort || { score: -1 };
 
-			var cursor = Stats.find({
+			let cursor = Stats.find({
 				_id: { $in: match.stats }
 			});
 
-            var mode = match.map.lang[langDefault].mode;
-            var type = match.rating_match ? 'rating' : 'random';
+            let mode = match.map ? match.map.lang[langDefault].mode : match.mode.title;
+            let type = match.rating_match ? 'rating' : 'random';
 
 			cursor.select({ _id: 0, match: 0, map: 0, clanwar: 0, level: 0, rating_match: 0, clan: 0, __v: 0, createdAt: 0, updatedAt: 0, date: 0 });
 
@@ -163,7 +192,7 @@ exports.stats = function (match, options) {
 			cursor.sort(sort);
 
             function getElo(stat) {
-                var progress = stat.player.progress;
+                let progress = stat.player.progress;
 
                 if (progress && progress.elo && progress.elo[mode] && progress.elo[mode][type] !== undefined) {
                     progress.elo = progress.elo[mode][type];

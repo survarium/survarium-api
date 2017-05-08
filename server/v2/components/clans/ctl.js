@@ -31,7 +31,7 @@ exports.list = function list (options) {
 		updatedAt: 0,
         banned: 0
 	};
-	
+
 	var sort = options.sort || { elo: -1 };
 	var limit = 20;
 	var skip = 0;
@@ -231,11 +231,11 @@ exports.players = function players (clan, options) {
 exports.matches = function matches(clan, options) {
 	options = options || {};
 
-	var totalQuery = {};
+	let totalQuery = {};
 
-	var query = totalQuery = { clan: clan._id };
+	let query = totalQuery = { clan: clan._id };
 
-	var fields = {
+	let fields = {
 		clanwar: 0,
 		clan: 0,
 		team: 0,
@@ -244,12 +244,12 @@ exports.matches = function matches(clan, options) {
 		createdAt: 0,
 		updatedAt: 0
 	};
-	var sort = options.sort || { date: -1 };
-	var limit = 10;
-	var skip = 0;
+	let sort = options.sort || { date: -1 };
+	let limit = 10;
+	let skip = 0;
 
 	if (options.skip) {
-		var __skip = Number(options.skip);
+		let __skip = Number(options.skip);
 		if (!isNaN(__skip) && (__skip > 0)) {
 			skip = __skip;
 		}
@@ -258,13 +258,13 @@ exports.matches = function matches(clan, options) {
 	const MAX_LIMIT = 50;
 
 	if (options.limit) {
-		var __limit = Number(options.limit);
+		let __limit = Number(options.limit);
 		if (!isNaN(__limit) && (__limit > 0)) {
 			limit = Math.min(MAX_LIMIT, __limit);
 		}
 	}
 
-	var cursor = Stats
+	let cursor = Stats
 		.find(query)
 		.select(fields)
 		.sort(sort);
@@ -288,8 +288,20 @@ exports.matches = function matches(clan, options) {
 		},
 		{
 			path: 'map',
-			select: libLang.select(options.lang) + ' -createdAt -updatedAt -__v -_id'
-		}
+			select: libLang.select() + ' -createdAt -updatedAt -__v -_id'
+		},
+        {
+            path: 'battlefield',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
+        {
+            path: 'mode',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
+        {
+            path: 'weather',
+            select: '-createdAt -updatedAt -__v -_id'
+        }
 	]);
 
 	return Promise.props({
@@ -306,11 +318,11 @@ exports.matches = function matches(clan, options) {
 exports.clanwars = function clanwars(clan, options) {
 	options = options || {};
 
-	var totalQuery = {};
+	let totalQuery = {};
 
-	var query = totalQuery = { 'clans.clan': clan._id };
+	let query = totalQuery = { 'clans.clan': clan._id };
 
-	var fields = {
+	let fields = {
 		replay: 0,
 		server: 0,
 		duration: 0,
@@ -322,12 +334,12 @@ exports.clanwars = function clanwars(clan, options) {
 		createdAt: 0,
 		updatedAt: 0
 	};
-	var sort = options.sort || { date: -1 };
-	var limit = 10;
-	var skip = 0;
+	let sort = options.sort || { date: -1 };
+	let limit = 10;
+	let skip = 0;
 
 	if (options.skip) {
-		var __skip = Number(options.skip);
+		let __skip = Number(options.skip);
 		if (!isNaN(__skip) && (__skip > 0)) {
 			skip = __skip;
 		}
@@ -336,13 +348,13 @@ exports.clanwars = function clanwars(clan, options) {
 	const MAX_LIMIT = 50;
 
 	if (options.limit) {
-		var __limit = Number(options.limit);
+		let __limit = Number(options.limit);
 		if (!isNaN(__limit) && (__limit > 0)) {
 			limit = Math.min(MAX_LIMIT, __limit);
 		}
 	}
 
-	var cursor = Matches
+	let cursor = Matches
 		.find(query)
 		.select(fields)
 		.sort(sort);
@@ -362,8 +374,20 @@ exports.clanwars = function clanwars(clan, options) {
 		},
 		{
 			path: 'map',
-			select: libLang.select(options.lang) + ' -createdAt -updatedAt -__v -_id'
-		}
+			select: libLang.select() + ' -createdAt -updatedAt -__v -_id'
+		},
+        {
+            path: 'battlefield',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
+        {
+            path: 'mode',
+            select: '-createdAt -updatedAt -__v -_id'
+        },
+        {
+            path: 'weather',
+            select: '-createdAt -updatedAt -__v -_id'
+        }
 	]);
 
 	return Promise.props({

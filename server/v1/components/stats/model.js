@@ -22,6 +22,18 @@ const StatsSchema = new Schema({
 		type: Schema.Types.ObjectId,
 		ref : 'Maps'
 	},
+	battlefield: {
+		type: Schema.Types.ObjectId,
+		ref : 'Place'
+	},
+	mode: {
+		type: Schema.Types.ObjectId,
+		ref : 'GameMode'
+	},
+	weather: {
+		type: Schema.Types.ObjectId,
+		ref : 'Weather'
+	},
     rating_match: {
         type: Boolean,
         index: true
