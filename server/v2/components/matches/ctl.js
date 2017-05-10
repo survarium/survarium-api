@@ -10,6 +10,12 @@ const Query   = require('./query');
 const got     = require('got');
 
 const langDefault = config.api.langDefault;
+const MODE_MAP = {
+    'team deathmatch': 'Team Deathmatch',
+    'artifact hunt': 'Artifact Hunt',
+    'battery retrieval': 'Battery retrieval',
+    'research': 'Research'
+};
 
 exports.id = function (id) {
 	if (!/^\d+$/.test(id)) {
@@ -170,10 +176,10 @@ exports.stats = function (match, options) {
 				_id: { $in: match.stats }
 			});
 
-            let mode = match.map ? match.map.lang[langDefault].mode : match.mode.title;
+            let mode = match.map ? match.map.lang[langDefault].mode : MODE_MAP[match.mode.title];
             let type = match.rating_match ? 'rating' : 'random';
 
-			cursor.select({ _id: 0, match: 0, map: 0, clanwar: 0, level: 0, rating_match: 0, clan: 0, __v: 0, createdAt: 0, updatedAt: 0, date: 0 });
+			cursor.select({ _id: 0, match: 0, map: 0, clanwar: 0, level: 0, rating_match: 0, clan: 0, battlefield: 0, mode: 0, weather: 0, __v: 0, createdAt: 0, updatedAt: 0, date: 0 });
 
 			cursor.populate([
 				{
