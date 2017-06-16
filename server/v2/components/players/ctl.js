@@ -7,8 +7,23 @@ const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
 const Query   = require('./query');
 
+const checkId = /^\d+$/;
+
 exports.id = function getPlayerId(nickname) {
-	return model.findOne({ nickname: nickname }, { _id: 1, nickname: 1 }).lean();
+    const fields = { _id: 1, nickname: 1, id: 1 };
+
+	return model
+        .findOne({ nickname }, fields)
+        .lean()
+        .then(player => {
+            if (!player && checkId.test(nickname)) {
+                return model
+                    .findOne({ id: nickname }, fields)
+                    .lean();
+            }
+
+            return player;
+        });
 };
 
 exports.list = function list(options) {
