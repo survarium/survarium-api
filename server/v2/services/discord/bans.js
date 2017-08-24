@@ -10,6 +10,7 @@ function router(message) {
 	let match = message.content.match(/^Banlist (\d+)( (revoke|claninform))?/i);
 	let postId = match && match[1];
 	if (!postId) {
+		if (message.channel.type !== 'dm') return;
 		return Discord.sendMessage([message.channel], `You say: ${message.content}`)
             .catch(err => console.error(err.stack));
 	}
