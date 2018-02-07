@@ -14,7 +14,8 @@ const MODE_MAP = {
     'team deathmatch': 'Team Deathmatch',
     'artifact hunt': 'Artifact Hunt',
     'battery retrieval': 'Battery retrieval',
-    'research': 'Research'
+    'research': 'Research',
+	'slaughter': 'Slaughter'
 };
 
 exports.id = function (id) {
