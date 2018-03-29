@@ -37,7 +37,8 @@ function getPages(result) {
 		{ url: HOST + '/matches/search', changefreq: 'monthly' },
 		{ url: HOST + '/clans/list', changefreq: 'monthly' },
 		{ url: HOST + '/clans/search', changefreq: 'monthly' },
-		{ url: HOST + '/armory', changefreq: 'monthly' }
+		{ url: HOST + '/armory', changefreq: 'monthly' },
+		{ url: HOST + '/pve/dangerous-knowledge', changefreq: 'monthly' }
 	]);
 	return new Promise(resolve => resolve(result));
 }
@@ -134,20 +135,6 @@ function getArmory(result) {
 	});
 }
 
-function getPVE(result) {
-	result = result || [];
-	return new Promise((resolve) => {
-		var changefreq = 'monthly';
-		var url = HOST + '/pve/';
-
-		['dangerous-knowledge'].forEach(path =>
-			result.push({ url: url + encodeURIComponent(path), changefreq: changefreq })
-		);
-
-        resolve(result);
-	});
-}
-
 function addAlternates(result) {
 	return result.map(elem => {
 		elem.links = ALTERNATES.map(lang => {
@@ -169,8 +156,7 @@ db.once('connected', () => {
 		    getClans(result),
 		    getPlayers(result),
 			getMatches(result),
-            getArmory(result),
-            getPVE(result)
+            getArmory(result)
 		])
 		//.then(() => result = addAlternates(result)) // Yandex robot errors
 		.then(() => {
