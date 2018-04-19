@@ -23,6 +23,15 @@ router.get('/messages', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/messages/:messageId', function (req, res, next) {
+	ctl
+		.one(req.params.messageId)
+		.then(function (result) {
+			return res.json(result);
+		})
+		.catch(next);
+});
+
 if (config.importer.messages) {
 	require('./importer');
 }

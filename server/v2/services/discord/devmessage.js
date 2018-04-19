@@ -68,7 +68,7 @@ var devmessage = (function (storage) {
 
 		let text = toMD(message.text);
 
-		const head = toMD(`<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + message.topic.name + '</a>' : ''}\n\n`);
+		const head = toMD(`<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + (message.topic.name || message.forum.name) + '</a>' : ''}\n\n`);
 		const SIZE = Discord.MAXSIZE - head.length;
 
 		const length = text.length;

@@ -11,6 +11,10 @@ exports.devs = function () {
 	return devs.slice();
 };
 
+exports.one = function (id) {
+    return model.findOne({ _id: id }, { _v: 0 }).lean();
+};
+
 exports.list = function list (options) {
 	options = options || {};
 
@@ -19,7 +23,6 @@ exports.list = function list (options) {
     var query = Query.list(options.filter);
 
 	var fields = {
-		_id: 0,
 		__v: 0
 	};
 	var sort = options.sort || { date: -1 };

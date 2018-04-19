@@ -104,7 +104,7 @@ var devmessage = (function (storage) {
 			.replace(/__italic__/gm, '<i>')
 			.replace(/__\/italic__/gm, '</i>');
 
-		const head = `<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + message.topic.name + '</a>' : ''}\n`;
+		const head = `<b>${dev.name}</b>: ${message.topic.id ? '<a href="' + url + '">' + (message.topic.name || message.forum.name) + '</a>' : ''}\n`;
 		const SIZE = 4096 - head.length;
 
 		const length = text.length;
