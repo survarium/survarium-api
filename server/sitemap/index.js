@@ -44,24 +44,45 @@ function getPages(result) {
 }
 
 function getClans(result) {
-	result = result || [];
-	return new Promise((resolve, reject) => {
-		var changefreq = 'weekly';
-		var url = HOST + '/clans/';
+    result = result || [];
+    return new Promise((resolve, reject) => {
+        var changefreq = 'weekly';
+        var url = HOST + '/clans/';
 
-		var aggregator = db.collection('clans').aggregate([
-			{ $project: { path: '$abbr', _id: 0 } }
-		], { cursor: { batchSize: 1 } });
+        var aggregator = db.collection('clans').aggregate([
+            { $project: { path: '$abbr', _id: 0 } }
+        ], { cursor: { batchSize: 1 } });
 
-		aggregator
-			.on('data', function clansElem (elem) {
-				result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
-			})
-			.once('end', function () {
-				resolve(result);
-			})
-			.once('error', reject);
-	});
+        aggregator
+        .on('data', function clansElem (elem) {
+            result.push({ url: url + encodeURIComponent(elem.path), changefreq: changefreq });
+        })
+        .once('end', function () {
+            resolve(result);
+        })
+        .once('error', reject);
+    });
+}
+
+function getMessages(result) {
+    result = result || [];
+    return new Promise((resolve, reject) => {
+        var changefreq = 'never';
+        var url = HOST + '/info/messages/';
+
+        var aggregator = db.collection('vg_messages').aggregate([
+            { $project: { _id: 1 } }
+        ], { cursor: { batchSize: 1 } });
+
+        aggregator
+        .on('data', function clansElem (elem) {
+            result.push({ url: url + encodeURIComponent(elem._id), changefreq: changefreq });
+        })
+        .once('end', function () {
+            resolve(result);
+        })
+        .once('error', reject);
+    });
 }
 
 function getMatches(result) {
@@ -156,7 +177,8 @@ db.once('connected', () => {
 		    getClans(result),
 		    getPlayers(result),
 			getMatches(result),
-            getArmory(result)
+            getArmory(result),
+            getMessages(result)
 		])
 		//.then(() => result = addAlternates(result)) // Yandex robot errors
 		.then(() => {
