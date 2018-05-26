@@ -2,6 +2,7 @@
 
 const Promise = require('bluebird');
 const config  = require('../../../configs');
+const modes   = require('../../../v1/components/mode/model');
 const model   = require('../../../v1/components/matches/model');
 const Stats   = require('../../../v1/components/stats/model');
 const db      = require('../../../v1/lib/db');
@@ -213,21 +214,34 @@ exports.stats = function (match, options) {
 };
 
 exports.timeline = function (query) {
-	var date = new Date();
-	date.setHours(date.getHours() - 23, 0, 0, 0);
+	var dateIndexedSearch = new Date();
+	var minutesFromHourStart = dateIndexedSearch.getMinutes();
 
-    var match = { date: { $gte: date } };
+	dateIndexedSearch.setHours(dateIndexedSearch.getHours() - 24, 0, 0, 0);
+
+	var dateResultFilter = new Date(dateIndexedSearch);
+	dateResultFilter.setMinutes(minutesFromHourStart);
+
+	var millisecondsFromHourStart = minutesFromHourStart * 60000;
+
+    var match = { date: { $gte: dateIndexedSearch } };
 
     if (~['rating', 'random'].indexOf(query.type)) {
         match.rating_match = query.type === 'rating';
     }
 
-	return model.aggregate([
-        { $match: match },
-		{ $group: { _id: { level: '$level', hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
-		{ $group: { _id: '$_id.level', hours: { $push: { hour: '$_id.hour', total: '$total', date: '$date' } }, total: { $sum: '$total' } } },
-		{ $project: { level: '$_id', hours: '$hours', date: '$date', total: '$total', _id: 0 }}
-	]).allowDiskUse(true).exec();
+    return modes.findOne({ title: 'pve' }, { _id: 1 }).lean()
+        .then(pveMode => model.aggregate([
+            { $match: Object.assign(match, { mode: { $ne: pveMode._id } }) }, // поиск с квантификацией по часам
+            { $match: { date: { $gte: dateResultFilter } } }, // обрезка данных старше 24 часов (тут уже динамические минуты)
+            { $project: {
+                    date: { $subtract: ['$date', millisecondsFromHourStart]}, // двигаем динамическую минуту в 0
+                    level: 1
+                } },
+            { $group: { _id: { level: '$level', hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
+            { $group: { _id: '$_id.level', hours: { $push: { hour: '$_id.hour', total: '$total', date: { $add: ['$date', millisecondsFromHourStart]} } }, total: { $sum: '$total' } } },
+            { $project: { level: '$_id', hours: '$hours', total: '$total', _id: 0 }}
+        ]).allowDiskUse(true).exec());
 };
 
 exports.replay = function (match) {
