@@ -1,6 +1,7 @@
 'use strict';
 
 const Promise = require('bluebird');
+const modes   = require('../../../v1/components/mode/model');
 const model   = require('../../../v1/components/players/model');
 const stats   = require('../../../v1/components/stats/model');
 const db      = require('../../../v1/lib/db');
@@ -287,23 +288,25 @@ exports.top = function getTop(query) {
 		date.setHours(date.getHours() - 1, 0, 0, 0);
 	}
 
-	return stats
-		.aggregate([
-			{ $match: { date: { $gte: date } } },
-			{ $group: { _id: { level: '$level' }, data: { $push: { level: '$level', player: '$player', match: '$match', score: '$score' } } } },
-			{ $unwind: '$data' },
-			{ $sort: { 'data.score': -1 } },
-			{ $group: { _id: '$_id', data: { $first: '$data' } } },
-			{ $lookup: { from: 'matches', localField: 'data.match', foreignField: '_id', as: 'data.match' } },
-			{ $lookup: { from: 'players', localField: 'data.player', foreignField: '_id', as: 'data.player' } },
-			{ $project: { _id: 0, level: '$data.level', score: '$data.score',
-				'player.nickname': { $arrayElemAt: ['$data.player.nickname', 0] },
-				'player.clan_meta': { $arrayElemAt: ['$data.player.clan_meta', 0] },
-				match: { $arrayElemAt: ['$data.match.id', 0] } } },
-			{ $sort: { level: 1 } },
-			{ $limit: 10 }
-		])
-		.allowDiskUse(true).exec();
+	return modes.findOne({ title: 'pve' }, { _id: 1 }).lean()
+		.then(pveMode => stats
+			.aggregate([
+				{ $match: { mode: { $ne: pveMode._id }, date: { $gte: date } } },
+				{ $group: { _id: { level: '$level' }, data: { $push: { level: '$level', player: '$player', match: '$match', score: '$score' } } } },
+				{ $unwind: '$data' },
+				{ $sort: { 'data.score': -1 } },
+				{ $group: { _id: '$_id', data: { $first: '$data' } } },
+				{ $lookup: { from: 'matches', localField: 'data.match', foreignField: '_id', as: 'data.match' } },
+				{ $lookup: { from: 'players', localField: 'data.player', foreignField: '_id', as: 'data.player' } },
+				{ $project: { _id: 0, level: '$data.level', score: '$data.score',
+						'player.nickname': { $arrayElemAt: ['$data.player.nickname', 0] },
+						'player.clan_meta': { $arrayElemAt: ['$data.player.clan_meta', 0] },
+						match: { $arrayElemAt: ['$data.match.id', 0] } } },
+				{ $sort: { level: 1 } },
+				{ $limit: 10 }
+			])
+			.allowDiskUse(true).exec()
+		);
 };
 
 exports.unique = function getUnique(query) {
