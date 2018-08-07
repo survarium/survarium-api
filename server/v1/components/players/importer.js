@@ -39,6 +39,20 @@ function fetch(params) {
 		});
 }
 
+/**
+ * TODO: remove Player.ammunition.mods field
+ * TODO: update its model
+ * TODO: update its loader
+ * @param modification_ids
+ */
+function parseAmmunitionMod(modification_ids) {
+	if (!modification_ids) {
+		return;
+	}
+
+	return;
+}
+
 function assignAmmunition(ammunition) {
 	function assignProfile(profile) {
 		var dataset = ammunition[profile];
@@ -57,7 +71,7 @@ function assignAmmunition(ammunition) {
 						item: +item.item_id,
 						slot: +item.slot_id,
 						amount: +item.amount,
-						mods: item.modification_ids ? item.modification_ids.split(',').map(Number) : undefined
+						mods: parseAmmunitionMod(item.modification_ids)
 					};
 				})
 		};
