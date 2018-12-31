@@ -89,13 +89,21 @@ router.get('/modifications/:mods', function (req, res, next) {
 		.catch(next);
 });
 
+router.get('/faction-challenge', async (req, res, next) => {
+	try {
+		return res.send(await ctl.factionChallenge());
+    } catch (e) {
+		return next(e);
+	}
+});
+
 function modelAuth(req, res, next) {
     let key = req.query.key;
-    
+
     if (!key || !~config.keys.models.indexOf(key)) {
         return next({ message: '`Key` is invalid' });
     }
-    
+
     next();
 }
 

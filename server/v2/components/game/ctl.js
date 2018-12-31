@@ -1,6 +1,7 @@
 'use strict';
 
 const Promise  = require('bluebird');
+const got      = require('got');
 const config   = require('../../../configs');
 const Items    = require('./models/items');
 const Versions = require('./models/versions');
@@ -224,7 +225,7 @@ exports.factions = function factions(params) {
 exports.modifications = function modifications(params, query) {
     let language = getLang(query.language);
     let thin = query.thin !== undefined;
-    
+
     let projection = {
         _id: 0,
         id: '$_id',
@@ -233,17 +234,17 @@ exports.modifications = function modifications(params, query) {
         postfix: 1,
         item_level_depended: 1,
     };
-    
+
     let pipeline = [
         { $project: projection }
     ];
-    
+
     if (params.list) {
         pipeline.unshift({
             $match: { _id: { $in: params.list } }
         });
     }
-    
+
     if (thin) {
         projection['modifier'] = { $arrayElemAt: [ '$modifiers.value', 0 ] };
     } else {
@@ -255,7 +256,7 @@ exports.modifications = function modifications(params, query) {
             'ui_desc',
             'lobby_info'
         ].forEach(field => projection[field] = 1);
-        
+
         let unprop = [
             'id',
             'name',
@@ -284,7 +285,7 @@ exports.modifications = function modifications(params, query) {
             'prop.direction': '$prop.direction',
             'prop.name': `$prop.langs.${language}.name`,
         });
-        
+
         let group = [
             'name',
             'value',
@@ -303,7 +304,7 @@ exports.modifications = function modifications(params, query) {
             _id: '$id',
             props: { $push: '$prop' }
         });
-        
+
         let finalize = [
             'name',
             'value',
@@ -323,7 +324,7 @@ exports.modifications = function modifications(params, query) {
             _id: 0,
             id: '$_id'
         });
-    
+
         pipeline.push({ $unwind: { path: '$ui_desc.props_list', preserveNullAndEmptyArrays: true } });
         pipeline.push({ $lookup: { from: UiProps.collection.name, localField: `ui_desc.props_list.prop_id`, foreignField: '_id', as: `prop` } });
         pipeline.push({ $unwind: { path: '$prop', preserveNullAndEmptyArrays: true } });
@@ -331,15 +332,15 @@ exports.modifications = function modifications(params, query) {
         pipeline.push({ $group: group });
         pipeline.push({ $project: finalize })
     }
-    
+
     pipeline.push({ $sort: { id: 1 } });
-    
+
     return Mods.aggregate(pipeline);
 };
 
 exports.one = function (req, res, next) {
     let name = req.params.item;
-    
+
     return Items
         .findOne({
             name: name
@@ -351,7 +352,7 @@ exports.one = function (req, res, next) {
             if (!item) {
                 throw new Error(`No item ${name} found`);
             }
-            
+
             req.item = item;
             next();
         })
@@ -378,7 +379,7 @@ exports.modelForm = function modelForm(params) {
 exports.modelUpload = function modelUpload(params) {
     let item = params.item;
     let name = item.name;
-    
+
     return item
         .update({ $set: { visual: true } })
         .then(() => `<!DOCTYPE html>
@@ -388,4 +389,23 @@ exports.modelUpload = function modelUpload(params) {
                 <h3>Item ${name} model uploaded OK</h3>
             </body>
         </html>`);
+};
+
+exports.factionChallenge = async (params = {}) => {
+    const url = 'https://account.survarium.com/en/faction-challenge/json';
+
+    const CACHE_TTL = 60;
+    const CACHE_KEY = `FACTION:CHALLENGE`;
+
+    const cached = await cache.get(CACHE_KEY);
+
+    if (cached !== null) {
+    	return JSON.parse(cached)
+	}
+
+	const { body: fresh } = await got(url, { json: true });
+
+    cache.set(CACHE_KEY, JSON.stringify(fresh), 'EX', CACHE_TTL);
+
+    return fresh;
 };
