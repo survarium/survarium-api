@@ -391,21 +391,25 @@ exports.modelUpload = function modelUpload(params) {
         </html>`);
 };
 
-exports.factionChallenge = async (params = {}) => {
+exports.factionChallenge = function () {
     const url = 'https://account.survarium.com/en/faction-challenge/json';
 
     const CACHE_TTL = 60;
     const CACHE_KEY = `FACTION:CHALLENGE`;
 
-    const cached = await cache.get(CACHE_KEY);
+    return cache.get(CACHE_KEY)
+		.then(function (cached) {
+            if (cached !== null) {
+                return JSON.parse(cached);
+            }
 
-    if (cached !== null) {
-    	return JSON.parse(cached)
-	}
+            return got(url, { json: true })
+				.then(function (data) {
+					let body = data.body;
 
-	const { body: fresh } = await got(url, { json: true });
+                    cache.set(CACHE_KEY, JSON.stringify(body), 'EX', CACHE_TTL);
 
-    cache.set(CACHE_KEY, JSON.stringify(fresh), 'EX', CACHE_TTL);
-
-    return fresh;
+                    return body;
+				});
+		});
 };

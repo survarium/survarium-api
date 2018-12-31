@@ -89,12 +89,12 @@ router.get('/modifications/:mods', function (req, res, next) {
 		.catch(next);
 });
 
-router.get('/faction-challenge', async (req, res, next) => {
-	try {
-		return res.send(await ctl.factionChallenge());
-    } catch (e) {
-		return next(e);
-	}
+router.get('/faction-challenge', function (req, res, next) {
+    ctl.factionChallenge()
+		.then(function (data) {
+			res.send(data);
+		})
+		.catch(next);
 });
 
 function modelAuth(req, res, next) {
