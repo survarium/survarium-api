@@ -85,7 +85,7 @@ function parseSearch(html, options) {
 	return getMaxPost(options.dev, options.target.lang)
 		.then(MAXPOST => {
 			MAXPOST && debug(`last ${options.dev.name} message is #${MAXPOST}`);
-		
+
 			let search = cheerio.load(html, { decodeEntities: false });
 
 			let searchError = search('#message p').text();
@@ -106,7 +106,7 @@ function parseSearch(html, options) {
 				let postURL = $post.find('.searchresults a').attr('href');
 
 				let postId = Number(postURL.match(/p\=(\d+)/)[1]);
-				
+
 				if (!i) {
 					debug(`${options.dev.name} last found message is ${postId} in ${options.target.lang} forum`);
 				}
@@ -187,7 +187,9 @@ function loadMessages(messages, params) {
 
 function loadTarget(target) {
 	return new Promise(function (resolve, reject) {
-		var targets = developers.slice();
+		var targets = developers.filter(function (dev) {
+			return !dev.ex;
+		}).slice();
 		var errors = [];
 		var done = 0;
 		/**
@@ -203,9 +205,9 @@ function loadTarget(target) {
 			}
 			var searchUrl = target.search.url + dev.id;
 			debug(`loading ${dev.name} messages in ${target.lang} forum (${searchUrl})`);
-			
-			console.log(headers);
-			
+
+			// console.log(headers);
+
 			return Promise.delay(target.delay * 20).then(function () {
 				return got(searchUrl, {
 					headers: headers

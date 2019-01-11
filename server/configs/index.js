@@ -87,7 +87,7 @@ module.exports = {
 	v2: {
 		developers: [
             { id: '58',      name: 'Yava' },
-            { id: '65',      name: 'dima' },
+			{ id: '65',      name: 'dima', ex: true },
             { id: '67',      name: 'Stohe' },
             { id: '68',      name: 'YM2612' },
             { id: '69',      name: 'joewillburn' },
@@ -106,8 +106,8 @@ module.exports = {
             { id: '1364745', name: 'Shingan' },
             { id: '1366813', name: 'TriTonn' },
             { id: '1391790', name: 'Survator3000' },
-            { id: '1379035', name: 'mjanus' }
-            //{ id: '1080565', name: 'Esmer' }
+            { id: '1379035', name: 'mjanus' },
+            { id: '1080565', name: 'Esmer', ex: true }
         ]
 	},
 
