@@ -56,6 +56,7 @@ const StatsSchema = new Schema({
 	team: Number,
 
 	level: scoreMicro,
+	elo: Number,
 
     place  : {
 	    type: Number,

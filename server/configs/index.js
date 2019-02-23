@@ -58,7 +58,10 @@ module.exports = {
 					${process.env.DB_HOST || 'localhost'}
 					${process.env.DB_PORT ? ':' + (+process.env.DB_PORT) : ''}/
 					${process.env.DB_NAME || 'sv-v1'}`
-				.replace(/\t|\r|\n/gm, '')
+				.replace(/\t|\r|\n/gm, ''),
+			options: {
+				useNewUrlParser: true
+			}
 		},
 		cache: {
 			auth:  process.env.CACHE_AUTH,

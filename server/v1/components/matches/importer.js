@@ -39,6 +39,7 @@ function tryToShutdown() {
 function saveStats(matchData, match) {
 	debug(`saving stats for match ${match.id}`);
 
+	const isRating = Boolean(match.rating_match);
 	let statsData = matchData.accounts;
 	let createdStats = {};
 
@@ -82,7 +83,8 @@ function saveStats(matchData, match) {
 							player: player._id,
 							team  : teamNum,
 							level : match.level,
-                            rating_match: Boolean(match.rating_match),
+                            rating_match: isRating,
+							elo   : (player.progress || {})[`elo-${isRating ? 'rating' : 'random'}`] || 0,
 							kills : kills,
 							dies  : dies,
 							kd : +utils.kd(kills, dies),

@@ -190,7 +190,6 @@ exports.stats = function (match, options) {
 					    _id: 0,
                         nickname: 1,
                         'progress.level': 1,
-                        ['progress.elo.' + mode + '.' + type]: 1,
                         'clan_meta.abbr': 1,
                         banned: 1
 					}
@@ -199,17 +198,7 @@ exports.stats = function (match, options) {
 
 			cursor.sort(sort);
 
-            function getElo(stat) {
-                let progress = stat.player.progress;
-
-                if (progress && progress.elo && progress.elo[mode] && progress.elo[mode][type] !== undefined) {
-                    progress.elo = progress.elo[mode][type];
-                } else progress.elo = 1000;
-
-                return stat;
-            }
-
-			return cursor.lean().then(result => result.map(getElo));
+			return cursor.lean();
 		});
 };
 

@@ -16,7 +16,6 @@ const EXPIRE = 60 * 5;
 const logKey = 'player:';
 
 const langDefault = config.api.langDefault;
-const MODES = config.game.modes;
 
 function fetch(params) {
 	debug(`loading player ${params.id} from source`);
@@ -89,16 +88,11 @@ function assignDataToModel(source, update) {
 
 	var kills = +data.matches_stats.kills || 0;
 	var dies = +data.matches_stats.dies || 0;
-	var $set = MODES.reduce((result, mode) => {
-	    let progress = data.progress[mode] || {};
-
-	    result[`progress.elo.${mode}.random`] = +progress.random || 1000;
-	    result[`progress.elo.${mode}.rating`] = +progress.rating || 1000;
-
-	    return result;
-    }, {
+	var $set = {
 		'progress.level': +data.progress.level || 0,
 		'progress.experience': +data.progress.experience || 0,
+		'progress.elo-random': +data.progress[''].random || 0,
+		'progress.elo-rating': +data.progress[''].rating || 0,
 
 		'total.matches': +data.matches_stats.matches || 0,
 		'total.victories': +data.matches_stats.victories || 0,
@@ -115,7 +109,7 @@ function assignDataToModel(source, update) {
 		}),
 
 		ammunition: assignAmmunition(data.ammunition)
-	});
+	};
 
 	var $update = { $set };
 
