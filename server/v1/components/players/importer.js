@@ -86,7 +86,7 @@ function assignDataToModel(source, update, { duplicate } = {}) {
 	var data = source.data.userdata;
 	var skills = source.skills.skills;
 	// newbie players exports with `progress: false`
-	var progress = Object.assign({}, data.progress);
+	var progress = Object.assign({ '': {} }, data.progress);
 
 	var kills = +data.matches_stats.kills || 0;
 	var dies = +data.matches_stats.dies || 0;
@@ -150,7 +150,7 @@ function assignDataToModel(source, update, { duplicate } = {}) {
  * @param {Object}  player          player document
  * @returns {Object} player
  */
-function assignClan(params, player) {
+function assignClan(params, player = {}) {
 	var isNew = params.isNew;
 	var clanId = params.source.data.userdata.clan_id;
 	debug(`assigning clan ${clanId} to player ${player.nickname}`);
