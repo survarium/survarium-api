@@ -85,14 +85,16 @@ function assignAmmunition(ammunition) {
 function assignDataToModel(source, update) {
 	var data = source.data.userdata;
 	var skills = source.skills.skills;
+	// newbie players exports with `progress: false`
+	var progress = Object.assign({}, data.progress);
 
 	var kills = +data.matches_stats.kills || 0;
 	var dies = +data.matches_stats.dies || 0;
 	var $set = {
-		'progress.level': +data.progress.level || 0,
-		'progress.experience': +data.progress.experience || 0,
-		'progress.elo-random': +data.progress[''].random || 0,
-		'progress.elo-rating': +data.progress[''].rating || 0,
+		'progress.level': +progress.level || 0,
+		'progress.experience': +progress.experience || 0,
+		'progress.elo-random': +progress[''].random || 0,
+		'progress.elo-rating': +progress[''].rating || 0,
 
 		'total.matches': +data.matches_stats.matches || 0,
 		'total.victories': +data.matches_stats.victories || 0,
@@ -175,6 +177,31 @@ function assignClan(params, player) {
 	return player;
 }
 
+function existingPlayerConflict(fetched, params, err) {
+	const self = this;
+
+	if (err.code === 11000 && err.message && err.message.match(/index: nickname/) && ((params.conflicts || 0) < 3)) {
+		debug(`player ${params.id} cannot be updated: duplicate found. ${err.message}`);
+
+		return self
+			.findOne({nickname: fetched.data.userdata.nickname}, {id: 1})
+			.then(function playerConflictedOk(conflicted) {
+				if (!conflicted) {
+					return;
+				}
+
+				return load
+					.call(self, {id: conflicted.id, conflicts: (params.conflicts || 0) + 1});
+			})
+			.then(function () {
+				return load
+					.call(self, params);
+			});
+	}
+
+	throw err;
+}
+
 function load(params) {
 	var id = params.id;
 	var self = this;
@@ -198,7 +225,10 @@ function load(params) {
 									.catch(function playerCreatorError(err) {
 										if (err.code === 11000) {
 											debug(`player ${id} should be created, but its already exists. ${err.message}`);
-											return self.findOne({ id: id });
+											return self.findOne({ id: id })
+												.then(existingPlayer =>
+													existingPlayer ? existingPlayer : existingPlayerConflict.call(self, fetched, params, err)
+												);
 										}
 
 										throw err;
@@ -209,27 +239,7 @@ function load(params) {
 										debug(`player ${id} updated`);
 										return player;
 									})
-                                    .catch(function playerUpdaterError(err) {
-                                        if (err.code === 11000 && err.message && err.message.match(/index: nickname/) && ((params.conflicts || 0) < 3)) {
-                                            debug(`player ${id} cannot be updated: duplicate found. ${err.message}`);
-
-                                            return self
-                                                .findOne({ nickname: fetched.data.userdata.nickname }, { id: 1 })
-                                                .then(function playerConflictedOk(conflicted) {
-                                                    if (!conflicted) {
-                                                        return;
-                                                    }
-
-                                                    return load
-                                                        .call(self, { id: conflicted.id, conflicts: (params.conflicts || 0) + 1 });
-                                                })
-                                                .then(function () {
-                                                    return player;
-                                                });
-                                        }
-
-                                        throw err;
-                                    })
+                                    .catch(existingPlayerConflict.bind(self, fetched, params))
 							)
                             .tap(ItemsUsage.bind({ debug: debug }))
 							.then(assignClan.bind(null, { isNew: isNew, source: fetched }));
