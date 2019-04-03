@@ -82,7 +82,7 @@ function assignAmmunition(ammunition) {
 	}, []);
 }
 
-function assignDataToModel(source, update) {
+function assignDataToModel(source, update, { duplicate } = {}) {
 	var data = source.data.userdata;
 	var skills = source.skills.skills;
 	// newbie players exports with `progress: false`
@@ -115,17 +115,28 @@ function assignDataToModel(source, update) {
 
 	var $update = { $set };
 
+	function storePreviousNickname(previous, conflict) {
+		($update.$push || ($update.$push = {}))['nicknames'] = {
+			nickname: previous,
+			until   : Date.now(),
+			conflict
+		};
+	}
+
 	if (!update) {
 		$set.id = source.data.pid;
 		$set.nickname = data.nickname;
 	} else {
 		if (data.nickname !== update.nickname) {
-			($update.$push || ($update.$push = {}))['nicknames'] = {
-				nickname: update.nickname,
-				until   : Date.now()
-			};
+			storePreviousNickname(update.nickname, false);
 			$set.nickname = data.nickname;
 		}
+	}
+
+	if ($set.nickname && duplicate) {
+		debug(`resetting duplicate nickname ${$set.nickname} to pid ${source.data.pid}`);
+		storePreviousNickname($set.nickname, true);
+		$set.nickname = source.data.pid;
 	}
 
 	return $update;
@@ -177,48 +188,64 @@ function assignClan(params, player) {
 	return player;
 }
 
+const MAX_DUPLICATE_CONFLICTS = 2;
+
 function existingPlayerConflict(fetched, params, err) {
 	const self = this;
 
-	if (err.code === 11000 && err.message && err.message.match(/index: nickname/) && ((params.conflicts || 0) < 3)) {
-		debug(`player ${params.id} cannot be updated: duplicate found. ${err.message}`);
+	if (err.code === 11000 && err.message && err.message.match(/index: nickname/)) {
+		const conflictedNickname = fetched.data.userdata.nickname;
 
-		return self
-			.findOne({nickname: fetched.data.userdata.nickname}, {id: 1})
-			.then(function playerConflictedOk(conflicted) {
-				if (!conflicted) {
-					return;
-				}
+		params.conflicts = (params.conflicts || 0) + 1;
 
-				return load
-					.call(self, {id: conflicted.id, conflicts: (params.conflicts || 0) + 1});
-			})
-			.then(function () {
-				return load
-					.call(self, params);
-			});
+		if (params.conflicts <= MAX_DUPLICATE_CONFLICTS) {
+			debug(`trying to update duplicate for id ${params.id} with nickname ${conflictedNickname}`);
+
+			return self
+				.findOne({ nickname: conflictedNickname }, { id: 1 })
+				.then(function playerConflictedOk(conflicted) {
+					if (!conflicted) {
+						debug(`cannot find player duplicate by nickname ${conflictedNickname}`);
+						return;
+					}
+
+					return load
+						.call(self, { id: conflicted.id, conflicts: params.conflicts });
+				})
+				.then(function ({ id } = {}) {
+					debug(`duplicate updated for ${conflictedNickname} with id ${id}`);
+
+					return load
+						.call(self, params);
+				});
+		} else {
+			debug(`cannot resolve duplicate for id ${params.id} with nickname ${conflictedNickname} in ${params.conflicts} tries`);
+		}
 	}
 
 	throw err;
 }
 
 function load(params) {
-	var id = params.id;
-	var self = this;
+	const { id, conflicts = 0 } = params;
+	const self = this;
 
 	debug(`loading player ${id}`);
 
     return self
-		.findOne({ id: id })
+		.findOne({ id })
 		.then(function playerToUpdate(player) {
-			if (!player || ((new Date()).getTime() - player.updatedAt.getTime() > EXPIRE * 1000)) {
-				var isNew = !player;
+			const isNew = !player;
+			const isExpired = player && (new Date()).getTime() - player.updatedAt.getTime() > EXPIRE * 1000;
+			const isDuplicate = conflicts === MAX_DUPLICATE_CONFLICTS;
+
+			if (isNew || isExpired || isDuplicate) {
 				return fetch(params)
 					.then(function playerFromSource(fetched) {
 						debug(`player ${id} will be ${isNew ? 'created' : 'updated'}`);
 						return (isNew ?
 								self
-									.create(assignDataToModel(fetched).$set)
+									.create(assignDataToModel(fetched, undefined, { duplicate: isDuplicate }).$set)
 									.tap(function () {
 										debug(`player ${id} created`);
 									})
@@ -227,13 +254,15 @@ function load(params) {
 											debug(`player ${id} should be created, but its already exists. ${err.message}`);
 											return self.findOne({ id: id })
 												.then(existingPlayer =>
-													existingPlayer ? existingPlayer : existingPlayerConflict.call(self, fetched, params, err)
+													existingPlayer ?
+														existingPlayer :
+														existingPlayerConflict.call(self, fetched, params, err)
 												);
 										}
 
 										throw err;
 									}):
-								self.update({ id: id }, assignDataToModel(fetched, player))
+								self.update({ id: id }, assignDataToModel(fetched, player, { duplicate: isDuplicate }))
                                     .exec()
 									.then(function playerUpdaterOk() {
 										debug(`player ${id} updated`);
@@ -250,12 +279,15 @@ function load(params) {
 			}
 			debug(`loaded fresh player ${id}`);
 			return player;
+		})
+		.catch(err => {
+			throw new Error(`cannot load player id ${id} with ${conflicts} conflicts and error ${err.message || err}`);
 		});
 }
 
 /*setTimeout(function () {
 	// Import test
-	load.call(db.model('Players'), { id: '15238791817735151910' }).then(function (player) {
+	load.call(db.model('Players'), { id: '10138467795994661623' }).then(function (player) {
 		console.log('ok')//player);
 	});
 }, 1000);*/

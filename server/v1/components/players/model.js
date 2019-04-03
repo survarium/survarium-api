@@ -35,7 +35,8 @@ const PlayersSchema = new Schema({
 				type: Date,
 				default: Date.now
 			},
-			nickname: String
+			nickname: String,
+			conflict: Boolean
 		}
 	],
 	clan: {
