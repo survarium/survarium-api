@@ -27,7 +27,7 @@ const PlayersSchema = new Schema({
 		index: { unique: true },
 		text: true,
 		required: true,
-		trim: true
+		trim: false // игроки любят использовать один и тот же ник с разным количеством пробелов
 	},
 	nicknames: [
 		{
