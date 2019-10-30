@@ -16,10 +16,11 @@ const DELAY_BETWEEN_MESSAGES = 3000;
 const DELAY_BETWEEN_LOGINS = 1000 * 60 * 10;
 
 var headers = {
-	'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 YaBrowser/16.9.1.1192 Yowser/2.5 Safari/537.36',
+	'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 YaBrowser/19.9.0.1768 Yowser/2.5 Safari/537.36',
 	'cache-control': 'no-cache',
 	pragma: 'no-cache',
-	cookie: 'lang=ru'
+	cookie: 'lang=ru',
+	referer: 'https://forum.survarium.com'
 };
 
 const targets = [
@@ -210,6 +211,8 @@ function loadTarget(target) {
 			debug(`loading ${dev.name} messages in ${target.lang} forum (${searchUrl})`);
 
 			return Promise.delay(target.delay * 20).then(function () {
+				headers.referer = target.search.url;
+
 				return got(searchUrl, {
 					headers: headers
 				})
