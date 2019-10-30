@@ -12,6 +12,9 @@ const got        = require('got');
 const cheerio    = require('cheerio');
 const VgMessages = require('./model');
 
+const DELAY_BETWEEN_MESSAGES = 3000;
+const DELAY_BETWEEN_LOGINS = 1000 * 60 * 10;
+
 var headers = {
 	'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 YaBrowser/16.9.1.1192 Yowser/2.5 Safari/537.36',
 	'cache-control': 'no-cache',
@@ -28,7 +31,7 @@ const targets = [
 		topic: {
 			url: 'https://forum.survarium.com/ru/viewtopic.php'
 		},
-		delay: 1000
+		delay: DELAY_BETWEEN_MESSAGES
 	},
 	{
 		lang: 'en',
@@ -38,7 +41,7 @@ const targets = [
 		topic: {
 			url: 'https://forum.survarium.com/en/viewtopic.php'
 		},
-		delay: 1000
+		delay: DELAY_BETWEEN_MESSAGES
 	}
 ];
 
@@ -339,7 +342,7 @@ function loader () {
 		.then(load)
 		.catch(err => debug(`loader:critical:${err}`))
 		.then(() => {
-			setTimeout(loader, 1000 * 60 * 5);
+			setTimeout(loader, DELAY_BETWEEN_LOGINS);
 		});
 }
 
