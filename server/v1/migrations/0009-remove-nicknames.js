@@ -36,8 +36,8 @@ db.once('connected', function () {
     console.log('Dropping aliases...');
 
     players
-        .update(
-            { id: 18436435757559477704 },
+        .updateOne(
+            { id: '18436435757559477704' },
             { $unset: { nicknames: 1 }},
             function receiver(err) {
                 status();
