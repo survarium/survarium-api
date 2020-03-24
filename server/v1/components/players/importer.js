@@ -270,7 +270,7 @@ function load(params) {
 									})
                                     .catch(existingPlayerConflict.bind(self, fetched, params))
 							)
-                            .tap(ItemsUsage.bind({ debug: debug }))
+                            // .tap(ItemsUsage.bind({ debug: debug }))
 							.then(assignClan.bind(null, { isNew: isNew, source: fetched }));
 					})
 					.then(function playerAfterUpdate(player) {
