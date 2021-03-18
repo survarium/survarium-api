@@ -179,7 +179,7 @@ exports.stats = function getStats(player, options) {
 	cursor.populate([
 		{
 			path: 'match',
-			select: { _id: 0, id: 1 }
+			select: { _id: 0, id: 1, replay: 2 }
 		},
 		{
 			path: 'map',
