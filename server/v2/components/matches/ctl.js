@@ -207,7 +207,7 @@ exports.timeline = function (query) {
 	var dateIndexedSearch = new Date();
 	var minutesFromHourStart = dateIndexedSearch.getMinutes();
 
-	dateIndexedSearch.setHours(dateIndexedSearch.getHours() - 24, 0, 0, 0);
+	dateIndexedSearch.setHours(dateIndexedSearch.getHours() - 25, 0, 0, 0);
 
 	var dateResultFilter = new Date(dateIndexedSearch);
 	dateResultFilter.setMinutes(minutesFromHourStart);
@@ -219,18 +219,48 @@ exports.timeline = function (query) {
     if (~['rating', 'random'].indexOf(query.type)) {
         match.rating_match = query.type === 'rating';
     }
-    var retour = modes.findOne({ title: 'pve' }).lean()
-        .then(pveMode => model.aggregate([
-            { $match: Object.assign(match, { mode: { $ne: pveMode._id } }) }, // поиск с квантификацией по часам
-			{ $match: { date: { $gte: dateResultFilter } } }, // обрезка данных старше 24 часов (тут уже динамические минуты)
-			{ $project: {
-					date: { $subtract: ['$date', millisecondsFromHourStart]}, // двигаем динамическую минуту в 0
-					level: 1
-				} },
-			{ $group: { _id: {  hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
-			{ $group: { _id: '$_id.hour', hours: { $push: { hour: '$_id.hour', total: '$total', date: { $add: ['$date', millisecondsFromHourStart]} } }, total: { $sum: '$total' } } },
-			{ $project: { hours: '$hours', total: '$total', _id: 0 }}
-        ]).allowDiskUse(true).exec());
+
+	if (~['all'].indexOf(query.type)) {
+		var retour = modes.findOne({ title: 'pve' }).lean()
+			.then(pveMode => model.aggregate([
+				//{ $match: Object.assign(match, { mode: { $ne: pveMode._id } }) }, // поиск с квантификацией по часам
+				{ $match: { date: { $gte: dateResultFilter } } }, // обрезка данных старше 24 часов (тут уже динамические минуты)
+				{ $project: {
+						date: { $subtract: ['$date', millisecondsFromHourStart]}, // двигаем динамическую минуту в 0
+						level: 1
+					} },
+				{ $group: { _id: {  hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
+				{ $group: { _id: '$_id.hour', hours: { $push: { hour: '$_id.hour', total: '$total', date: { $add: ['$date', millisecondsFromHourStart]} } }, total: { $sum: '$total' } } },
+				{ $project: { hours: '$hours', total: '$total', _id: 0 }}
+			]).allowDiskUse(true).exec());
+	} else if (~['pve'].indexOf(query.type)) {
+		var retour = modes.findOne({ title: 'pve' }).lean()
+			.then(pveMode => model.aggregate([
+				{ $match: Object.assign(match, { mode: { $eq: pveMode._id } }) }, // поиск с квантификацией по часам
+				{ $match: { date: { $gte: dateResultFilter } } }, // обрезка данных старше 24 часов (тут уже динамические минуты)
+				{ $project: {
+						date: { $subtract: ['$date', millisecondsFromHourStart]}, // двигаем динамическую минуту в 0
+						level: 1
+					} },
+				{ $group: { _id: {  hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
+				{ $group: { _id: '$_id.hour', hours: { $push: { hour: '$_id.hour', total: '$total', date: { $add: ['$date', millisecondsFromHourStart]} } }, total: { $sum: '$total' } } },
+				{ $project: { hours: '$hours', total: '$total', _id: 0 }}
+			]).allowDiskUse(true).exec());
+	} else { // 'rating', 'random'
+		var retour = modes.findOne({ title: 'pve' }).lean()
+			.then(pveMode => model.aggregate([
+				{ $match: Object.assign(match, { mode: { $ne: pveMode._id } }) }, // поиск с квантификацией по часам
+				{ $match: { date: { $gte: dateResultFilter } } }, // обрезка данных старше 24 часов (тут уже динамические минуты)
+				{ $project: {
+						date: { $subtract: ['$date', millisecondsFromHourStart]}, // двигаем динамическую минуту в 0
+						level: 1
+					} },
+				{ $group: { _id: {  hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
+				{ $group: { _id: '$_id.hour', hours: { $push: { hour: '$_id.hour', total: '$total', date: { $add: ['$date', millisecondsFromHourStart]} } }, total: { $sum: '$total' } } },
+				{ $project: { hours: '$hours', total: '$total', _id: 0 }}
+			]).allowDiskUse(true).exec());
+	}
+
 	return retour;
 };
 
