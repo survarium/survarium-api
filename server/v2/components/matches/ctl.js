@@ -9,6 +9,7 @@ const db      = require('../../../v1/lib/db');
 const libLang = require('../../../v1/lib/lang');
 const Query   = require('./query');
 const got     = require('got');
+const debug     = require('debug')('timeline');;
 
 const langDefault = config.api.langDefault;
 const MODE_MAP = {
@@ -218,19 +219,19 @@ exports.timeline = function (query) {
     if (~['rating', 'random'].indexOf(query.type)) {
         match.rating_match = query.type === 'rating';
     }
-
-    return modes.findOne({ title: 'pve' }, { _id: 1 }).lean()
+    var retour = modes.findOne({ title: 'pve' }).lean()
         .then(pveMode => model.aggregate([
             { $match: Object.assign(match, { mode: { $ne: pveMode._id } }) }, // поиск с квантификацией по часам
-            { $match: { date: { $gte: dateResultFilter } } }, // обрезка данных старше 24 часов (тут уже динамические минуты)
-            { $project: {
-                    date: { $subtract: ['$date', millisecondsFromHourStart]}, // двигаем динамическую минуту в 0
-                    level: 1
-                } },
-            { $group: { _id: { level: '$level', hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
-            { $group: { _id: '$_id.level', hours: { $push: { hour: '$_id.hour', total: '$total', date: { $add: ['$date', millisecondsFromHourStart]} } }, total: { $sum: '$total' } } },
-            { $project: { level: '$_id', hours: '$hours', total: '$total', _id: 0 }}
+			{ $match: { date: { $gte: dateResultFilter } } }, // обрезка данных старше 24 часов (тут уже динамические минуты)
+			{ $project: {
+					date: { $subtract: ['$date', millisecondsFromHourStart]}, // двигаем динамическую минуту в 0
+					level: 1
+				} },
+			{ $group: { _id: {  hour: { $hour: '$date' } }, date: { $min: '$date' }, total: { $sum: 1 } } },
+			{ $group: { _id: '$_id.hour', hours: { $push: { hour: '$_id.hour', total: '$total', date: { $add: ['$date', millisecondsFromHourStart]} } }, total: { $sum: '$total' } } },
+			{ $project: { hours: '$hours', total: '$total', _id: 0 }}
         ]).allowDiskUse(true).exec());
+	return retour;
 };
 
 exports.replay = function (match) {
