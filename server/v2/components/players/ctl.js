@@ -334,9 +334,10 @@ exports.unique = function getUnique(query) {
 	    let minutes = Number(query.minutes);
 
         if (query.period === 'hour') {
-            from.setHours(from.getHours() - 1, 0, 0, 0);
-        } else if (query.period === 'half') {
-            from.setMinutes(from.getMinutes() - 30, 0, 0);
+            from.setHours(from.getHours() - 2 ); // -2 because of utc+1
+        } else if (query.period === 'week') {
+			from.setHours(from.getHours() - 1, 0, 0, 0);
+			from.setDate(from.getDate() - 7);
         } else if (query.period === 'month') {
             from.setHours(from.getHours() - 1, 0, 0, 0);
             from.setMonth(from.getMonth() - 1);
@@ -357,7 +358,8 @@ exports.unique = function getUnique(query) {
 			{ $group: { _id: '$player' }},
             { $group: { _id: null, count: { $sum: 1 } } }
 		])
-		.allowDiskUse(true).exec().then(function (result) {
+		//.allowDiskUse(true).exec().then(function (result) {
+		.exec().then(function (result) {
 			return { count: result[0] ? result[0].count : 0 };
 		});
 };
