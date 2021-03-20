@@ -323,7 +323,6 @@ exports.clanwars = function clanwars(clan, options) {
 	let query = totalQuery = { 'clans.clan': clan._id };
 
 	let fields = {
-		replay: 0,
 		server: 0,
 		duration: 0,
 		stats: 0,
@@ -375,6 +374,10 @@ exports.clanwars = function clanwars(clan, options) {
 		{
 			path: 'map',
 			select: libLang.select() + ' -createdAt -updatedAt -__v -_id'
+		},
+		{
+			path: 'place',
+			select: '-createdAt -updatedAt -__v -_id'
 		},
         {
             path: 'battlefield',
