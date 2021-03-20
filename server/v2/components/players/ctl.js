@@ -285,25 +285,25 @@ exports.top = function getTop(query) {
 		date.setMinutes(0, 0, 0, 0);
 		date.setDate(date.getDate() - 1);
 	} else {
-		date.setHours(date.getHours() - 1, 0, 0, 0);
+		date.setHours(date.getHours() - 2);
 	}
 
 	return modes.findOne({ title: 'pve' }, { _id: 1 }).lean()
 		.then(pveMode => stats
 			.aggregate([
 				{ $match: { mode: { $ne: pveMode._id }, date: { $gte: date } } },
-				{ $group: { _id: { level: '$level' }, data: { $push: { level: '$level', player: '$player', match: '$match', score: '$score' } } } },
+				{ $group: { _id: { rating_match: '$rating_match' }, data: { $push: { rating_match: '$rating_match',  player: '$player', match: '$match', score: '$score' } } } },
 				{ $unwind: '$data' },
 				{ $sort: { 'data.score': -1 } },
 				{ $group: { _id: '$_id', data: { $first: '$data' } } },
 				{ $lookup: { from: 'matches', localField: 'data.match', foreignField: '_id', as: 'data.match' } },
 				{ $lookup: { from: 'players', localField: 'data.player', foreignField: '_id', as: 'data.player' } },
-				{ $project: { _id: 0, level: '$data.level', score: '$data.score',
+				{ $project: { _id: '$data.rating_match', rating_match: '$data.rating_match', score: '$data.score',
 						'player.nickname': { $arrayElemAt: ['$data.player.nickname', 0] },
 						'player.clan_meta': { $arrayElemAt: ['$data.player.clan_meta', 0] },
 						match: { $arrayElemAt: ['$data.match.id', 0] } } },
-				{ $sort: { level: 1 } },
-				{ $limit: 10 }
+				{ $sort: { rating_match: 1 } },
+				{ $limit: 2 }
 			])
 			.allowDiskUse(true).exec()
 		);
