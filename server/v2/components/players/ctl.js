@@ -103,7 +103,34 @@ exports.fetch = function getPlayer(player) {
 		__v: 0
 	});
 
-	return cursor.lean();
+	let thisPlayer = cursor.lean().exec().then(
+		currPlayer => {
+			if (currPlayer && currPlayer.progress && currPlayer.progress['elo-random']) {
+				let Players  = db.model('Players');
+				let search = {
+					updatedAt: {
+						$gte : new Date(new Date().setDate(new Date().getDate()-30))
+					},
+					"progress.elo-random": {
+						$gte : currPlayer.progress['elo-random']
+					}
+				};
+
+				const promise1 = new Promise((resolve) => {
+					resolve(
+						Players
+							.find(search).count()
+					);
+				});
+
+				return promise1.then((position) => {
+					currPlayer.progress['position'] = position;
+					return currPlayer;
+				});
+			}
+		});
+
+	return thisPlayer;
 };
 
 exports.skills = function getSkills(player) {
@@ -285,7 +312,7 @@ exports.top = function getTop(query) {
 		date.setMinutes(0, 0, 0, 0);
 		date.setDate(date.getDate() - 1);
 	} else {
-		date.setHours(date.getHours() - 2);
+		date.setHours(date.getHours() - 3);
 	}
 
 	return modes.findOne({ title: 'pve' }, { _id: 1 }).lean()
