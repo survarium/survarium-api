@@ -26,6 +26,7 @@
     "tape": "^4.4.0"
   },
   "dependencies": {
+    "moment-timezone": "^0.5.33",
     "newrelic": "^1.28.1"
   }
 }

@@ -17,7 +17,8 @@ const MODE_MAP = {
     'artifact hunt': 'Artifact Hunt',
     'battery retrieval': 'Battery retrieval',
     'research': 'Research',
-	'slaughter': 'Slaughter'
+	'slaughter': 'Slaughter',
+	'paintball': 'Paintball'
 };
 
 exports.id = function (id) {
@@ -207,7 +208,7 @@ exports.timeline = function (query) {
 	var dateIndexedSearch = new Date();
 	var minutesFromHourStart = dateIndexedSearch.getMinutes();
 
-	dateIndexedSearch.setHours(dateIndexedSearch.getHours() - 25, 0, 0, 0);
+	dateIndexedSearch.setHours(dateIndexedSearch.getHours() - 25);
 
 	var dateResultFilter = new Date(dateIndexedSearch);
 	dateResultFilter.setMinutes(minutesFromHourStart);

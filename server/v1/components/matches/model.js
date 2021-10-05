@@ -5,7 +5,7 @@ require('./model-unloaded');
 const Schema = mongoose.Schema;
 const scoreMicro = {
 	type: Number,
-	default: 0
+	default: 4
 };
 
 const MatchesSchema = new Schema({
@@ -29,6 +29,9 @@ const MatchesSchema = new Schema({
 	    type: Boolean,
         index: true
     },
+	difficulty: {
+		type: Number
+	},
 	score: [
 		Number
 	],

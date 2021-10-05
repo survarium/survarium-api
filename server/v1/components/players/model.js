@@ -123,7 +123,9 @@ const PlayersSchema = new Schema({
 	    type: Number,
         index: true
     },
-	deletedAt: Date
+	deletedAt: Date,
+	lastRanked: Date,
+	index: true
 }, { timestamps: true });
 
 PlayersSchema.statics.load = function () {
@@ -152,6 +154,7 @@ PlayersSchema.methods.addStat = function (stat, matchData) {
 			'total.scoreAvg': +((this.total.score + stat.score || 0) / (this.total.stats + 1)).toFixed(0)
 		}
 	}).exec()];
+
 	if (stat.clan) {
 		updaters.push(ClansImporter.publicStat(stat.clan, stat));
 	}
@@ -163,12 +166,14 @@ PlayersSchema.methods.addStat = function (stat, matchData) {
 };
 
 PlayersSchema.methods.attachClan = function (clan) {
+	var fixedAbbr = (clan.abbr === 'Вier') ? 'NOT_Вier' : clan.abbr;
+
 	return this
 		.update({
 			clan: clan._id,
 			clan_meta: {
 				id: clan.id,
-				abbr: clan.abbr
+				abbr: fixedAbbr
 			}
 		})
 		.exec();
@@ -184,6 +189,16 @@ PlayersSchema.methods.detachClan = function () {
 		})
 		.exec();
 };
+
+
+PlayersSchema.methods.updateLastRanked = function (date) {
+	return this
+		.update({
+			lastRanked: date,
+		})
+		.exec();
+};
+
 
 PlayersSchema.statics.activeCount = function () {
 	const cacheKey = `player:activeCount`;

@@ -105,7 +105,10 @@ exports.fetch = function getPlayer(player) {
 
 	let thisPlayer = cursor.lean().exec().then(
 		currPlayer => {
-			if (currPlayer && currPlayer.progress && currPlayer.progress['elo-random']) {
+			if (currPlayer
+				&& currPlayer.updatedAt
+				&& currPlayer.updatedAt >= new Date(new Date().setDate(new Date().getDate()-30))
+				&& currPlayer.progress && currPlayer.progress['elo-random']) {
 				let Players  = db.model('Players');
 				let search = {
 					updatedAt: {
@@ -124,9 +127,70 @@ exports.fetch = function getPlayer(player) {
 				});
 
 				return promise1.then((position) => {
-					currPlayer.progress['position'] = position;
+					currPlayer.position = position;
 					return currPlayer;
 				});
+			} else {
+				return currPlayer;
+			}
+		}).then(
+			currPlayer => {
+				if (currPlayer
+					&& currPlayer.lastRanked
+					&& currPlayer.progress && currPlayer.progress['elo-rating']) {
+						let Players  = db.model('Players');
+						const promise2 = new Promise((resolve) => {
+							resolve(
+								Players
+									.aggregate([
+										{ $sort: { lastRanked: -1} },
+										{ $limit: 1 },
+										{
+											$project:
+												{
+													_id: 0,
+													lastRanked: "$lastRanked",
+												}
+										}
+									])
+									.allowDiskUse(true).exec()
+							);
+						});
+						return promise2.then((lastRanked) => {
+							let Players  = db.model('Players');
+							let startSeason = new Date(
+								lastRanked[0].lastRanked.getFullYear(),
+								lastRanked[0].lastRanked.getMonth(),
+								1
+							);
+							currPlayer.lastSeason = startSeason;
+
+							if(currPlayer.lastRanked < startSeason) {
+								return currPlayer;
+							}
+							let search2 = {
+								lastRanked: {
+									$gte : startSeason
+								},
+								"progress.elo-rating": {
+									$gte : currPlayer.progress['elo-rating']
+								}
+							};
+
+							const promise3 = new Promise((resolve) => {
+								resolve(
+									Players
+										.find(search2).count()
+								);
+							});
+
+							return promise3.then((positionRanked) => {
+								currPlayer.positionRanked = positionRanked;
+								return currPlayer;
+							});
+						});
+			} else {
+				return currPlayer;
 			}
 		});
 
@@ -206,7 +270,7 @@ exports.stats = function getStats(player, options) {
 	cursor.populate([
 		{
 			path: 'match',
-			select: { _id: 0, id: 1, replay: 2 }
+			select: { _id: 0, id: 1, replay: 2, clanwar: 3 }
 		},
 		{
 			path: 'map',

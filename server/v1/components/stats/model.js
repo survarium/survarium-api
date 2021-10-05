@@ -78,6 +78,7 @@ const StatsSchema = new Schema({
 	pointCaptures: scoreMicro,
 	boxesBringed : scoreMicro,
 	artefactUses : scoreMicro,
+	pveBoxesBringed : scoreMicro,
 
 	deletedAt: Date
 }, {

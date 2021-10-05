@@ -259,7 +259,6 @@ var getCookie = function (cookie) {
 
 function auth() {
 	var url = 'https://account.survarium.com/ru';
-
 	return got(url, {
 			headers: {
 				'user-agent': headers['user-agent']

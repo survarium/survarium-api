@@ -97,7 +97,8 @@ function saveStats(matchData, match) {
 							artefactKills: +playerStats.artefact_kill || 0,
 							pointCaptures: +playerStats.capture_a_point || 0,
 							boxesBringed : +playerStats.bring_a_box || 0,
-							artefactUses : +playerStats.use_artefact || 0
+							artefactUses : +playerStats.use_artefact || 0,
+							pveBoxesBringed: +playerStats.bring_a_pve_box || 0,
 						};
 
 						if (player.clan) {
@@ -111,7 +112,14 @@ function saveStats(matchData, match) {
 							})
 							.tap(function (stat) {
 								debug(`stats document for player ${player.nickname} and match ${match.id} created`);
-								return player.addStat(stat, matchData);
+
+								if(isRating === true) {
+									debug(`Updating lastRanked date of player ${player.nickname}`);
+									return player.updateLastRanked(match.date);
+								} else {
+									debug(`Unranked Match`);
+									return player.addStat(stat, matchData);
+								}
 							});
 					});
 			};
@@ -283,14 +291,19 @@ function saveMatch(data) {
         }
 
 		debug(`creating document for match ${id}`);
+		let dateMatch = new Date(statsData.time_start.replace(/\s/, 'T'));
+		let moment = require('moment-timezone');
+		let offSet = moment().tz("Europe/Paris").utcOffset();
+		dateMatch.setMinutes(dateMatch.getMinutes() + offSet);
 
 	    let doc = {
             id: data.match_id,
-            date: new Date(statsData.time_start.replace(/\s/, 'T')),
+            date: dateMatch,
             duration: statsData.game_duration,
             server: statsData.server_id,
             replay: statsData.replay_path === '' ? undefined : statsData.replay_path,
             level: statsData.match_level,
+			difficulty: (statsData.hasOwnProperty('difficulty')) ? statsData.difficulty : undefined,
             rating_match: statsData.rating_match,
             score: [0, 1].map(function (teamNum) {
                 return statsData[`team_${teamNum + 1}_score`];
@@ -537,7 +550,12 @@ var importHoles = [];
  * @returns {Promise}
  */
 function loadByTS(last) {
+	//FCM force date to yesterday, shouldn't be use outside first import
+	/*var dateS = new Date();
+	dateS.setDate(dateS.getDate() - 2);
+	var date = dateS.getTime();*/
 	var date = last.ts;
+
 	var matchesToImport = +process.env.IMPORTER || 50;
 	var offset = last.offset || 0;
 	debug(`loading ${matchesToImport} matches at ${new Date()} from ts=${date} with offset ${offset} (${new Date(date * 1000)})`);
@@ -707,8 +725,10 @@ function loadByTS(last) {
 }
 
 var startOfTimes = {
-	date: new Date(process.env.IMPORTER_START || '2016-05-15T21:08:03Z'),
-	match: +process.env.IMPORTER_MATCH || 4895046
+	//date: new Date(process.env.IMPORTER_START || '2020-12-01T00:00:00Z'),
+	date: new Date('2020-12-08T00:00:00Z'),
+	//match: +process.env.IMPORTER_MATCH || 54895046
+	match: 15718077
 };
 
 /**
@@ -717,6 +737,7 @@ var startOfTimes = {
  */
 function getLastImport() {
 	return (lastImport || lastImportMatch)?
+	//return (false == true)? //FCM todo clean
 		Promise.resolve({
 			ts: lastImport,
 			id: lastImportMatch

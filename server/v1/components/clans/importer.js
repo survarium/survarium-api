@@ -108,18 +108,31 @@ function getClanMembers(fetched, clan) {
  */
 function assignDataToModel(source, update, clanMembers) {
 	var data   = source.clan.clan_info;
+	var fixedName;
+
+	if(data.abbreviation === 'Вier') {
+		fixedName = 'NOT_Вier'
+	} else if(data.abbreviation === 'Вier') {
+		fixedName = 'NOT_Вier'
+	} else if(data.abbreviation === 'Βier') {
+		fixedName = 'NOT_Βier'
+	} else {
+		fixedName = data.abbreviation;
+	}
+
 	var result = {
-		name : data.name,
+		name : fixedName,
 		level: data.level,
 		elo  : data.elo
 	};
 	if (!update) {
 		result.id         = source.clan.clan_id;
-		result.abbr       = data.abbreviation;
+
+		result.abbr       = (data.abbreviation != 'Вier') ? data.abbreviation : 'NOT_Вier';
 		result.foundation = new Date(data.creation_time.replace(/\s/, 'T'));
 	} else {
 		if (update.abbr !== data.abbreviation) {
-			result.abbr = data.abbreviation;
+			result.abbr = (data.abbreviation != 'Вier') ? data.abbreviation : 'NOT_Вier';
 		}
 		if (!update.foundation) {
 			result.foundation = new Date(data.creation_time.replace(/\s/, 'T'));
@@ -284,6 +297,15 @@ function clanwar(params) {
 
 	if (!matchData.is_clan || !matchData.clan_match) {
 		debug(`match ${match.id} is not a clanwar`);
+
+		if(match.id == 15840337) {
+			const util = require('util');
+			debug(util.inspect(matchData, false, null, true /* enable colors */));
+			debug(util.inspect(matchData, false, null, true /* enable colors */));
+			debug(`match is_clan : ${matchData.is_clan } `);
+			debug(`match clan_match : ${matchData.clan_match } `);
+		}
+
 		return Promise.resolve(undefined);
 	}
 
