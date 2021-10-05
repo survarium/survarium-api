@@ -117,7 +117,7 @@ module.exports = {
 	game: {
 		langs: ['russian', 'english', 'ukrainian', 'polish'],
         upload: process.env.GAME_UPLOAD_DIR || 'uploads/',
-        modes: ['Battery retrieval', 'Team Deathmatch', 'Research', 'Artifact Hunt', 'Slaughter']
+        modes: ['Battery retrieval', 'Team Deathmatch', 'Research', 'Artifact Hunt', 'Slaughter', 'Paintball']
 	},
 
 	discord: {
